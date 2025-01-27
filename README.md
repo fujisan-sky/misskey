@@ -14,6 +14,7 @@ Misskeyの　ふじさんすきー版のコードです。<br>
 	↓を見てください。<br>
 	<a href=https://misskey.day/documents/htmls/migration.html>ふじさんすきー版への移行</a><br>
 <br>
+	☆gitの使い方が分からなくて本家の修正と嚙み合って無いです。ごめんなさい。☆<br>
 <br>
 
 <<<<<<< HEAD
