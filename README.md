@@ -1,37 +1,17 @@
 <div align="center">
 Misskeyの　ふじさんすきー版のコードです。<br>
-	一応、そのままmisskeyフォークとして使えるはず……<br>
-小規模サーバーで、かつ、鯖缶が適当（さぼってる）な場合に有効だと思います。<br>
-<br>
-インストール方法は、misskey公式と同じ。<br>
-<br>
-	<br>
-	<b>[機能]</b><br>
-	↓を見てください。<br>
-	<a href=https://misskey.day/documents/htmls/fork.html>ふじさんすきーの特徴</a><br>
-	<br>
-	<b>[移行]</b><br>
-	↓を見てください。<br>
-	<a href=https://misskey.day/documents/htmls/migration.html>ふじさんすきー版への移行</a><br>
-<br>
-<br>
 
+ すみません。<br>
+ 特にそういうサイトも無いようでしたので、、<br>
+ 2024.11以降はフォークとして使える・・は、あきらめました。<br>
+ 申し訳ありませんが環境依存や固有文字列ありそのままでは使えません。<br>
+ <br>
+ 
 <<<<<<< HEAD
 [Learn more](https://misskey-hub.net/)
 =======
 <<<<<<< HEAD
 **🌎 **[Misskey](https://misskey-hub.net/)** is an open source, decentralized social media platform that's free forever! 🚀**
-=======
-ふじさんすきー版のコードです。<br>
-小規模サーバーで、かつ、鯖缶が適当（さぼってる）な場合に有効じゃないかと思います。<br>
-<br>
-インストール方法は、misskey公式と同じです。<br>
-<br>
-　あと、時間のある時に説明を作ってみますが、取り合えずソース公開という事で。<br>
- 姉妹サーバーを歓迎しますので（多少は）構築のお手伝いもさせて頂く（かもしれません）！<br>
-<br>
-<br>
-
 
 **🌎 **Misskey** is an open source, federated social media platform that's free forever! 🚀**
 
