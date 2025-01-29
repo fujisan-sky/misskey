@@ -1,22 +1,12 @@
 <div align="center">
 Misskeyの　ふじさんすきー版のコードです。<br>
-	一応、そのままmisskeyフォークとして使えるはず……<br>
-小規模サーバーで、かつ、鯖缶が適当（さぼってる）な場合に有効だと思います。<br>
-<br>
-インストール方法は、misskey公式と同じ。<br>
-<br>
-	<br>
-	<b>[機能]</b><br>
-	↓を見てください。<br>
-	<a href=https://misskey.day/documents/htmls/fork.html>ふじさんすきーの特徴</a><br>
-	<br>
-	<b>[移行]</b><br>
-	↓を見てください。<br>
-	<a href=https://misskey.day/documents/htmls/migration.html>ふじさんすきー版への移行</a><br>
-<br>
-	☆gitの使い方が分からなくて本家の修正履歴と嚙み合って無いです。ごめんなさい。☆<br>
-<br>
 
+ すみません。<br>
+ 特にそういうサイトも無いようでしたので、、<br>
+ 2024.11以降はフォークとして使える・・は、あきらめました。<br>
+ 申し訳ありませんが環境依存や固有文字列ありそのままでは使えません。<br>
+ <br>
+ 
 <<<<<<< HEAD
 [Learn more](https://misskey-hub.net/)
 =======
