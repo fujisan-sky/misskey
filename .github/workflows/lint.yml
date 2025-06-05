@@ -10,6 +10,7 @@ on:
       - packages/frontend/**
       - packages/frontend-shared/**
       - packages/frontend-embed/**
+      - packages/icons-subsetter/**
       - packages/sw/**
       - packages/misskey-js/**
       - packages/misskey-bubble-game/**
@@ -22,6 +23,7 @@ on:
       - packages/frontend/**
       - packages/frontend-shared/**
       - packages/frontend-embed/**
+      - packages/icons-subsetter/**
       - packages/sw/**
       - packages/misskey-js/**
       - packages/misskey-bubble-game/**
@@ -38,7 +40,7 @@ jobs:
         submodules: true
     - name: Setup pnpm
       uses: pnpm/action-setup@v4.1.0
-    - uses: actions/setup-node@v4.2.0
+    - uses: actions/setup-node@v4.4.0
       with:
         node-version-file: '.node-version'
         cache: 'pnpm'
@@ -55,6 +57,7 @@ jobs:
         - frontend
         - frontend-shared
         - frontend-embed
+        - icons-subsetter
         - sw
         - misskey-js
         - misskey-bubble-game
@@ -69,13 +72,13 @@ jobs:
         submodules: true
     - name: Setup pnpm
       uses: pnpm/action-setup@v4.1.0
-    - uses: actions/setup-node@v4.2.0
+    - uses: actions/setup-node@v4.4.0
       with:
         node-version-file: '.node-version'
         cache: 'pnpm'
     - run: pnpm i --frozen-lockfile
     - name: Restore eslint cache
-      uses: actions/cache@v4.2.2
+      uses: actions/cache@v4.2.3
       with:
         path: ${{ env.eslint-cache-path }}
         key: eslint-${{ env.eslint-cache-version }}-${{ matrix.workspace }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ github.ref_name }}-${{ github.sha }}
@@ -99,7 +102,7 @@ jobs:
         submodules: true
     - name: Setup pnpm
       uses: pnpm/action-setup@v4.1.0
-    - uses: actions/setup-node@v4.2.0
+    - uses: actions/setup-node@v4.4.0
       with:
         node-version-file: '.node-version'
         cache: 'pnpm'

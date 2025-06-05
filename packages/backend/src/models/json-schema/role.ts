@@ -224,6 +224,18 @@ export const packedRolePoliciesSchema = {
 			type: 'integer',
 			optional: false, nullable: false,
 		},
+		maxFileSizeMb: {
+			type: 'integer',
+			optional: false, nullable: false,
+		},
+		uploadableFileTypes: {
+			type: 'array',
+			optional: false, nullable: false,
+			items: {
+				type: 'string',
+				optional: false, nullable: false,
+			},
+		},
 		alwaysMarkNsfw: {
 			type: 'boolean',
 			optional: false, nullable: false,
@@ -292,6 +304,7 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
+<<<<<<< HEAD
 		publicMinimumInterval: {
 			type: 'integer',
 			optional: false, nullable: false,
@@ -303,6 +316,12 @@ export const packedRolePoliciesSchema = {
 		canCreateEmoji: {
 			type: 'boolean',
 			optional: false, nullable: false,
+=======
+		chatAvailability: {
+			type: 'string',
+			optional: false, nullable: false,
+			enum: ['available', 'readonly', 'unavailable'],
+>>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
 		},
 	},
 } as const;
@@ -393,6 +412,11 @@ export const packedRoleSchema = {
 					example: false,
 				},
 				asBadge: {
+					type: 'boolean',
+					optional: false, nullable: false,
+					example: false,
+				},
+				preserveAssignmentOnMoveAccount: {
 					type: 'boolean',
 					optional: false, nullable: false,
 					example: false,
