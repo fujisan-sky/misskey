@@ -139,12 +139,14 @@ const shouldDisableSubmitting = computed((): boolean => {
 		instance.enableTestcaptcha && !testcaptchaResponse.value ||
 		instance.emailRequiredForSignup && emailState.value !== 'ok' ||
 		usernameState.value !== 'ok' ||
+		passwordStrength.value == 'low' ||
 		passwordRetypeState.value !== 'match';
 });
 
 function getPasswordStrength(source: string): number {
 	let strength = 0;
 	let power = 0.018;
+	let popular_words: Array<string> = ['fuji','misskey','neko','cat','sky','ocha','nasu','unko','pass','user','pasu','word','FUJI','Fuji','CLOUD','cloud','MISSKEY','Misskey','abcd','efgh','ABCD','EFGH','1234','0123','4567','123123','abab','0101','1212','xyz','2025','taka'];
 
 	// 英数字
 	if (/[a-zA-Z]/.test(source) && /[0-9]/.test(source)) {
@@ -161,7 +163,28 @@ function getPasswordStrength(source: string): number {
 		power += 0.02;
 	}
 
-	strength = power * source.length;
+	let  valid_length = 0.0;
+	let last_char = '';
+	for ( let cur_char of source ){
+		if( cur_char != last_char ){
+			valid_length += 1.34;
+		}else{
+			valid_length += 0.2;
+		}
+		last_char = cur_char;
+	}
+
+	if ( source.includes(username.value) ){
+		valid_length = valid_length - username.value.length + 1;
+	}
+
+	for ( let cur_word of popular_words ){
+		if ( source.includes(cur_word) ){
+			valid_length = valid_length - cur_word.length + 1;
+		}
+	}
+
+	strength = power * valid_length;
 
 	return Math.max(0, Math.min(1, strength));
 }
@@ -175,7 +198,7 @@ function onChangeUsername(): void {
 	{
 		const err =
 			!username.value.match(/^[a-zA-Z0-9_]+$/) ? 'invalid-format' :
-			username.value.length < 1 ? 'min-range' :
+			username.value.length < 4 ? 'min-range' :
 			username.value.length > 20 ? 'max-range' :
 			null;
 

@@ -67,7 +67,7 @@ import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkFolder from '@/components/MkFolder.vue';
-import { selectFile } from '@/scripts/select-file.js';
+import { selectFile } from '@/utility/select-file.js';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
@@ -87,16 +87,10 @@ const emit = defineEmits<{
 	(ev: 'closed'): void
 }>();
 
-<<<<<<< HEAD
-const windowEl = ref<InstanceType<typeof MkWindow> | null>(null);
+const windowEl = useTemplateRef('windowEl');
 const aid = ref<string>(props.avatarDecoration ? props.avatarDecoration.id : '');
 let url = ref<string>(props.avatarDecoration ? props.avatarDecoration.url : '');
 let name = ref<string>(props.avatarDecoration ? props.avatarDecoration.name : '');
-=======
-const windowEl = useTemplateRef('windowEl');
-const url = ref<string>(props.avatarDecoration ? props.avatarDecoration.url : '');
-const name = ref<string>(props.avatarDecoration ? props.avatarDecoration.name : '');
->>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
 const description = ref<string>(props.avatarDecoration ? props.avatarDecoration.description : '');
 const roleIdsThatCanBeUsedThisDecoration = ref(props.avatarDecoration ? props.avatarDecoration.roleIdsThatCanBeUsedThisDecoration : []);
 const rolesThatCanBeUsedThisDecoration = ref<Misskey.entities.Role[]>([]);

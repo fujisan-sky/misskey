@@ -136,7 +136,15 @@ export const store = markRaw(new Pizzax('base', {
 	},
 	reactions: {
 		where: 'account',
-		default: ['👍', '❤️', '😆', '🤔', '😮', '🎉', '💢', '😥', '😇', '🍮'],
+//		default: ['👍', '❤️', '😆', '🤔', '😮', '🎉', '💢', '😥', '😇', '🍮',':fuji3:'],
+		default: ['👍', '❤️', '🎉',
+			':fuji3:', ':ablobcatheadbangfastultra:', ':ablobcatattention:', ':ablobcatfloofpat:', 
+			':ablobcry:', ':ablobcatdrool:', ':blobcatfearful:', ':blobcat_ofton:', 
+			':Shiropuyo_hayai_Resonance:', ':Shiropuyo_ohayou:',
+			':Shiropuyo_oyasumi:', ':igyo:', ':ajiwai_bukai:', ':iihanashi:', ':google_hart:',
+			':ablobcat_uruuru:', ':meow_bongo_keyboard:', ':ablobcat_kyaa:',
+			':cat_thumbsup_84:', ':frog_happy_84:', ':dog_thinking_84:'
+			],
 	},
 	pinnedEmojis: {
 		where: 'account',
@@ -187,38 +195,6 @@ export const store = markRaw(new Pizzax('base', {
 		where: 'account',
 		default: false,
 	},
-<<<<<<< HEAD
-	memo: {
-		where: 'account',
-		default: null,
-	},
-	reactions: {
-		where: 'account',
-//		default: ['👍', '❤️', '😆', '🤔', '😮', '🎉', '💢', '😥', '😇', '🍮',':fuji3:'],
-		default: ['👍', '❤️', '🎉',
-			':fuji3:', ':ablobcatheadbangfastultra:', ':ablobcatattention:', ':ablobcatfloofpat:', 
-			':ablobcry:', ':ablobcatdrool:', ':blobcatfearful:', ':blobcat_ofton:', 
-			':Shiropuyo_hayai_Resonance:', ':Shiropuyo_ohayou:',
-			':Shiropuyo_oyasumi:', ':igyo:', ':ajiwai_bukai:', ':iihanashi:', ':google_hart:',
-			':ablobcat_uruuru:', ':meow_bongo_keyboard:', ':ablobcat_kyaa:',
-			':cat_thumbsup_84:', ':frog_happy_84:', ':dog_thinking_84:'
-			],
-	},
-	pinnedEmojis: {
-		where: 'account',
-		default: [],
-	},
-	reactionAcceptance: {
-		where: 'account',
-		default: 'nonSensitiveOnly' as 'likeOnly' | 'likeOnlyForRemote' | 'nonSensitiveOnly' | 'nonSensitiveOnlyForLocalLikeOnlyForRemote' | null,
-	},
-	mutedAds: {
-		where: 'account',
-		default: [] as string[],
-	},
-
-=======
->>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
 	menu: {
 		where: 'deviceAccount',
 		default: [

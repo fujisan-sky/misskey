@@ -292,6 +292,13 @@ export class MiUser {
 			(this as any)[k] = v;
 		}
 	}
+
+	@Column('boolean', {
+		default: false,
+		comment: 'Whether the User is safemode(under 12).',
+	})
+	public safemode: boolean;
+
 }
 
 export type MiLocalUser = MiUser & {

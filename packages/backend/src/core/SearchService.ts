@@ -163,8 +163,8 @@ export class SearchService {
 				}
 			}
 		}
-		console.log('----add meilisearch indexes-----');
-		console.log(attachedFileType);
+		//console.log('----add meilisearch indexes-----');
+		//console.log(attachedFileType);
 
 		await this.meilisearchNoteIndex?.addDocuments([{
 			id: note.id,

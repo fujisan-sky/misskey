@@ -8,15 +8,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 	ref="buttonEl"
 	v-ripple="canToggle"
 	class="_button"
-<<<<<<< HEAD
-        :class="[$style.root, { [$style.reacted]: note.myReaction == reaction, [$style.canToggle]: canToggle || true, [$style.small]: defaultStore.state.reactionsDisplaySize === 'small', [$style.large]: defaultStore.state.reactionsDisplaySize === 'large' }]"
-        @click="toggleReaction($event)"
-        @contextmenu.prevent.stop="menu"
-=======
-	:class="[$style.root, { [$style.reacted]: myReaction == reaction, [$style.canToggle]: canToggle, [$style.small]: prefer.s.reactionsDisplaySize === 'small', [$style.large]: prefer.s.reactionsDisplaySize === 'large' }]"
-	@click="toggleReaction()"
+	:class="[$style.root, { [$style.reacted]: myReaction == reaction, [$style.canToggle]: canToggle || true, [$style.small]: prefer.s.reactionsDisplaySize === 'small', [$style.large]: prefer.s.reactionsDisplaySize === 'large' }]"
+	@click="toggleReaction($event)"
 	@contextmenu.prevent.stop="menu"
->>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
 >
 	<MkReactionIcon style="pointer-events: none;" :class="prefer.s.limitWidthOfReaction ? $style.limitWidth : ''" :reaction="reaction" :emojiUrl="reactionEmojis[reaction.substring(1, reaction.length - 1)]"/>
 	<span :class="$style.count">{{ count }}</span>
@@ -24,11 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-<<<<<<< HEAD
-import { computed, inject, onMounted, shallowRef, watch, ComputedRef } from 'vue';
-=======
 import { computed, inject, onMounted, useTemplateRef, watch } from 'vue';
->>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
 import * as Misskey from 'misskey-js';
 import { getUnicodeEmoji } from '@@/js/emojilist.js';
 import MkCustomEmojiDetailedDialog from './MkCustomEmojiDetailedDialog.vue';
@@ -257,7 +247,7 @@ const chooseAlternative = (ev) => {
 //       console.log(alternative.value);
 //       console.log(alternative.value.name);
        misskeyApi('notes/reactions/create', {
-               noteId: props.note.id,
+		noteId: props.noteId,
                reaction: `:${alternative.value.name}:`,
        });
 };

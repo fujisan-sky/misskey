@@ -66,7 +66,7 @@ export const packedRoleCondFormulaValueUserSettingBooleanSchema = {
 		type: {
 			type: 'string',
 			nullable: false, optional: false,
-			enum: ['isSuspended', 'isLocked', 'isBot', 'isCat', 'isExplorable'],
+			enum: ['isSuspended', 'isLocked', 'isBot', 'isCat', 'isExplorable' , 'isSafe' ],
 		},
 	},
 } as const;
@@ -304,7 +304,11 @@ export const packedRolePoliciesSchema = {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},
-<<<<<<< HEAD
+		chatAvailability: {
+			type: 'string',
+			optional: false, nullable: false,
+			enum: ['available', 'readonly', 'unavailable'],
+		},
 		publicMinimumInterval: {
 			type: 'integer',
 			optional: false, nullable: false,
@@ -316,12 +320,6 @@ export const packedRolePoliciesSchema = {
 		canCreateEmoji: {
 			type: 'boolean',
 			optional: false, nullable: false,
-=======
-		chatAvailability: {
-			type: 'string',
-			optional: false, nullable: false,
-			enum: ['available', 'readonly', 'unavailable'],
->>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
 		},
 	},
 } as const;

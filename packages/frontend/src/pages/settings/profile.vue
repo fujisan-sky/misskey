@@ -52,6 +52,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkInput>
 		</SearchMarker>
 
+                <SearchMarker :keywords="['safemode']">
+                        <MkSwitch v-model="profile.safemode">
+				<template #label><SearchLabel>あんぜんモード（１２才以下の人は必須）</SearchLabel></template>
+                                <template #caption>危険を避けるための制限を行います。この情報は公開されません。</template>
+                        </MkSwitch>
+                </SearchMarker>
+
+
 		<SearchMarker :keywords="['language', 'locale']">
 			<MkSelect v-model="profile.lang">
 				<template #label><SearchLabel>{{ i18n.ts.language }}</SearchLabel></template>
@@ -188,6 +196,7 @@ const profile = reactive({
 	followedMessage: $i.followedMessage,
 	location: $i.location,
 	birthday: $i.birthday,
+	safemode: $i.safemode ?? false,
 	lang: assertVaildLang($i.lang) ? $i.lang : null,
 	isBot: $i.isBot ?? false,
 	isCat: $i.isCat ?? false,
@@ -238,6 +247,7 @@ function save() {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		birthday: profile.birthday || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		safemode: !!profile.safemode,
 		lang: profile.lang || null,
 		isBot: !!profile.isBot,
 		isCat: !!profile.isCat,
