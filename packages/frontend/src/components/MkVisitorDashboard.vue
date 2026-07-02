@@ -17,6 +17,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<div :class="$style.mainAbout">
 				<!-- eslint-disable-next-line vue/no-v-html -->
 				<div v-html="instance.description || i18n.ts.headlineMisskey"></div>
+                                <hr>
+                                <center>
+                                <MkButton :class="$style.mainAction" full rounded type="a" target="_baknk" rel="noopener" href="https://misskey.day/documents/htmls/feature.html">
+どんなサーバーかと言うと【特徴】</MkButton>　
+<!--                                <MkButton :class="$style.mainAction" rounded inline link to="https://misskey.day/documents/htmls/kiyaku4.html">利用規約</MkButton>　
+                                <MkButton :class="$style.mainAction" rounded inline link to="https://misskey.day/documents/htmls/notice.html">注意事項</MkButton>
+--->
+                                </center>
 			</div>
 			<div v-if="instance.disableRegistration || instance.federation !== 'all'" :class="$style.mainWarn" class="_gaps_s">
 				<MkInfo v-if="instance.disableRegistration" warn>{{ i18n.ts.invitationRequiredToRegister }}</MkInfo>
@@ -24,12 +32,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkInfo v-else-if="instance.federation === 'none'" warn>{{ i18n.ts.federationDisabled }}</MkInfo>
 			</div>
 			<div class="_gaps_s" :class="$style.mainActions">
+				<!---
 				<MkButton :class="$style.mainAction" full rounded gradate data-cy-signup style="margin-right: 12px;" @click="signup()">{{ i18n.ts.joinThisServer }}</MkButton>
 				<MkButton :class="$style.mainAction" full rounded type="a" target="_blank" rel="noopener" href="https://misskey-hub.net/servers/">{{ i18n.ts.exploreOtherServers }}</MkButton>
 				<MkButton :class="$style.mainAction" full rounded data-cy-signin @click="signin()">{{ i18n.ts.login }}</MkButton>
+				---->
+				<MkButton :class="$style.mainAction" full rounded gradate data-cy-signup style="margin-right: 12px;" @click="signup()">【新規入会】ここを押して【歓迎】<br>
+いますぐ、この里に住みましょう！</MkButton>
+				<MkButton :class="$style.mainAction" full rounded type="a" target="_blank" rel="noopener" href="https://misskey.day/documents/htmls/rank/">他のサーバーを探す</MkButton>
+				<MkButton :class="$style.mainAction" full rounded data-cy-signin @click="signin()">【既存会員】<br>里に入る(ログイン)</MkButton>
 			</div>
 		</div>
 	</div>
+	<!---------
 	<div v-if="stats && instance.clientOptions.showActivitiesForVisitor !== false" :class="$style.stats">
 		<div :class="[$style.statsItem, $style.panel]">
 			<div :class="$style.statsItemLabel">{{ i18n.ts.users }}</div>
@@ -46,6 +61,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<MkStreamingNotesTimeline src="local"/>
 		</div>
 	</div>
+	------------>
 	<div v-if="instance.clientOptions.showActivitiesForVisitor !== false" :class="$style.panel">
 		<XActiveUsersChart/>
 	</div>
