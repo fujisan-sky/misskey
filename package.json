@@ -1,10 +1,6 @@
 {
 	"name": "misskey",
-<<<<<<< HEAD
-	"version": "2025.3.1-fujisan",
-=======
-	"version": "2025.6.0",
->>>>>>> 3eb64ccf7aab4a85bf2aed2c4ac2378bf723f2fc
+	"version": "2025.6.0-fujisan0",
 	"codename": "nasubi",
 	"repository": {
 		"type": "git",
