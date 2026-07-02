@@ -1,0 +1,26 @@
+--- packages/frontend/src/components/MkSignin.input.vue	2026-07-02 10:19:31.590760405 +0900
++++ packages/frontend/src/components/MkSignin.input.vue	2026-07-02 09:56:54.989926651 +0900
+@@ -69,21 +69,19 @@
+ const props = withDefaults(defineProps<{
+ 	message?: string,
+ 	openOnRemote?: OpenOnRemoteOptions,
+-	initialUsername?: string;
+ }>(), {
+ 	message: '',
+ 	openOnRemote: undefined,
+-	initialUsername: undefined,
+ });
+ 
+ const emit = defineEmits<{
+ 	(ev: 'usernameSubmitted', v: string): void;
+-	(ev: 'passkeyClick', v: PointerEvent): void;
++	(ev: 'passkeyClick', v: MouseEvent): void;
+ }>();
+ 
+ const host = toUnicode(configHost);
+ 
+-const username = ref(props.initialUsername ?? '');
++const username = ref('');
+ 
+ //#region Open on remote
+ function openRemote(options: OpenOnRemoteOptions, targetHost?: string): void {

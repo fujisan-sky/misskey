@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/page/page.note.vue	2026-07-02 10:19:31.595760387 +0900
++++ packages/frontend/src/components/page/page.note.vue	2026-07-02 09:56:54.996926637 +0900
+@@ -18,7 +18,7 @@
+ import { misskeyApi } from '@/utility/misskey-api.js';
+ 
+ const props = defineProps<{
+-	block: Extract<Misskey.entities.PageBlock, { type: 'note' }>,
++	block: Misskey.entities.PageBlock,
+ 	page: Misskey.entities.Page,
+ }>();
+ 

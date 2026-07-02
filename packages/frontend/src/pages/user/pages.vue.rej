@@ -1,0 +1,36 @@
+--- packages/frontend/src/pages/user/pages.vue	2026-07-02 10:19:31.605760352 +0900
++++ packages/frontend/src/pages/user/pages.vue	2026-07-02 09:56:55.012926606 +0900
+@@ -5,27 +5,27 @@
+ 
+ <template>
+ <div class="_spacer" style="--MI_SPACER-w: 700px;">
+-	<MkPagination v-slot="{items}" :paginator="paginator" withControl>
++	<MkPagination v-slot="{items}" ref="list" :pagination="pagination">
+ 		<MkPagePreview v-for="page in items" :key="page.id" :page="page" class="_margin"/>
+ 	</MkPagination>
+ </div>
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, markRaw } from 'vue';
++import { computed } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import MkPagePreview from '@/components/MkPagePreview.vue';
+ import MkPagination from '@/components/MkPagination.vue';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+ const props = defineProps<{
+ 	user: Misskey.entities.User;
+ }>();
+ 
+-const paginator = markRaw(new Paginator('users/pages', {
++const pagination = {
++	endpoint: 'users/pages' as const,
+ 	limit: 20,
+-	computedParams: computed(() => ({
++	params: computed(() => ({
+ 		userId: props.user.id,
+ 	})),
+-}));
++};
+ </script>

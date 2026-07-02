@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkSystemWebhookEditor.impl.ts	2026-07-02 10:19:31.591760401 +0900
++++ packages/frontend/src/components/MkSystemWebhookEditor.impl.ts	2026-07-02 09:56:54.990926649 +0900
+@@ -25,7 +25,7 @@
+ };
+ 
+ export async function showSystemWebhookEditorDialog(props: MkSystemWebhookEditorProps): Promise<MkSystemWebhookResult | null> {
+-	const { result } = await new Promise<{ result: MkSystemWebhookResult | null }>(resolve => {
++	const { result } = await new Promise<{ result: MkSystemWebhookResult | null }>(async resolve => {
+ 		const { dispose } = os.popup(
+ 			defineAsyncComponent(() => import('@/components/MkSystemWebhookEditor.vue')),
+ 			props,

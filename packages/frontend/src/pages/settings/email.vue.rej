@@ -1,0 +1,19 @@
+--- packages/frontend/src/pages/settings/email.vue	2026-07-02 10:19:31.603760359 +0900
++++ packages/frontend/src/pages/settings/email.vue	2026-07-02 09:56:55.008926613 +0900
+@@ -74,13 +74,13 @@
+ 
+ const $i = ensureSignin();
+ 
+-const emailAddress = ref($i.email ?? '');
++const emailAddress = ref($i.email);
+ 
+-function onChangeReceiveAnnouncementEmail(v: boolean) {
++const onChangeReceiveAnnouncementEmail = (v) => {
+ 	misskeyApi('i/update', {
+ 		receiveAnnouncementEmail: v,
+ 	});
+-}
++};
+ 
+ async function saveEmailAddress() {
+ 	const auth = await os.authenticateDialog();

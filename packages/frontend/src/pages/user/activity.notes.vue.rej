@@ -1,0 +1,47 @@
+--- packages/frontend/src/pages/user/activity.notes.vue	2026-07-02 10:19:31.605760352 +0900
++++ packages/frontend/src/pages/user/activity.notes.vue	2026-07-02 09:56:55.011926608 +0900
+@@ -36,15 +36,13 @@
+ const chartEl = useTemplateRef('chartEl');
+ const legendEl = useTemplateRef('legendEl');
+ const now = new Date();
+-let chartInstance: Chart | null = null;
++let chartInstance: Chart = null;
+ const chartLimit = 50;
+ const fetching = ref(true);
+ 
+ const { handler: externalTooltipHandler } = useChartTooltip();
+ 
+ async function renderChart() {
+-	if (chartEl.value == null) return;
+-
+ 	if (chartInstance) {
+ 		chartInstance.destroy();
+ 	}
+@@ -57,7 +55,7 @@
+ 		return new Date(y, m, d - ago);
+ 	};
+ 
+-	const format = (arr: number[]) => {
++	const format = (arr) => {
+ 		return arr.map((v, i) => ({
+ 			x: getDate(i).getTime(),
+ 			y: v,
+@@ -116,6 +114,7 @@
+ 					offset: true,
+ 					stacked: true,
+ 					time: {
++						stepSize: 1,
+ 						unit: 'day',
+ 						displayFormats: {
+ 							day: 'M/d',
+@@ -160,9 +159,7 @@
+ 					},
+ 					external: externalTooltipHandler,
+ 				},
+-				...({ // TSを黙らすため
+-					gradient,
+-				}),
++				gradient,
+ 			},
+ 		},
+ 		plugins: [chartVLine(vLineColor), chartLegend(legendEl.value)],

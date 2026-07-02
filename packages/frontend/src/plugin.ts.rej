@@ -1,0 +1,311 @@
+--- packages/frontend/src/plugin.ts	2026-07-02 10:19:31.606760348 +0900
++++ packages/frontend/src/plugin.ts	2026-07-02 09:56:55.012926606 +0900
+@@ -3,13 +3,12 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { ref } from 'vue';
++import { ref, defineAsyncComponent } from 'vue';
++import { Interpreter, Parser, utils, values } from '@syuilo/aiscript';
+ import { compareVersions } from 'compare-versions';
+-import { isSafeMode } from '@@/js/config.js';
++import { v4 as uuid } from 'uuid';
+ import * as Misskey from 'misskey-js';
+-import type { Parser, Interpreter, values, utils as utils_TypeReferenceOnly } from '@syuilo/aiscript';
+-import type { FormWithDefault } from '@/utility/form.js';
+-import { genId } from '@/utility/id.js';
++import { aiScriptReadline, createAiScriptEnv } from '@/aiscript/api.js';
+ import { store } from '@/store.js';
+ import * as os from '@/os.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+@@ -20,13 +19,13 @@
+ 	installId: string;
+ 	name: string;
+ 	active: boolean;
+-	config?: FormWithDefault;
++	config?: Record<string, { default: any }>;
+ 	configData: Record<string, any>;
+ 	src: string | null;
+ 	version: string;
+ 	author?: string;
+ 	description?: string;
+-	permissions?: (typeof Misskey.permissions)[number][];
++	permissions?: string[];
+ };
+ 
+ export type AiScriptPluginMeta = {
+@@ -34,22 +33,16 @@
+ 	version: string;
+ 	author: string;
+ 	description?: string;
+-	permissions?: (typeof Misskey.permissions)[number][];
++	permissions?: string[];
+ 	config?: Record<string, any>;
+ };
+ 
+-let _parser: Parser | null = null;
+-
+-async function getParser(): Promise<Parser> {
+-	const { Parser } = await import('@syuilo/aiscript');
+-	_parser ??= new Parser();
+-	return _parser;
+-}
++const parser = new Parser();
+ 
+ export function isSupportedAiScriptVersion(version: string): boolean {
+ 	try {
+ 		return (compareVersions(version, '0.12.0') >= 0);
+-	} catch (_) {
++	} catch (err) {
+ 		return false;
+ 	}
+ }
+@@ -59,8 +52,6 @@
+ 		throw new Error('code is required');
+ 	}
+ 
+-	const { Interpreter, utils } = await import('@syuilo/aiscript');
+-
+ 	const lv = utils.getLangVersion(code);
+ 	if (lv == null) {
+ 		throw new Error('No language version annotation found');
+@@ -70,9 +61,8 @@
+ 
+ 	let ast;
+ 	try {
+-		const parser = await getParser();
+ 		ast = parser.parse(code);
+-	} catch (_) {
++	} catch (err) {
+ 		throw new Error('Aiscript syntax error');
+ 	}
+ 
+@@ -82,23 +72,22 @@
+ 	}
+ 
+ 	const metadata = meta.get(null);
+-	if (metadata == null || typeof metadata !== 'object' || Array.isArray(metadata)) {
+-		throw new Error('Metadata not found or invalid');
++	if (metadata == null) {
++		throw new Error('Metadata not found');
+ 	}
+ 
+ 	const { name, version, author, description, permissions, config } = metadata;
+-
+ 	if (name == null || version == null || author == null) {
+ 		throw new Error('Required property not found');
+ 	}
+ 
+ 	return {
+-		name: name as string,
+-		version: version as string,
+-		author: author as string,
+-		description: description as string | undefined,
+-		permissions: permissions as (typeof Misskey.permissions)[number][] | undefined,
+-		config: config as Record<string, any> | undefined,
++		name,
++		version,
++		author,
++		description,
++		permissions,
++		config,
+ 	};
+ }
+ 
+@@ -106,13 +95,12 @@
+ 	if (plugin.permissions == null || plugin.permissions.length === 0) return;
+ 	if (Object.hasOwn(store.s.pluginTokens, plugin.installId)) return;
+ 
+-	const token = await new Promise<string>((res, rej) => {
+-		let dispose: () => void;
+-		os.popupAsyncWithDialog(import('@/components/MkTokenGenerateWindow.vue').then(x => x.default), {
++	const token = await new Promise<string>(async (res, rej) => {
++		const { dispose } = await os.popupAsyncWithDialog(import('@/components/MkTokenGenerateWindow.vue').then(x => x.default), {
+ 			title: i18n.ts.tokenRequested,
+ 			information: i18n.ts.pluginTokenRequestedDescription,
+ 			initialName: plugin.name,
+-			initialPermissions: plugin.permissions as typeof Misskey.permissions[number][],
++			initialPermissions: plugin.permissions,
+ 		}, {
+ 			done: async result => {
+ 				const { name, permissions } = result;
+@@ -124,7 +112,7 @@
+ 				res(token);
+ 			},
+ 			closed: () => dispose(),
+-		}).then(d => dispose = d.dispose, err => rej(err));
++		});
+ 	});
+ 
+ 	store.set('pluginTokens', {
+@@ -147,11 +135,10 @@
+ 		throw new Error('Plugin already installed');
+ 	}
+ 
+-	const installId = genId();
++	const installId = uuid();
+ 
+ 	const plugin = {
+ 		...realMeta,
+-		config: realMeta.config ?? {},
+ 		installId,
+ 		active: true,
+ 		configData: {},
+@@ -168,13 +155,6 @@
+ export async function uninstallPlugin(plugin: Plugin) {
+ 	abortPlugin(plugin);
+ 	prefer.commit('plugins', prefer.s.plugins.filter(x => x.installId !== plugin.installId));
+-
+-	Object.keys(window.localStorage).forEach(key => {
+-		if (key.startsWith('aiscript:plugins:' + plugin.installId)) {
+-			window.localStorage.removeItem(key);
+-		}
+-	});
+-
+ 	if (Object.hasOwn(store.s.pluginTokens, plugin.installId)) {
+ 		await os.apiWithDialog('i/revoke-token', {
+ 			token: store.s.pluginTokens[plugin.installId],
+@@ -208,13 +188,13 @@
+ 		handler: (note: Misskey.entities.Note) => void;
+ 	};
+ 	note_view_interruptor: {
+-		handler: (note: Misskey.entities.Note) => Misskey.entities.Note | null;
++		handler: (note: Misskey.entities.Note) => unknown;
+ 	};
+ 	note_post_interruptor: {
+ 		handler: (note: FIXME) => unknown;
+ 	};
+ 	page_view_interruptor: {
+-		handler: (page: Misskey.entities.Page) => Misskey.entities.Page;
++		handler: (page: Misskey.entities.Page) => unknown;
+ 	};
+ };
+ 
+@@ -236,17 +216,14 @@
+ }
+ 
+ export function launchPlugins() {
+-	return Promise.all(prefer.s.plugins.map(plugin => {
++	for (const plugin of prefer.s.plugins) {
+ 		if (plugin.active) {
+-			return launchPlugin(plugin.installId);
+-		} else {
+-			return Promise.resolve();
++			launchPlugin(plugin.installId);
+ 		}
+-	}));
++	}
+ }
+ 
+ async function launchPlugin(id: Plugin['installId']): Promise<void> {
+-	if (isSafeMode) return;
+ 	const plugin = prefer.s.plugins.find(x => x.installId === id);
+ 	if (!plugin) return;
+ 
+@@ -256,7 +233,7 @@
+ 	pluginLogs.value.set(plugin.installId, []);
+ 
+ 	function systemLog(message: string, isError = false): void {
+-		pluginLogs.value.get(plugin!.installId)?.push({
++		pluginLogs.value.get(plugin.installId)?.push({
+ 			at: Date.now(),
+ 			isSystem: true,
+ 			message,
+@@ -268,10 +245,7 @@
+ 
+ 	await authorizePlugin(plugin);
+ 
+-	const { Interpreter, utils } = await import('@syuilo/aiscript');
+-	const { aiScriptReadline } = await import('@/aiscript/api.js');
+-
+-	const aiscript = new Interpreter(await createPluginEnv({
++	const aiscript = new Interpreter(createPluginEnv({
+ 		plugin: plugin,
+ 		storageKey: 'plugins:' + plugin.installId,
+ 	}), {
+@@ -296,8 +270,7 @@
+ 
+ 	pluginContexts.set(plugin.installId, aiscript);
+ 
+-	const parser = await getParser();
+-	await aiscript.exec(parser.parse(plugin.src)).then(
++	aiscript.exec(parser.parse(plugin.src)).then(
+ 		() => {
+ 			console.info('Plugin installed:', plugin.name, 'v' + plugin.version);
+ 			systemLog('Plugin started');
+@@ -353,14 +326,9 @@
+ 	}
+ }
+ 
+-async function createPluginEnv(opts: { plugin: Plugin; storageKey: string }): Promise<Record<string, values.Value>> {
++function createPluginEnv(opts: { plugin: Plugin; storageKey: string }): Record<string, values.Value> {
+ 	const id = opts.plugin.installId;
+ 
+-	const ais = await import('@syuilo/aiscript');
+-	const values = ais.values;
+-	const utils: typeof utils_TypeReferenceOnly = ais.utils;
+-	const { createAiScriptEnv } = await import('@/aiscript/api.js');
+-
+ 	const config = new Map<string, values.Value>();
+ 	for (const [k, v] of Object.entries(opts.plugin.config ?? {})) {
+ 		config.set(k, utils.jsToVal(typeof opts.plugin.configData[k] !== 'undefined' ? opts.plugin.configData[k] : v.default));
+@@ -380,7 +348,7 @@
+ 			utils.assertFunction(handler);
+ 			addPluginHandler(id, 'post_form_action', {
+ 				title: title.value,
+-				handler: (form, update) => withContext(ctx => {
++				handler: withContext(ctx => (form, update) => {
+ 					ctx.execFn(handler, [utils.jsToVal(form), values.FN_NATIVE(([key, value]) => {
+ 						if (!key || !value) {
+ 							return;
+@@ -396,7 +364,7 @@
+ 			utils.assertFunction(handler);
+ 			addPluginHandler(id, 'user_action', {
+ 				title: title.value,
+-				handler: (user) => withContext(ctx => {
++				handler: withContext(ctx => (user) => {
+ 					ctx.execFn(handler, [utils.jsToVal(user)]);
+ 				}),
+ 			});
+@@ -407,7 +375,7 @@
+ 			utils.assertFunction(handler);
+ 			addPluginHandler(id, 'note_action', {
+ 				title: title.value,
+-				handler: (note) => withContext(ctx => {
++				handler: withContext(ctx => (note) => {
+ 					ctx.execFn(handler, [utils.jsToVal(note)]);
+ 				}),
+ 			});
+@@ -416,8 +384,8 @@
+ 		'Plugin:register:note_view_interruptor': values.FN_NATIVE(([handler]) => {
+ 			utils.assertFunction(handler);
+ 			addPluginHandler(id, 'note_view_interruptor', {
+-				handler: (note) => withContext(ctx => {
+-					return utils.valToJs(ctx.execFnSync(handler, [utils.jsToVal(note)])) as Misskey.entities.Note | null;
++				handler: withContext(ctx => async (note) => {
++					return utils.valToJs(await ctx.execFn(handler, [utils.jsToVal(note)]));
+ 				}),
+ 			});
+ 		}),
+@@ -425,8 +393,8 @@
+ 		'Plugin:register:note_post_interruptor': values.FN_NATIVE(([handler]) => {
+ 			utils.assertFunction(handler);
+ 			addPluginHandler(id, 'note_post_interruptor', {
+-				handler: (note) => withContext(ctx => {
+-					return utils.valToJs(ctx.execFnSync(handler, [utils.jsToVal(note)]));
++				handler: withContext(ctx => async (note) => {
++					return utils.valToJs(await ctx.execFn(handler, [utils.jsToVal(note)]));
+ 				}),
+ 			});
+ 		}),
+@@ -434,8 +402,8 @@
+ 		'Plugin:register:page_view_interruptor': values.FN_NATIVE(([handler]) => {
+ 			utils.assertFunction(handler);
+ 			addPluginHandler(id, 'page_view_interruptor', {
+-				handler: (page) => withContext(ctx => {
+-					return utils.valToJs(ctx.execFnSync(handler, [utils.jsToVal(page)])) as Misskey.entities.Page;
++				handler: withContext(ctx => async (page) => {
++					return utils.valToJs(await ctx.execFn(handler, [utils.jsToVal(page)]));
+ 				}),
+ 			});
+ 		}),

@@ -1,0 +1,13 @@
+--- packages/backend/src/models/json-schema/ad.ts	2026-07-02 10:19:31.541760578 +0900
++++ packages/backend/src/models/json-schema/ad.ts	2026-07-02 09:56:54.907926814 +0900
+@@ -60,10 +60,5 @@
+ 			optional: false,
+ 			nullable: false,
+ 		},
+-		isSensitive: {
+-			type: 'boolean',
+-			optional: false,
+-			nullable: false,
+-		},
+ 	},
+ } as const;

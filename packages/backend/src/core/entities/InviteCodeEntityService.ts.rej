@@ -1,0 +1,25 @@
+--- packages/backend/src/core/entities/InviteCodeEntityService.ts	2026-07-02 10:19:31.535760599 +0900
++++ packages/backend/src/core/entities/InviteCodeEntityService.ts	2026-07-02 09:56:54.900926828 +0900
+@@ -38,10 +38,7 @@
+ 			where: {
+ 				id: src,
+ 			},
+-			relations: {
+-				createdBy: true,
+-				usedBy: true,
+-			},
++			relations: ['createdBy', 'usedBy'],
+ 		});
+ 
+ 		return await awaitAll({
+@@ -49,8 +46,8 @@
+ 			code: target.code,
+ 			expiresAt: target.expiresAt ? target.expiresAt.toISOString() : null,
+ 			createdAt: this.idService.parse(target.id).date.toISOString(),
+-			createdBy: target.createdBy ? hints?.packedCreatedBy ?? (await this.userEntityService.pack(target.createdBy, me)) : null,
+-			usedBy: target.usedBy ? hints?.packedUsedBy ?? (await this.userEntityService.pack(target.usedBy, me)) : null,
++			createdBy: target.createdBy ? hints?.packedCreatedBy ?? await this.userEntityService.pack(target.createdBy, me) : null,
++			usedBy: target.usedBy ? hints?.packedUsedBy ?? await this.userEntityService.pack(target.usedBy, me) : null,
+ 			usedAt: target.usedAt ? target.usedAt.toISOString() : null,
+ 			used: !!target.usedAt,
+ 		});

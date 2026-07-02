@@ -1,0 +1,37 @@
+--- packages/frontend/src/pages/admin/overview.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/admin/overview.vue	2026-07-02 09:56:55.001926627 +0900
+@@ -84,7 +84,6 @@
+ import { i18n } from '@/i18n.js';
+ import { definePage } from '@/page.js';
+ import MkFoldableSection from '@/components/MkFoldableSection.vue';
+-import { genId } from '@/utility/id.js';
+ 
+ const rootEl = useTemplateRef('rootEl');
+ const serverInfo = ref<Misskey.entities.ServerInfoResponse | null>(null);
+@@ -95,7 +94,7 @@
+ const federationSubActive = ref<number | null>(null);
+ const federationSubActiveDiff = ref<number | null>(null);
+ const newUsers = ref<Misskey.entities.UserDetailed[] | null>(null);
+-const activeInstances = shallowRef<Misskey.entities.FederationInstancesResponse | null>(null);
++const activeInstances = shallowRef<Misskey.entities.FederationInstance | null>(null);
+ const queueStatsConnection = markRaw(useStream().useChannel('queueStats'));
+ const now = new Date();
+ const filesPagination = {
+@@ -104,7 +103,7 @@
+ 	noPaging: true,
+ };
+ 
+-function onInstanceClick(i: Misskey.entities.FederationInstance) {
++function onInstanceClick(i) {
+ 	os.pageWindow(`/instance-info/${i.host}`);
+ }
+ 
+@@ -171,7 +170,7 @@
+ 
+ 	nextTick(() => {
+ 		queueStatsConnection.send('requestLog', {
+-			id: genId(),
++			id: Math.random().toString().substring(2, 10),
+ 			length: 100,
+ 		});
+ 	});

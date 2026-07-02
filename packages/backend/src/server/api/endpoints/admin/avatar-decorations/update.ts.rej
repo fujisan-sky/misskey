@@ -1,0 +1,29 @@
+--- packages/backend/src/server/api/endpoints/admin/avatar-decorations/update.ts	2026-07-02 10:21:18.563380732 +0900
++++ packages/backend/src/server/api/endpoints/admin/avatar-decorations/update.ts	2026-07-02 09:56:54.913926802 +0900
+@@ -30,7 +30,6 @@
+ 		roleIdsThatCanBeUsedThisDecoration: { type: 'array', items: {
+ 			type: 'string',
+ 		} },
+-		category: { type: 'string', nullable: true },
+ 	},
+ 	required: ['id'],
+ } as const;
+@@ -40,6 +39,7 @@
+ 	constructor(
+ 		private avatarDecorationService: AvatarDecorationService,
+ 	) {
++
+ 		super(meta, paramDef, async (ps, me) => {
+ 
+ 			const decoration = await  this.avatarDecorationService.getAvatarDecorationById(ps.id);
+@@ -68,10 +68,8 @@
+ 					description: new_description,
+ 					url: ps.url,
+ 					roleIdsThatCanBeUsedThisDecoration: ps.roleIdsThatCanBeUsedThisDecoration,
+-					category: ps.category,
+ 				}, me);
+ 			}
+-
+ 		});
+ 	}
+ }

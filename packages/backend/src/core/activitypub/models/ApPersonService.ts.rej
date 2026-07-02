@@ -1,0 +1,56 @@
+--- packages/backend/src/core/activitypub/models/ApPersonService.ts	2026-07-02 10:19:31.532760610 +0900
++++ packages/backend/src/core/activitypub/models/ApPersonService.ts	2026-07-02 09:56:54.897926834 +0900
+@@ -310,7 +310,7 @@
+ 		}
+ 
+ 		// eslint-disable-next-line no-param-reassign
+-		if (resolver == null) resolver = await this.apResolverService.createResolver();
++		if (resolver == null) resolver = this.apResolverService.createResolver();
+ 
+ 		const object = await resolver.resolve(uri);
+ 		if (object.id == null) throw new Error('invalid object.id: ' + object.id);
+@@ -376,7 +376,7 @@
+ 					isLocked: person.manuallyApprovesFollowers,
+ 					movedToUri: person.movedTo,
+ 					movedAt: person.movedTo ? new Date() : null,
+-					alsoKnownAs: toArray(person.alsoKnownAs),
++					alsoKnownAs: person.alsoKnownAs,
+ 					isExplorable: person.discoverable,
+ 					username: person.preferredUsername,
+ 					usernameLower: person.preferredUsername?.toLowerCase(),
+@@ -500,7 +500,7 @@
+ 		//#endregion
+ 
+ 		// eslint-disable-next-line no-param-reassign
+-		if (resolver == null) resolver = await this.apResolverService.createResolver();
++		if (resolver == null) resolver = this.apResolverService.createResolver();
+ 
+ 		const object = hint ?? await resolver.resolve(uri);
+ 
+@@ -568,7 +568,7 @@
+ 			isCat: (person as any).isCat === true,
+ 			isLocked: person.manuallyApprovesFollowers,
+ 			movedToUri: person.movedTo ?? null,
+-			alsoKnownAs: person.alsoKnownAs ? toArray(person.alsoKnownAs) : null,
++			alsoKnownAs: person.alsoKnownAs ?? null,
+ 			isExplorable: person.discoverable,
+ 			...(await this.resolveAvatarAndBanner(exist, person.icon, person.image).catch(() => ({}))),
+ 		} as Partial<MiRemoteUser> & Pick<MiRemoteUser, 'isBot' | 'isCat' | 'isLocked' | 'movedToUri' | 'alsoKnownAs' | 'isExplorable'>;
+@@ -678,7 +678,7 @@
+ 
+ 		// リモートサーバーからフェッチしてきて登録
+ 		// eslint-disable-next-line no-param-reassign
+-		if (resolver == null) resolver = await this.apResolverService.createResolver();
++		if (resolver == null) resolver = this.apResolverService.createResolver();
+ 		return await this.createPerson(uri, resolver);
+ 	}
+ 
+@@ -707,7 +707,7 @@
+ 
+ 		this.logger.info(`Updating the featured: ${user.uri}`);
+ 
+-		const _resolver = resolver ?? await this.apResolverService.createResolver();
++		const _resolver = resolver ?? this.apResolverService.createResolver();
+ 
+ 		// Resolve to (Ordered)Collection Object
+ 		const collection = await _resolver.resolveCollection(user.featured);

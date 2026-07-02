@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/global/MkError.stories.impl.ts	2026-07-02 10:19:31.593760394 +0900
++++ packages/frontend/src/components/global/MkError.stories.impl.ts	2026-07-02 09:56:54.993926643 +0900
+@@ -4,7 +4,7 @@
+  */
+ 
+ /* eslint-disable @typescript-eslint/explicit-function-return-type */
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import { expect, waitFor } from '@storybook/test';
+ import type { StoryObj } from '@storybook/vue3';
+ import MkError from './MkError.vue';

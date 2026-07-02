@@ -1,0 +1,145 @@
+--- packages/frontend/src/pages/admin/roles.role.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/admin/roles.role.vue	2026-07-02 09:56:55.002926625 +0900
+@@ -23,20 +23,20 @@
+ 				<div class="_gaps">
+ 					<MkButton primary rounded @click="assign"><i class="ti ti-plus"></i> {{ i18n.ts.assign }}</MkButton>
+ 
+-					<MkPagination :paginator="usersPaginator">
++					<MkPagination :pagination="usersPagination">
+ 						<template #empty><MkResult type="empty" :text="i18n.ts.noUsers"/></template>
+ 
+ 						<template #default="{ items }">
+ 							<div class="_gaps_s">
+-								<div v-for="item in items" :key="item.user.id" :class="[$style.userItem, { [$style.userItemOpened]: expandedItemIds.includes(item.id) }]">
++								<div v-for="item in items" :key="item.user.id" :class="[$style.userItem, { [$style.userItemOpend]: expandedItems.includes(item.id) }]">
+ 									<div :class="$style.userItemMain">
+ 										<MkA :class="$style.userItemMainBody" :to="`/admin/user/${item.user.id}`">
+ 											<MkUserCardMini :user="item.user"/>
+ 										</MkA>
+-										<button class="_button" :class="$style.userToggle" @click="toggleItem(item.id)"><i :class="$style.chevron" class="ti ti-chevron-down"></i></button>
+-										<button class="_button" :class="$style.unassign" @click="unassign(item.user.id, $event)"><i class="ti ti-x"></i></button>
++										<button class="_button" :class="$style.userToggle" @click="toggleItem(item)"><i :class="$style.chevron" class="ti ti-chevron-down"></i></button>
++										<button class="_button" :class="$style.unassign" @click="unassign(item.user, $event)"><i class="ti ti-x"></i></button>
+ 									</div>
+-									<div v-if="expandedItemIds.includes(item.id)" :class="$style.userItemSub">
++									<div v-if="expandedItems.includes(item.id)" :class="$style.userItemSub">
+ 										<div>Assigned: <MkTime :time="item.createdAt" mode="detail"/></div>
+ 										<div v-if="item.expiresAt">Period: {{ new Date(item.expiresAt).toLocaleString() }}</div>
+ 										<div v-else>Period: {{ i18n.ts.indefinitely }}</div>
+@@ -54,8 +54,7 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, markRaw, reactive, ref } from 'vue';
+-import * as Misskey from 'misskey-js';
++import { computed, reactive, ref } from 'vue';
+ import XEditor from './roles.editor.vue';
+ import MkFolder from '@/components/MkFolder.vue';
+ import * as os from '@/os.js';
+@@ -67,33 +66,29 @@
+ import MkInfo from '@/components/MkInfo.vue';
+ import MkPagination from '@/components/MkPagination.vue';
+ import { useRouter } from '@/router.js';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+ const router = useRouter();
+ 
+ const props = defineProps<{
+-	id: string;
++	id?: string;
+ }>();
+ 
+-const usersPaginator = markRaw(new Paginator('admin/roles/users', {
++const usersPagination = {
++	endpoint: 'admin/roles/users' as const,
+ 	limit: 20,
+-	computedParams: computed(() => props.id ? ({
++	params: computed(() => ({
+ 		roleId: props.id,
+-	}) : undefined),
+-}));
++	})),
++};
+ 
+-const expandedItemIds = ref<Misskey.entities.AdminRolesUsersResponse[number]['id'][]>([]);
++const expandedItems = ref([]);
+ 
+ const role = reactive(await misskeyApi('admin/roles/show', {
+ 	roleId: props.id,
+ }));
+ 
+ function edit() {
+-	router.push('/admin/roles/:id/edit', {
+-		params: {
+-			id: role.id,
+-		},
+-	});
++	router.push('/admin/roles/' + role.id + '/edit');
+ }
+ 
+ async function del() {
+@@ -116,15 +111,15 @@
+ 	const { canceled: canceled2, result: period } = await os.select({
+ 		title: i18n.ts.period + ': ' + role.name,
+ 		items: [{
+-			value: 'indefinitely', label: i18n.ts.indefinitely,
++			value: 'indefinitely', text: i18n.ts.indefinitely,
+ 		}, {
+-			value: 'oneHour', label: i18n.ts.oneHour,
++			value: 'oneHour', text: i18n.ts.oneHour,
+ 		}, {
+-			value: 'oneDay', label: i18n.ts.oneDay,
++			value: 'oneDay', text: i18n.ts.oneDay,
+ 		}, {
+-			value: 'oneWeek', label: i18n.ts.oneWeek,
++			value: 'oneWeek', text: i18n.ts.oneWeek,
+ 		}, {
+-			value: 'oneMonth', label: i18n.ts.oneMonth,
++			value: 'oneMonth', text: i18n.ts.oneMonth,
+ 		}],
+ 		default: 'indefinitely',
+ 	});
+@@ -139,27 +134,25 @@
+ 
+ 	await os.apiWithDialog('admin/roles/assign', { roleId: role.id, userId: user.id, expiresAt });
+ 	//role.users.push(user);
+-	usersPaginator.reload();
+ }
+ 
+-async function unassign(userId: Misskey.entities.User['id'], ev: PointerEvent) {
++async function unassign(user, ev) {
+ 	os.popupMenu([{
+ 		text: i18n.ts.unassign,
+ 		icon: 'ti ti-x',
+ 		danger: true,
+ 		action: async () => {
+-			await os.apiWithDialog('admin/roles/unassign', { roleId: role.id, userId: userId });
+-			//role.users = role.users.filter(u => u.id !== userId);
+-			usersPaginator.reload();
++			await os.apiWithDialog('admin/roles/unassign', { roleId: role.id, userId: user.id });
++			//role.users = role.users.filter(u => u.id !== user.id);
+ 		},
+ 	}], ev.currentTarget ?? ev.target);
+ }
+ 
+-async function toggleItem(itemId: string) {
+-	if (expandedItemIds.value.includes(itemId)) {
+-		expandedItemIds.value = expandedItemIds.value.filter(x => x !== itemId);
++async function toggleItem(item) {
++	if (expandedItems.value.includes(item.id)) {
++		expandedItems.value = expandedItems.value.filter(x => x !== item.id);
+ 	} else {
+-		expandedItemIds.value.push(itemId);
++		expandedItems.value.push(item.id);
+ 	}
+ }
+ 
+@@ -206,7 +199,7 @@
+ 	transition: transform 0.1s ease-out;
+ }
+ 
+-.userItem.userItemOpened {
++.userItem.userItemOpend {
+ 	.chevron {
+ 		transform: rotateX(180deg);
+ 	}

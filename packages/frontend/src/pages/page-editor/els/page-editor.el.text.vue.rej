@@ -1,0 +1,33 @@
+--- packages/frontend/src/pages/page-editor/els/page-editor.el.text.vue	2026-07-02 10:19:31.602760362 +0900
++++ packages/frontend/src/pages/page-editor/els/page-editor.el.text.vue	2026-07-02 09:56:55.006926617 +0900
+@@ -5,7 +5,7 @@
+ 
+ <template>
+ <!-- eslint-disable vue/no-mutating-props -->
+-<XContainer :draggable="true" :dragStartCallback="dragStartCallback" @remove="() => emit('remove')">
++<XContainer :draggable="true" @remove="() => emit('remove')">
+ 	<template #header><i class="ti ti-align-left"></i> {{ i18n.ts._pages.blocks.text }}</template>
+ 
+ 	<section>
+@@ -22,13 +22,11 @@
+ import { Autocomplete } from '@/utility/autocomplete.js';
+ 
+ const props = defineProps<{
+-	dragStartCallback?: (ev: DragEvent) => void;
+ 	modelValue: Misskey.entities.PageBlock & { type: 'text' }
+ }>();
+ 
+ const emit = defineEmits<{
+ 	(ev: 'update:modelValue', value: Misskey.entities.PageBlock & { type: 'text' }): void;
+-	(ev: 'remove'): void;
+ }>();
+ 
+ let autocomplete: Autocomplete;
+@@ -44,7 +42,6 @@
+ });
+ 
+ onMounted(() => {
+-	if (inputEl.value == null) return;
+ 	autocomplete = new Autocomplete(inputEl.value, text);
+ });
+ 

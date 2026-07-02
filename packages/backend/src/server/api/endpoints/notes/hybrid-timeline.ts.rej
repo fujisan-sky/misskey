@@ -1,0 +1,83 @@
+--- packages/backend/src/server/api/endpoints/notes/hybrid-timeline.ts	2026-07-02 10:19:31.556760525 +0900
++++ packages/backend/src/server/api/endpoints/notes/hybrid-timeline.ts	2026-07-02 09:56:54.925926778 +0900
+@@ -18,8 +18,6 @@
+ import { UserFollowingService } from '@/core/UserFollowingService.js';
+ import { MiLocalUser } from '@/models/User.js';
+ import { FanoutTimelineEndpointService } from '@/core/FanoutTimelineEndpointService.js';
+-import { ChannelMutingService } from '@/core/ChannelMutingService.js';
+-import { ChannelFollowingService } from '@/core/ChannelFollowingService.js';
+ import { ApiError } from '../../error.js';
+ 
+ export const meta = {
+@@ -48,7 +46,7 @@
+ 		bothWithRepliesAndWithFiles: {
+ 			message: 'Specifying both withReplies and withFiles is not supported',
+ 			code: 'BOTH_WITH_REPLIES_AND_WITH_FILES',
+-			id: 'dfaa3eb7-8002-4cb7-bcc4-1095df46656f',
++			id: 'dfaa3eb7-8002-4cb7-bcc4-1095df46656f'
+ 		},
+ 	},
+ } as const;
+@@ -81,6 +79,9 @@
+ 		@Inject(DI.notesRepository)
+ 		private notesRepository: NotesRepository,
+ 
++		@Inject(DI.channelFollowingsRepository)
++		private channelFollowingsRepository: ChannelFollowingsRepository,
++
+ 		private noteEntityService: NoteEntityService,
+ 		private roleService: RoleService,
+ 		private activeUsersChart: ActiveUsersChart,
+@@ -88,8 +89,6 @@
+ 		private cacheService: CacheService,
+ 		private queryService: QueryService,
+ 		private userFollowingService: UserFollowingService,
+-		private channelMutingService: ChannelMutingService,
+-		private channelFollowingService: ChannelFollowingService,
+ 		private fanoutTimelineEndpointService: FanoutTimelineEndpointService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+@@ -197,13 +196,11 @@
+ 		withReplies: boolean,
+ 	}, me: MiLocalUser) {
+ 		const followees = await this.userFollowingService.getFollowees(me.id);
+-
+-		const mutingChannelIds = await this.channelMutingService
+-			.list({ requestUserId: me.id }, { idOnly: true })
+-			.then(x => x.map(x => x.id));
+-		const followingChannelIds = await this.channelFollowingService
+-			.list({ requestUserId: me.id }, { idOnly: true })
+-			.then(x => x.map(x => x.id).filter(x => !mutingChannelIds.includes(x)));
++		const followingChannels = await this.channelFollowingsRepository.find({
++			where: {
++				followerId: me.id,
++			},
++		});
+ 
+ 		const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId)
+ 			.andWhere(new Brackets(qb => {
+@@ -222,7 +219,9 @@
+ 			.leftJoinAndSelect('reply.user', 'replyUser')
+ 			.leftJoinAndSelect('renote.user', 'renoteUser');
+ 
+-		if (followingChannelIds.length > 0) {
++		if (followingChannels.length > 0) {
++			const followingChannelIds = followingChannels.map(x => x.followeeId);
++
+ 			query.andWhere(new Brackets(qb => {
+ 				qb.where('note.channelId IN (:...followingChannelIds)', { followingChannelIds });
+ 				qb.orWhere('note.channelId IS NULL');
+@@ -231,13 +230,6 @@
+ 			query.andWhere('note.channelId IS NULL');
+ 		}
+ 
+-		if (mutingChannelIds.length > 0) {
+-			query.andWhere(new Brackets(qb => {
+-				qb.orWhere('note.renoteChannelId IS NULL');
+-				qb.orWhere('note.renoteChannelId NOT IN (:...mutingChannelIds)', { mutingChannelIds });
+-			}));
+-		}
+-
+ 		if (!ps.withReplies) {
+ 			query.andWhere(new Brackets(qb => {
+ 				qb

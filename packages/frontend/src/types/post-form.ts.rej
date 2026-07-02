@@ -1,0 +1,22 @@
+--- packages/frontend/src/types/post-form.ts	2026-07-02 10:19:31.606760348 +0900
++++ packages/frontend/src/types/post-form.ts	2026-07-02 09:56:55.013926604 +0900
+@@ -6,16 +6,9 @@
+ import * as Misskey from 'misskey-js';
+ 
+ export interface PostFormProps {
+-	reply?: Misskey.entities.Note | null;
+-	renote?: Misskey.entities.Note | null;
+-	channel?: {
+-		id: string;
+-		name: string;
+-		color: string;
+-		isSensitive: boolean;
+-		allowRenoteToExternal: boolean;
+-		userId: string | null;
+-	} | null;
++	reply?: Misskey.entities.Note;
++	renote?: Misskey.entities.Note;
++	channel?: Misskey.entities.Channel; // TODO
+ 	mention?: Misskey.entities.User;
+ 	specified?: Misskey.entities.UserDetailed;
+ 	initialText?: string;

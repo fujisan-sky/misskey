@@ -1,0 +1,24 @@
+--- packages/frontend/src/components/MkUrlPreviewPopup.vue	2026-07-02 10:19:31.591760401 +0900
++++ packages/frontend/src/components/MkUrlPreviewPopup.vue	2026-07-02 09:56:54.991926647 +0900
+@@ -20,7 +20,7 @@
+ const props = defineProps<{
+ 	showing: boolean;
+ 	url: string;
+-	anchorElement: HTMLElement;
++	source: HTMLElement;
+ }>();
+ 
+ const emit = defineEmits<{
+@@ -32,9 +32,9 @@
+ const left = ref(0);
+ 
+ onMounted(() => {
+-	const rect = props.anchorElement.getBoundingClientRect();
+-	const x = Math.max((rect.left + (props.anchorElement.offsetWidth / 2)) - (300 / 2), 6) + window.scrollX;
+-	const y = rect.top + props.anchorElement.offsetHeight + window.scrollY;
++	const rect = props.source.getBoundingClientRect();
++	const x = Math.max((rect.left + (props.source.offsetWidth / 2)) - (300 / 2), 6) + window.scrollX;
++	const y = rect.top + props.source.offsetHeight + window.scrollY;
+ 
+ 	top.value = y;
+ 	left.value = x;

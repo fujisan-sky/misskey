@@ -1,0 +1,88 @@
+--- packages/frontend/src/widgets/WidgetSlideshow.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetSlideshow.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -9,7 +9,7 @@
+ 		<p v-if="widgetProps.folderId == null">
+ 			{{ i18n.ts.folder }}
+ 		</p>
+-		<p v-if="widgetProps.folderId != null && images.length === 0 && !fetching">{{ i18n.ts.nothing }}</p>
++		<p v-if="widgetProps.folderId != null && images.length === 0 && !fetching">{{ i18n.ts['no-image'] }}</p>
+ 		<div ref="slideA" class="slide a"></div>
+ 		<div ref="slideB" class="slide b"></div>
+ 	</div>
+@@ -22,7 +22,7 @@
+ import { useInterval } from '@@/js/use-interval.js';
+ import { useWidgetPropsManager } from './widget.js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
++import type { GetFormResultType } from '@/utility/form.js';
+ import * as os from '@/os.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+ import { i18n } from '@/i18n.js';
+@@ -32,16 +32,15 @@
+ 
+ const widgetPropsDef = {
+ 	height: {
+-		type: 'number',
+-		label: i18n.ts._widgetOptions.height,
++		type: 'number' as const,
+ 		default: 300,
+ 	},
+ 	folderId: {
+-		type: 'string',
+-		default: null as string | null,
++		type: 'string' as const,
++		default: null,
+ 		hidden: true,
+ 	},
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 
+@@ -60,7 +59,7 @@
+ const slideB = useTemplateRef('slideB');
+ 
+ const change = () => {
+-	if (images.value.length === 0 || slideA.value == null || slideB.value == null) return;
++	if (images.value.length === 0) return;
+ 
+ 	const index = Math.floor(Math.random() * images.value.length);
+ 	const img = `url(${ images.value[index].url })`;
+@@ -74,12 +73,11 @@
+ 
+ 		slideA.value.style.backgroundImage = img;
+ 
+-		slideB.value!.classList.remove('anime');
++		slideB.value.classList.remove('anime');
+ 	}, 1000);
+ };
+ 
+ const fetch = () => {
+-	if (slideA.value == null || slideB.value == null) return;
+ 	fetching.value = true;
+ 
+ 	misskeyApi('drive/files', {
+@@ -89,18 +87,18 @@
+ 	}).then(res => {
+ 		images.value = res;
+ 		fetching.value = false;
+-		slideA.value!.style.backgroundImage = '';
+-		slideB.value!.style.backgroundImage = '';
++		slideA.value.style.backgroundImage = '';
++		slideB.value.style.backgroundImage = '';
+ 		change();
+ 	});
+ };
+ 
+ const choose = () => {
+-	selectDriveFolder(null).then(({ folders, canceled }) => {
+-		if (canceled || folders[0] == null) {
++	selectDriveFolder(null).then(folder => {
++		if (folder[0] == null) {
+ 			return;
+ 		}
+-		widgetProps.folderId = folders[0].id;
++		widgetProps.folderId = folder[0].id;
+ 		save();
+ 		fetch();
+ 	});

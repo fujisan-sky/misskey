@@ -1,0 +1,39 @@
+--- packages/backend/src/models/json-schema/notification.ts	2026-07-02 10:19:31.541760578 +0900
++++ packages/backend/src/models/json-schema/notification.ts	2026-07-02 09:56:54.908926812 +0900
+@@ -214,36 +214,6 @@
+ 			type: {
+ 				type: 'string',
+ 				optional: false, nullable: false,
+-				enum: ['scheduledNotePosted'],
+-			},
+-			note: {
+-				type: 'object',
+-				ref: 'Note',
+-				optional: false, nullable: false,
+-			},
+-		},
+-	}, {
+-		type: 'object',
+-		properties: {
+-			...baseSchema.properties,
+-			type: {
+-				type: 'string',
+-				optional: false, nullable: false,
+-				enum: ['scheduledNotePostFailed'],
+-			},
+-			noteDraft: {
+-				type: 'object',
+-				ref: 'NoteDraft',
+-				optional: false, nullable: false,
+-			},
+-		},
+-	}, {
+-		type: 'object',
+-		properties: {
+-			...baseSchema.properties,
+-			type: {
+-				type: 'string',
+-				optional: false, nullable: false,
+ 				enum: ['follow'],
+ 			},
+ 			user: {

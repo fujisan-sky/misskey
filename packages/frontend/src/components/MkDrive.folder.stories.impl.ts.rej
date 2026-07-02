@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkDrive.folder.stories.impl.ts	2026-07-02 10:19:31.585760422 +0900
++++ packages/frontend/src/components/MkDrive.folder.stories.impl.ts	2026-07-02 09:56:54.982926665 +0900
+@@ -3,7 +3,7 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import type { StoryObj } from '@storybook/vue3';
+ import { http, HttpResponse } from 'msw';
+ import * as Misskey from 'misskey-js';

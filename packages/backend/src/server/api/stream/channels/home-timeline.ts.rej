@@ -1,0 +1,117 @@
+--- packages/backend/src/server/api/stream/channels/home-timeline.ts	2026-07-02 10:19:31.561760507 +0900
++++ packages/backend/src/server/api/stream/channels/home-timeline.ts	2026-07-02 09:56:54.930926768 +0900
+@@ -3,18 +3,15 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { Inject, Injectable, Scope } from '@nestjs/common';
++import { Injectable } from '@nestjs/common';
+ import type { Packed } from '@/misc/json-schema.js';
+ import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
+-import { NoteStreamingHidingService } from '../NoteStreamingHidingService.js';
+ import { bindThis } from '@/decorators.js';
+ import { isRenotePacked, isQuotePacked } from '@/misc/is-renote.js';
+ import type { JsonObject } from '@/misc/json-value.js';
+-import Channel, { type ChannelRequest } from '../channel.js';
+-import { REQUEST } from '@nestjs/core';
++import Channel, { type MiChannelService } from '../channel.js';
+ 
+-@Injectable({ scope: Scope.TRANSIENT })
+-export class HomeTimelineChannel extends Channel {
++class HomeTimelineChannel extends Channel {
+ 	public readonly chName = 'homeTimeline';
+ 	public static shouldShare = false;
+ 	public static requireCredential = true as const;
+@@ -23,13 +20,12 @@
+ 	private withFiles: boolean;
+ 
+ 	constructor(
+-		@Inject(REQUEST)
+-		request: ChannelRequest,
+-
+ 		private noteEntityService: NoteEntityService,
+-		private noteStreamingHidingService: NoteStreamingHidingService,
++
++		id: string,
++		connection: Channel['connection'],
+ 	) {
+-		super(request);
++		super(id, connection);
+ 		//this.onNote = this.onNote.bind(this);
+ 	}
+ 
+@@ -48,16 +44,17 @@
+ 		if (this.withFiles && (note.fileIds == null || note.fileIds.length === 0)) return;
+ 
+ 		if (note.channelId) {
+-			// そのチャンネルをフォローしていない
+-			if (!this.followingChannels.has(note.channelId)) {
+-				return;
+-			}
++			if (!this.followingChannels.has(note.channelId)) return;
+ 		} else {
+ 			// その投稿のユーザーをフォローしていなかったら弾く
+ 			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
+ 		}
+ 
+-		if (!this.isNoteVisibleForMe(note)) return;
++		if (note.visibility === 'followers') {
++			if (!isMe && !Object.hasOwn(this.following, note.userId)) return;
++		} else if (note.visibility === 'specified') {
++			if (!isMe && !note.visibleUserIds!.includes(this.user!.id)) return;
++		}
+ 
+ 		if (note.reply) {
+ 			const reply = note.reply;
+@@ -82,20 +79,15 @@
+ 
+ 		if (this.isNoteMutedOrBlocked(note)) return;
+ 
+-		const filtered = await this.noteStreamingHidingService.filter(note, this.user?.id ?? null);
+-		if (!filtered) return;
+-		// eslint-disable-next-line no-param-reassign -- これ以降元の Note オブジェクトは見てはいけないので、いっそ再代入した方が安全
+-		note = filtered;
+-
+-		if (this.user) {
+-			if (isRenotePacked(note) && !isQuotePacked(note)) {
+-				if (note.renote && Object.keys(note.renote.reactions).length > 0) {
+-					const myRenoteReaction = await this.noteEntityService.populateMyReaction(note.renote, this.user.id);
+-					note.renote.myReaction = myRenoteReaction;
+-				}
++		if (this.user && isRenotePacked(note) && !isQuotePacked(note)) {
++			if (note.renote && Object.keys(note.renote.reactions).length > 0) {
++				const myRenoteReaction = await this.noteEntityService.populateMyReaction(note.renote, this.user.id);
++				note.renote.myReaction = myRenoteReaction;
+ 			}
+ 		}
+ 
++		this.connection.cacheNote(note);
++
+ 		this.send('note', note);
+ 	}
+ 
+@@ -105,3 +97,24 @@
+ 		this.subscriber.off('notesStream', this.onNote);
+ 	}
+ }
++
++@Injectable()
++export class HomeTimelineChannelService implements MiChannelService<true> {
++	public readonly shouldShare = HomeTimelineChannel.shouldShare;
++	public readonly requireCredential = HomeTimelineChannel.requireCredential;
++	public readonly kind = HomeTimelineChannel.kind;
++
++	constructor(
++		private noteEntityService: NoteEntityService,
++	) {
++	}
++
++	@bindThis
++	public create(id: string, connection: Channel['connection']): HomeTimelineChannel {
++		return new HomeTimelineChannel(
++			this.noteEntityService,
++			id,
++			connection,
++		);
++	}
++}

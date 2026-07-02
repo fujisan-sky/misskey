@@ -1,0 +1,38 @@
+--- packages/backend/src/models/ChatMessage.ts	2026-07-02 10:19:31.538760589 +0900
++++ packages/backend/src/models/ChatMessage.ts	2026-07-02 09:56:54.904926820 +0900
+@@ -20,7 +20,7 @@
+ 	})
+ 	public fromUserId: MiUser['id'];
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -32,7 +32,7 @@
+ 	})
+ 	public toUserId: MiUser['id'] | null;
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -44,7 +44,7 @@
+ 	})
+ 	public toRoomId: MiChatRoom['id'] | null;
+ 
+-	@ManyToOne(() => MiChatRoom, {
++	@ManyToOne(type => MiChatRoom, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -72,7 +72,7 @@
+ 	})
+ 	public fileId: MiDriveFile['id'] | null;
+ 
+-	@ManyToOne(() => MiDriveFile, {
++	@ManyToOne(type => MiDriveFile, {
+ 		onDelete: 'SET NULL',
+ 	})
+ 	@JoinColumn()

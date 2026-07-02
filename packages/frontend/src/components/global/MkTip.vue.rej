@@ -1,0 +1,51 @@
+--- packages/frontend/src/components/global/MkTip.vue	2026-07-02 10:19:31.594760390 +0900
++++ packages/frontend/src/components/global/MkTip.vue	2026-07-02 09:56:54.994926641 +0900
+@@ -7,10 +7,7 @@
+ <div v-if="!store.r.tips.value[props.k]" :class="[$style.root, { [$style.warn]: warn }]" class="_selectable _gaps_s">
+ 	<div style="font-weight: bold;"><i class="ti ti-bulb"></i> {{ i18n.ts.tip }}:</div>
+ 	<div><slot></slot></div>
+-	<div>
+-		<MkButton inline primary rounded small @click="_closeTip()"><i class="ti ti-check"></i> {{ i18n.ts.gotIt }}</MkButton>
+-		<button class="_button" style="padding: 8px; margin-left: 4px;" @click="showMenu"><i class="ti ti-dots"></i></button>
+-	</div>
++	<MkButton primary rounded small @click="closeTip()"><i class="ti ti-check"></i> {{ i18n.ts.gotIt }}</MkButton>
+ </div>
+ </template>
+ 
+@@ -18,30 +15,19 @@
+ import { i18n } from '@/i18n.js';
+ import { store } from '@/store.js';
+ import MkButton from '@/components/MkButton.vue';
+-import * as os from '@/os.js';
+-import { TIPS, hideAllTips, closeTip } from '@/tips.js';
+ 
+ const props = withDefaults(defineProps<{
+-	k: typeof TIPS[number];
++	k: keyof (typeof store['s']['tips']);
+ 	warn?: boolean;
+ }>(), {
+ 	warn: false,
+ });
+ 
+-function _closeTip() {
+-	closeTip(props.k);
+-}
+-
+-function showMenu(ev: PointerEvent) {
+-	os.popupMenu([{
+-		icon: 'ti ti-bulb-off',
+-		text: i18n.ts.hideAllTips,
+-		danger: true,
+-		action: () => {
+-			hideAllTips();
+-			os.success();
+-		},
+-	}], ev.currentTarget ?? ev.target);
++function closeTip() {
++	store.set('tips', {
++		...store.r.tips.value,
++		[props.k]: true,
++	});
+ }
+ </script>
+ 

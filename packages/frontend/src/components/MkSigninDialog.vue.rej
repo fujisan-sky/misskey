@@ -1,0 +1,24 @@
+--- packages/frontend/src/components/MkSigninDialog.vue	2026-07-02 10:19:31.590760405 +0900
++++ packages/frontend/src/components/MkSigninDialog.vue	2026-07-02 09:56:54.989926651 +0900
+@@ -16,7 +16,7 @@
+ 			<button :class="$style.closeButton" class="_button" @click="onClose"><i class="ti ti-x"></i></button>
+ 		</div>
+ 		<div :class="$style.content">
+-			<MkSignin :autoSet="autoSet" :message="message" :openOnRemote="openOnRemote" :initialUsername="initialUsername" @login="onLogin"/>
++			<MkSignin :autoSet="autoSet" :message="message" :openOnRemote="openOnRemote" @login="onLogin"/>
+ 		</div>
+ 	</div>
+ </MkModal>
+@@ -34,12 +34,10 @@
+ 	autoSet?: boolean;
+ 	message?: string,
+ 	openOnRemote?: OpenOnRemoteOptions,
+-	initialUsername?: string;
+ }>(), {
+ 	autoSet: false,
+ 	message: '',
+ 	openOnRemote: undefined,
+-	initialUsername: undefined,
+ });
+ 
+ const emit = defineEmits<{

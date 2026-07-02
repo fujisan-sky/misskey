@@ -1,0 +1,20 @@
+--- packages/backend/src/server/api/endpoints/users/gallery/posts.ts	2026-07-02 10:19:31.559760514 +0900
++++ packages/backend/src/server/api/endpoints/users/gallery/posts.ts	2026-07-02 09:56:54.928926772 +0900
+@@ -33,8 +33,6 @@
+ 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+ 		sinceId: { type: 'string', format: 'misskey:id' },
+ 		untilId: { type: 'string', format: 'misskey:id' },
+-		sinceDate: { type: 'integer' },
+-		untilDate: { type: 'integer' },
+ 	},
+ 	required: ['userId'],
+ } as const;
+@@ -49,7 +47,7 @@
+ 		private queryService: QueryService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+-			const query = this.queryService.makePaginationQuery(this.galleryPostsRepository.createQueryBuilder('post'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
++			const query = this.queryService.makePaginationQuery(this.galleryPostsRepository.createQueryBuilder('post'), ps.sinceId, ps.untilId)
+ 				.andWhere('post.userId = :userId', { userId: ps.userId });
+ 
+ 			const posts = await query

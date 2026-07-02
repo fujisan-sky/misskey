@@ -1,0 +1,21 @@
+--- packages/frontend/src/pages/page-editor/common.ts	2026-07-02 10:19:31.602760362 +0900
++++ packages/frontend/src/pages/page-editor/common.ts	2026-07-02 09:56:55.006926617 +0900
+@@ -4,13 +4,12 @@
+  */
+ 
+ import { i18n } from '@/i18n.js';
+-import type { MkSelectItem } from '@/components/MkSelect.vue';
+ 
+ export function getPageBlockList() {
+ 	return [
+-		{ value: 'section', label: i18n.ts._pages.blocks.section },
+-		{ value: 'text', label: i18n.ts._pages.blocks.text },
+-		{ value: 'image', label: i18n.ts._pages.blocks.image },
+-		{ value: 'note', label: i18n.ts._pages.blocks.note },
+-	] as const satisfies MkSelectItem[];
++		{ value: 'section', text: i18n.ts._pages.blocks.section },
++		{ value: 'text', text: i18n.ts._pages.blocks.text },
++		{ value: 'image', text: i18n.ts._pages.blocks.image },
++		{ value: 'note', text: i18n.ts._pages.blocks.note },
++	];
+ }

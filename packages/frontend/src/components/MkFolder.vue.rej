@@ -1,0 +1,58 @@
+--- packages/frontend/src/components/MkFolder.vue	2026-07-02 10:19:31.586760419 +0900
++++ packages/frontend/src/components/MkFolder.vue	2026-07-02 09:56:54.983926663 +0900
+@@ -96,11 +96,10 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
++import { nextTick, onMounted, ref, useTemplateRef } from 'vue';
+ import { prefer } from '@/preferences.js';
+ import { getBgColor } from '@/utility/get-bg-color.js';
+ import { pageFolderTeleportCount, popup } from '@/os.js';
+-import { themeManager } from '@/theme.js';
+ import MkFolderPage from '@/components/MkFolderPage.vue';
+ import { deviceKind } from '@/utility/device-kind.js';
+ 
+@@ -120,11 +119,6 @@
+ 	canPage: true,
+ });
+ 
+-const emit = defineEmits<{
+-	(ev: 'opened'): void;
+-	(ev: 'closed'): void;
+-}>();
+-
+ const rootEl = useTemplateRef('rootEl');
+ const asPage = props.canPage && deviceKind === 'smartphone' && prefer.s['experimental.enableFolderPageView'];
+ const bgSame = ref(false);
+@@ -170,7 +164,7 @@
+ let pageId = pageFolderTeleportCount.value;
+ pageFolderTeleportCount.value += 1000;
+ 
+-async function toggle(ev: PointerEvent) {
++async function toggle() {
+ 	if (asPage && !opened.value) {
+ 		pageId++;
+ 		const { dispose } = await popup(MkFolderPage, {
+@@ -193,19 +187,11 @@
+ }
+ 
+ onMounted(() => {
+-	const themeValue = themeManager.currentCompiledTheme!;
++	const computedStyle = getComputedStyle(window.document.documentElement);
+ 	const parentBg = getBgColor(rootEl.value?.parentElement) ?? 'transparent';
+-	const myBg = themeValue.panel;
++	const myBg = computedStyle.getPropertyValue('--MI_THEME-panel');
+ 	bgSame.value = parentBg === myBg;
+ });
+-
+-watch(opened, (isOpened) => {
+-	if (isOpened) {
+-		emit('opened');
+-	} else {
+-		emit('closed');
+-	}
+-}, { flush: 'post' });
+ </script>
+ 
+ <style lang="scss" module>

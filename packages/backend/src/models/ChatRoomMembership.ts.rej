@@ -1,0 +1,20 @@
+--- packages/backend/src/models/ChatRoomMembership.ts	2026-07-02 10:19:31.539760585 +0900
++++ packages/backend/src/models/ChatRoomMembership.ts	2026-07-02 09:56:54.904926820 +0900
+@@ -20,7 +20,7 @@
+ 	})
+ 	public userId: MiUser['id'];
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -32,7 +32,7 @@
+ 	})
+ 	public roomId: MiChatRoom['id'];
+ 
+-	@ManyToOne(() => MiChatRoom, {
++	@ManyToOne(type => MiChatRoom, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()

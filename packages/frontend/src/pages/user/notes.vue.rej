@@ -1,0 +1,78 @@
+--- packages/frontend/src/pages/user/notes.vue	2026-07-02 10:19:31.605760352 +0900
++++ packages/frontend/src/pages/user/notes.vue	2026-07-02 09:56:55.012926606 +0900
+@@ -5,59 +5,52 @@
+ 
+ <template>
+ <div class="_spacer" style="--MI_SPACER-w: 800px;">
+-	<div>
++	<div :class="$style.root">
+ 		<MkStickyContainer>
+ 			<template #header>
+-				<MkTab
+-					v-model="tab"
+-					:tabs="[
+-						{ key: 'featured', label: i18n.ts.featured },
+-						{ key: 'notes', label: i18n.ts.notes },
+-						{ key: 'all', label: i18n.ts.all },
+-						{ key: 'files', label: i18n.ts.withFiles },
+-					]"
+-					:class="$style.tab"
+-				>
++				<MkTab v-model="tab" :class="$style.tab">
++					<option value="featured">{{ i18n.ts.featured }}</option>
++					<option value="notes">{{ i18n.ts.notes }}</option>
++					<option value="all">{{ i18n.ts.all }}</option>
++					<option value="files">{{ i18n.ts.withFiles }}</option>
+ 				</MkTab>
+ 			</template>
+-			<MkNotesTimeline v-if="tab === 'featured'" :noGap="true" :paginator="featuredPaginator" :class="$style.tl"/>
+-			<MkNotesTimeline v-else :noGap="true" :paginator="notesPaginator" :class="$style.tl"/>
++			<MkNotesTimeline :key="tab" :noGap="true" :pagination="pagination" :class="$style.tl"/>
+ 		</MkStickyContainer>
+ 	</div>
+ </div>
+ </template>
+ 
+ <script lang="ts" setup>
+-import { ref, computed, markRaw } from 'vue';
++import { ref, computed } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import MkNotesTimeline from '@/components/MkNotesTimeline.vue';
+ import MkTab from '@/components/MkTab.vue';
+ import { i18n } from '@/i18n.js';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+ const props = defineProps<{
+ 	user: Misskey.entities.UserDetailed;
+ }>();
+ 
+-const tab = ref<'featured' | 'notes' | 'all' | 'files'>('all');
++const tab = ref<string>('all');
+ 
+-const featuredPaginator = markRaw(new Paginator('users/featured-notes', {
++const pagination = computed(() => tab.value === 'featured' ? {
++	endpoint: 'users/featured-notes' as const,
+ 	limit: 10,
+ 	params: {
+ 		userId: props.user.id,
+ 	},
+-}));
+-
+-const notesPaginator = markRaw(new Paginator('users/notes', {
++} : {
++	endpoint: 'users/notes' as const,
+ 	limit: 10,
+-	computedParams: computed(() => ({
++	params: {
+ 		userId: props.user.id,
+ 		withRenotes: tab.value === 'all',
+ 		withReplies: tab.value === 'all',
+ 		withChannelNotes: tab.value === 'all',
+ 		withFiles: tab.value === 'files',
+-	})),
+-}));
++	},
++});
+ </script>
+ 
+ <style lang="scss" module>

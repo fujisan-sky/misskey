@@ -1,0 +1,58 @@
+--- packages/frontend/src/pages/my-lists/index.vue	2026-07-02 10:19:31.601760366 +0900
++++ packages/frontend/src/pages/my-lists/index.vue	2026-07-02 09:56:55.006926617 +0900
+@@ -16,9 +16,9 @@
+ 			<MkButton primary rounded style="margin: 0 auto;" @click="create"><i class="ti ti-plus"></i> {{ i18n.ts.createList }}</MkButton>
+ 
+ 			<div v-if="items.length > 0" class="_gaps">
+-				<MkA v-for="list in items" :key="list.id" class="_panel" :class="$style.list" :to="`/timeline/list/${list.id}`">
+-					<div style="margin-bottom: 4px;">{{ list.name }} <span :class="$style.nUsers">({{ i18n.tsx.nUsers({ n: `${list.userIds!.length}/${$i.policies['userEachUserListsLimit']}` }) }})</span></div>
+-					<MkAvatars :userIds="list.userIds!" :limit="10"/>
++				<MkA v-for="list in items" :key="list.id" class="_panel" :class="$style.list" :to="`/my/lists/${ list.id }`">
++					<div style="margin-bottom: 4px;">{{ list.name }} <span :class="$style.nUsers">({{ i18n.tsx.nUsers({ n: `${list.userIds.length}/${$i.policies['userEachUserListsLimit']}` }) }})</span></div>
++					<MkAvatars :userIds="list.userIds" :limit="10"/>
+ 				</MkA>
+ 			</div>
+ 		</div>
+@@ -40,20 +40,20 @@
+ 
+ const items = computed(() => userListsCache.value.value ?? []);
+ 
+-function _fetch_() {
++function fetch() {
+ 	userListsCache.fetch();
+ }
+ 
+-_fetch_();
++fetch();
+ 
+ async function create() {
+ 	const { canceled, result: name } = await os.inputText({
+ 		title: i18n.ts.enterListName,
+ 	});
+-	if (canceled || name == null) return;
++	if (canceled) return;
+ 	await os.apiWithDialog('users/lists/create', { name: name });
+ 	userListsCache.delete();
+-	_fetch_();
++	fetch();
+ }
+ 
+ const headerActions = computed(() => [{
+@@ -62,7 +62,7 @@
+ 	text: i18n.ts.reload,
+ 	handler: () => {
+ 		userListsCache.delete();
+-		_fetch_();
++		fetch();
+ 	},
+ }]);
+ 
+@@ -74,7 +74,7 @@
+ }));
+ 
+ onActivated(() => {
+-	_fetch_();
++	fetch();
+ });
+ </script>
+ 

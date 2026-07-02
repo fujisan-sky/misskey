@@ -1,0 +1,16 @@
+--- packages/backend/src/core/CustomEmojiService.ts	2026-07-02 10:19:31.529760620 +0900
++++ packages/backend/src/core/CustomEmojiService.ts	2026-07-02 09:56:54.892926844 +0900
+@@ -425,12 +425,7 @@
+ 		}
+ 		const _emojis = emojisQuery.length > 0 ? await this.emojisRepository.find({
+ 			where: emojisQuery,
+-			select: {
+-				name: true,
+-				host: true,
+-				originalUrl: true,
+-				publicUrl: true,
+-			},
++			select: ['name', 'host', 'originalUrl', 'publicUrl'],
+ 		}) : [];
+ 		for (const emoji of _emojis) {
+ 			this.emojisCache.set(`${emoji.name} ${emoji.host}`, emoji);

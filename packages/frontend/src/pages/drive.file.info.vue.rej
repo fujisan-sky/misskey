@@ -1,0 +1,126 @@
+--- packages/frontend/src/pages/drive.file.info.vue	2026-07-02 10:19:31.600760369 +0900
++++ packages/frontend/src/pages/drive.file.info.vue	2026-07-02 09:56:55.004926621 +0900
+@@ -105,7 +105,7 @@
+ });
+ const isImage = computed(() => file.value?.type.startsWith('image/'));
+ 
+-async function _fetch_() {
++async function fetch() {
+ 	fetching.value = true;
+ 
+ 	file.value = await misskeyApi('drive/files/show', {
+@@ -119,7 +119,7 @@
+ }
+ 
+ function postThis() {
+-	if (file.value == null) return;
++	if (!file.value) return;
+ 
+ 	os.post({
+ 		initialFiles: [file.value],
+@@ -127,29 +127,26 @@
+ }
+ 
+ function move() {
+-	if (file.value == null) return;
++	if (!file.value) return;
+ 
+-	const f = file.value;
+-
+-	selectDriveFolder(null).then(({ canceled, folders }) => {
+-		if (canceled) return;
++	selectDriveFolder(null).then(folder => {
+ 		misskeyApi('drive/files/update', {
+-			fileId: f.id,
+-			folderId: folders[0] ? folders[0].id : null,
++			fileId: file.value.id,
++			folderId: folder[0] ? folder[0].id : null,
+ 		}).then(async () => {
+-			await _fetch_();
++			await fetch();
+ 		});
+ 	});
+ }
+ 
+ function toggleSensitive() {
+-	if (file.value == null) return;
++	if (!file.value) return;
+ 
+ 	os.apiWithDialog('drive/files/update', {
+ 		fileId: file.value.id,
+ 		isSensitive: !file.value.isSensitive,
+ 	}).then(async () => {
+-		await _fetch_();
++		await fetch();
+ 	}).catch(err => {
+ 		os.alert({
+ 			type: 'error',
+@@ -160,9 +157,7 @@
+ }
+ 
+ function rename() {
+-	if (file.value == null) return;
+-
+-	const f = file.value;
++	if (!file.value) return;
+ 
+ 	os.inputText({
+ 		title: i18n.ts.renameFile,
+@@ -171,18 +166,16 @@
+ 	}).then(({ canceled, result: name }) => {
+ 		if (canceled) return;
+ 		os.apiWithDialog('drive/files/update', {
+-			fileId: f.id,
++			fileId: file.value.id,
+ 			name: name,
+ 		}).then(async () => {
+-			await _fetch_();
++			await fetch();
+ 		});
+ 	});
+ }
+ 
+ async function describe() {
+-	if (file.value == null) return;
+-
+-	const f = file.value;
++	if (!file.value) return;
+ 
+ 	const { dispose } = await os.popupAsyncWithDialog(import('@/components/MkFileCaptionEditWindow.vue').then(x => x.default), {
+ 		default: file.value.comment ?? '',
+@@ -190,10 +183,10 @@
+ 	}, {
+ 		done: caption => {
+ 			os.apiWithDialog('drive/files/update', {
+-				fileId: f.id,
++				fileId: file.value.id,
+ 				comment: caption.length === 0 ? null : caption,
+ 			}).then(async () => {
+-				await _fetch_();
++				await fetch();
+ 			});
+ 		},
+ 		closed: () => dispose(),
+@@ -201,7 +194,7 @@
+ }
+ 
+ async function deleteFile() {
+-	if (file.value == null) return;
++	if (!file.value) return;
+ 
+ 	const { canceled } = await os.confirm({
+ 		type: 'warning',
+@@ -215,11 +208,11 @@
+ 
+ 	globalEvents.emit('driveFilesDeleted', [file.value]);
+ 
+-	router.replace('/my/drive');
++	router.push('/my/drive');
+ }
+ 
+ onMounted(async () => {
+-	await _fetch_();
++	await fetch();
+ });
+ </script>
+ 

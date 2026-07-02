@@ -1,0 +1,66 @@
+--- packages/frontend/src/components/MkRetentionLineChart.vue	2026-07-02 10:19:31.590760405 +0900
++++ packages/frontend/src/components/MkRetentionLineChart.vue	2026-07-02 09:56:54.988926653 +0900
+@@ -10,22 +10,14 @@
+ <script lang="ts" setup>
+ import { onMounted, useTemplateRef } from 'vue';
+ import { Chart } from 'chart.js';
+-import type { ScatterDataPoint } from 'chart.js';
+ import tinycolor from 'tinycolor2';
+ import { store } from '@/store.js';
+-import { themeManager } from '@/theme.js';
+ import { useChartTooltip } from '@/composables/use-chart-tooltip.js';
+ import { chartVLine } from '@/utility/chart-vline.js';
+ import { alpha } from '@/utility/color.js';
+ import { initChart } from '@/utility/init-chart.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+ 
+-interface RetentionPoint extends ScatterDataPoint {
+-	x: number;
+-	y: number;
+-	d: string;
+-}
+-
+ initChart();
+ 
+ const chartEl = useTemplateRef('chartEl');
+@@ -52,7 +44,7 @@
+ 
+ 	const vLineColor = store.s.darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+ 
+-	const accent = tinycolor(themeManager.currentCompiledTheme!.accent);
++	const accent = tinycolor(getComputedStyle(window.document.documentElement).getPropertyValue('--MI_THEME-accent'));
+ 	const color = accent.toHex();
+ 
+ 	if (chartEl.value == null) return;
+@@ -70,14 +62,14 @@
+ 				fill: false,
+ 				tension: 0.4,
+ 				data: [{
+-					x: 0,
++					x: '0',
+ 					y: 100,
+ 					d: getYYYYMMDD(new Date(record.createdAt)),
+ 				}, ...Object.entries(record.data).sort((a, b) => getDate(a[0]) > getDate(b[0]) ? 1 : -1).map(([k, v], i) => ({
+-					x: i + 1,
++					x: (i + 1).toString(),
+ 					y: (v / record.users) * 100,
+ 					d: getYYYYMMDD(new Date(record.createdAt)),
+-				}))],
++				}))] as any,
+ 			})),
+ 		},
+ 		options: {
+@@ -119,11 +111,11 @@
+ 					enabled: false,
+ 					callbacks: {
+ 						title(context) {
+-							const v = context[0].dataset.data[context[0].dataIndex] as RetentionPoint;
++							const v = context[0].dataset.data[context[0].dataIndex] as unknown as { x: string, y: number, d: string };
+ 							return `${v.x} days later`;
+ 						},
+ 						label(context) {
+-							const v = context.dataset.data[context.dataIndex] as RetentionPoint;
++							const v = context.dataset.data[context.dataIndex] as unknown as { x: string, y: number, d: string };
+ 							const p = Math.round(v.y) + '%';
+ 							return `${v.d} ${p}`;
+ 						},

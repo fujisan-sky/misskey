@@ -1,0 +1,18 @@
+--- packages/backend/src/server/api/endpoints/notes/translate.ts	2026-07-02 10:19:31.557760521 +0900
++++ packages/backend/src/server/api/endpoints/notes/translate.ts	2026-07-02 09:56:54.926926776 +0900
+@@ -95,6 +95,7 @@
+ 			if (targetLang.includes('-')) targetLang = targetLang.split('-')[0];
+ 
+ 			const params = new URLSearchParams();
++			params.append('auth_key', this.serverSettings.deeplAuthKey);
+ 			params.append('text', note.text);
+ 			params.append('target_lang', targetLang);
+ 
+@@ -103,7 +104,6 @@
+ 			const res = await this.httpRequestService.send(endpoint, {
+ 				method: 'POST',
+ 				headers: {
+-					'Authorization': `DeepL-Auth-Key ${this.serverSettings.deeplAuthKey}`,
+ 					'Content-Type': 'application/x-www-form-urlencoded',
+ 					Accept: 'application/json, */*',
+ 				},

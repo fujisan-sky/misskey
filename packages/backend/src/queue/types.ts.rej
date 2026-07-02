@@ -1,0 +1,13 @@
+--- packages/backend/src/queue/types.ts	2026-07-02 10:19:31.543760571 +0900
++++ packages/backend/src/queue/types.ts	2026-07-02 09:56:54.910926808 +0900
+@@ -109,10 +109,6 @@
+ 	noteId: MiNote['id'];
+ };
+ 
+-export type PostScheduledNoteJobData = {
+-	noteDraftId: string;
+-};
+-
+ export type SystemWebhookDeliverJobData<T extends SystemWebhookEventType = SystemWebhookEventType> = {
+ 	type: T;
+ 	content: SystemWebhookPayload<T>;

@@ -1,0 +1,55 @@
+--- packages/frontend/src/pages/settings/accounts.vue	2026-07-02 10:19:31.603760359 +0900
++++ packages/frontend/src/pages/settings/accounts.vue	2026-07-02 09:56:55.008926613 +0900
+@@ -11,9 +11,7 @@
+ 			<!--<MkButton @click="refreshAllAccounts"><i class="ti ti-refresh"></i></MkButton>-->
+ 		</div>
+ 
+-		<template v-for="x in accounts" :key="x.host + x.id">
+-			<MkUserCardMini v-if="x.user" :user="x.user" :class="$style.user" @click.prevent="showMenu(x.host, x.id, $event)"/>
+-		</template>
++		<MkUserCardMini v-for="x in accounts" :key="x[0] + x[1].id" :user="x[1]" :class="$style.user" @click.prevent="menu(x[0], x[1], $event)"/>
+ 	</div>
+ </SearchMarker>
+ </template>
+@@ -26,35 +24,35 @@
+ import * as os from '@/os.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+ import { $i } from '@/i.js';
+-import { switchAccount, removeAccount, login, getAccountWithSigninDialog, getAccountWithSignupDialog, getAccounts } from '@/accounts.js';
++import { switchAccount, removeAccount, login, getAccountWithSigninDialog, getAccountWithSignupDialog } from '@/accounts.js';
+ import { i18n } from '@/i18n.js';
+ import { definePage } from '@/page.js';
+ import MkUserCardMini from '@/components/MkUserCardMini.vue';
+ import { prefer } from '@/preferences.js';
+ 
+-const accounts = await getAccounts();
++const accounts = prefer.r.accounts;
+ 
+ function refreshAllAccounts() {
+ 	// TODO
+ }
+ 
+-function showMenu(host: string, id: string, ev: PointerEvent) {
++function menu(host: string, account: Misskey.entities.UserDetailed, ev: MouseEvent) {
+ 	let menu: MenuItem[];
+ 
+ 	menu = [{
+ 		text: i18n.ts.switch,
+ 		icon: 'ti ti-switch-horizontal',
+-		action: () => switchAccount(host, id),
++		action: () => switchAccount(host, account.id),
+ 	}, {
+ 		text: i18n.ts.remove,
+ 		icon: 'ti ti-trash',
+-		action: () => removeAccount(host, id),
++		action: () => removeAccount(host, account.id),
+ 	}];
+ 
+ 	os.popupMenu(menu, ev.currentTarget ?? ev.target);
+ }
+ 
+-function addAccount(ev: PointerEvent) {
++function addAccount(ev: MouseEvent) {
+ 	os.popupMenu([{
+ 		text: i18n.ts.existingAccount,
+ 		action: () => { addExistingAccount(); },

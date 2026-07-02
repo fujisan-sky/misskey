@@ -1,0 +1,339 @@
+--- packages/frontend/src/components/MkNote.vue	2026-07-02 10:19:31.588760412 +0900
++++ packages/frontend/src/components/MkNote.vue	2026-07-02 09:56:54.986926657 +0900
+@@ -5,13 +5,13 @@
+ 
+ <template>
+ <div
+-	v-if="!hardMuted && !hideByPlugin && muted === false"
++	v-if="!hardMuted && muted === false"
+ 	ref="rootEl"
+ 	v-hotkey="keymap"
+ 	:class="[$style.root, { [$style.showActionsOnlyHover]: prefer.s.showNoteActionsOnlyHover, [$style.skipRender]: prefer.s.skipNoteRender }]"
+ 	tabindex="0"
+ >
+-	<MkNoteSub v-if="appearNote.replyId && !renoteCollapsed" :note="appearNote?.reply ?? null" :class="$style.replyTo"/>
++	<MkNoteSub v-if="appearNote.reply && !renoteCollapsed" :note="appearNote.reply" :class="$style.replyTo"/>
+ 	<div v-if="pinned" :class="$style.tip"><i class="ti ti-pin"></i> {{ i18n.ts.pinnedNote }}</div>
+ 	<div v-if="isRenote" :class="$style.renote">
+ 		<div v-if="note.channel" :class="$style.colorBar" :style="{ background: note.channel.color }"></div>
+@@ -38,10 +38,7 @@
+ 			<span v-if="note.channel" style="margin-left: 0.5em;" :title="note.channel.name"><i class="ti ti-device-tv"></i></span>
+ 		</div>
+ 	</div>
+-	<div v-if="isRenote && note.renote == null" :class="$style.deleted">
+-		{{ i18n.ts.deletedNote }}
+-	</div>
+-	<div v-else-if="renoteCollapsed" :class="$style.collapsedRenoteTarget">
++	<div v-if="renoteCollapsed" :class="$style.collapsedRenoteTarget">
+ 		<MkAvatar :class="$style.collapsedRenoteTargetAvatar" :user="appearNote.user" link preview/>
+ 		<Mfm :text="getNoteSummary(appearNote)" :plain="true" :nowrap="true" :author="appearNote.user" :nyaize="'respect'" :class="$style.collapsedRenoteTargetText" @click="renoteCollapsed = false"/>
+ 	</div>
+@@ -102,7 +99,7 @@
+ 					<div v-if="isEnabledUrlPreview">
+ 						<MkUrlPreview v-for="url in urls" :key="url" :url="url" :compact="true" :detail="false" :class="$style.urlPreview"/>
+ 					</div>
+-					<div v-if="appearNote.renoteId" :class="$style.quote"><MkNoteSimple :note="appearNote?.renote ?? null" :class="$style.quoteNote"/></div>
++					<div v-if="appearNote.renote" :class="$style.quote"><MkNoteSimple :note="appearNote.renote" :class="$style.quoteNote"/></div>
+ 					<button v-if="isLong && collapsed" :class="$style.collapsed" class="_button" @click="collapsed = false">
+ 						<span :class="$style.collapsedLabel">{{ i18n.ts.showMore }}</span>
+ 					</button>
+@@ -161,7 +158,7 @@
+ 		</div>
+ 	</article>
+ </div>
+-<div v-else-if="!hardMuted && !hideByPlugin" :class="$style.muted" @click="muted = false">
++<div v-else-if="!hardMuted" :class="$style.muted" @click="muted = false">
+ 	<I18n v-if="muted === 'sensitiveMute'" :src="i18n.ts.userSaysSomethingSensitive" tag="small">
+ 		<template #name>
+ 			<MkA v-user-preview="appearNote.userId" :to="userPage(appearNote.user)">
+@@ -263,33 +260,29 @@
+ 
+ const inTimeline = inject<boolean>('inTimeline', false);
+ const tl_withSensitive = inject<Ref<boolean>>('tl_withSensitive', ref(true));
+-const inChannel = inject(DI.inChannel, null);
++const inChannel = inject('inChannel', null);
+ const currentClip = inject<Ref<Misskey.entities.Clip> | null>('currentClip', null);
+-const currentAntenna = inject<Ref<Misskey.entities.Antenna | null> | null>('currentAntenna', null);
+ 
+ let note = deepClone(props.note);
+ 
+ // plugin
+ const noteViewInterruptors = getPluginHandlers('note_view_interruptor');
+-const hideByPlugin = ref(false);
+ if (noteViewInterruptors.length > 0) {
+-	let result: Misskey.entities.Note | null = deepClone(note);
+-	for (const interruptor of noteViewInterruptors) {
+-		try {
+-			result = interruptor.handler(result!) as Misskey.entities.Note | null;
+-		} catch (err) {
+-			console.error(err);
++	onMounted(async () => {
++		let result: Misskey.entities.Note | null = deepClone(note);
++		for (const interruptor of noteViewInterruptors) {
++			try {
++				result = await interruptor.handler(result!) as Misskey.entities.Note | null;
++			} catch (err) {
++				console.error(err);
++			}
+ 		}
+-	}
+-	if (result == null) {
+-		hideByPlugin.value = true;
+-	} else {
+ 		note = result as Misskey.entities.Note;
+-	}
++	});
+ }
+ 
+ const isRenote = Misskey.note.isPureRenote(note);
+-const appearNote = getAppearNote(note) ?? note;
++const appearNote = getAppearNote(note);
+ const { $note: $appearNote, subscribe: subscribeManuallyToNoteCapture } = useNoteCapture({
+ 	note: appearNote,
+ 	parentNote: note,
+@@ -328,27 +321,20 @@
+ 	url: `https://${host}/notes/${appearNote.id}`,
+ }));
+ 
+-/* eslint-disable no-redeclare */
+-/** checkOnlyでは純粋なワードミュート結果をbooleanで返却する */
++/* Overload FunctionにLintが対応していないのでコメントアウト
+ function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly: true): boolean;
+-function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly?: false): Array<string | string[]> | false | 'sensitiveMute';
+-
+-function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly = false): Array<string | string[]> | boolean | 'sensitiveMute' {
++function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly: false): Array<string | string[]> | false | 'sensitiveMute';
++*/
++function checkMute(noteToCheck: Misskey.entities.Note, mutedWords: Array<string | string[]> | undefined | null, checkOnly = false): Array<string | string[]> | false | 'sensitiveMute' {
+ 	if (mutedWords != null) {
+ 		const result = checkWordMute(noteToCheck, $i, mutedWords);
+-		if (Array.isArray(result)) {
+-			return checkOnly ? (result.length > 0) : result;
+-		}
++		if (Array.isArray(result)) return result;
+ 
+ 		const replyResult = noteToCheck.reply && checkWordMute(noteToCheck.reply, $i, mutedWords);
+-		if (Array.isArray(replyResult)) {
+-			return checkOnly ? (replyResult.length > 0) : replyResult;
+-		}
++		if (Array.isArray(replyResult)) return replyResult;
+ 
+ 		const renoteResult = noteToCheck.renote && checkWordMute(noteToCheck.renote, $i, mutedWords);
+-		if (Array.isArray(renoteResult)) {
+-			return checkOnly ? (renoteResult.length > 0) : renoteResult;
+-		}
++		if (Array.isArray(renoteResult)) return renoteResult;
+ 	}
+ 
+ 	if (checkOnly) return false;
+@@ -359,7 +345,6 @@
+ 
+ 	return false;
+ }
+-/* eslint-enable no-redeclare */
+ 
+ const keymap = {
+ 	'r': () => {
+@@ -432,13 +417,13 @@
+ 
+ 		const users = renotes.map(x => x.user);
+ 
+-		if (users.length < 1 || renoteButton.value == null) return;
++		if (users.length < 1) return;
+ 
+ 		const { dispose } = os.popup(MkUsersTooltip, {
+ 			showing,
+ 			users,
+ 			count: appearNote.renoteCount,
+-			anchorElement: renoteButton.value,
++			targetElement: renoteButton.value,
+ 		}, {
+ 			closed: () => dispose(),
+ 		});
+@@ -461,7 +446,7 @@
+ 				reaction: '❤️',
+ 				users,
+ 				count: $appearNote.reactionCount,
+-				anchorElement: reactButton.value!,
++				targetElement: reactButton.value!,
+ 			}, {
+ 				closed: () => dispose(),
+ 			});
+@@ -469,26 +454,23 @@
+ 	}
+ }
+ 
+-async function renote() {
+-	if (props.mock) return;
+-
+-	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+-	if (!isLoggedIn) return;
+-
++function renote(viaKeyboard = false) {
++	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+ 	showMovedDialog();
+ 
+ 	const { menu } = getRenoteMenu({ note: note, renoteButton, mock: props.mock });
+-	os.popupMenu(menu, renoteButton.value);
++	os.popupMenu(menu, renoteButton.value, {
++		viaKeyboard,
++	});
+ 
+ 	subscribeManuallyToNoteCapture();
+ }
+ 
+-async function reply() {
+-	if (props.mock) return;
+-
+-	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+-	if (!isLoggedIn) return;
+-
++function reply(): void {
++	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
++	if (props.mock) {
++		return;
++	}
+ 	os.post({
+ 		reply: appearNote,
+ 		channel: appearNote.channel,
+@@ -497,10 +479,8 @@
+ 	});
+ }
+ 
+-async function react() {
+-	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+-	if (!isLoggedIn) return;
+-
++function react(): void {
++	pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+ 	showMovedDialog();
+ 	if (appearNote.reactionAcceptance === 'likeOnly') {
+ 		sound.playMisskeySfx('reaction');
+@@ -595,7 +575,7 @@
+ 	}
+ }
+ 
+-function onContextmenu(ev: PointerEvent): void {
++function onContextmenu(ev: MouseEvent): void {
+ 	if (props.mock) {
+ 		return;
+ 	}
+@@ -607,7 +587,7 @@
+ 		ev.preventDefault();
+ 		react();
+ 	} else {
+-		const { menu, cleanup } = getNoteMenu({ note: note, translating, translation, currentClip: currentClip?.value, currentAntenna: currentAntenna?.value ?? undefined });
++		const { menu, cleanup } = getNoteMenu({ note: note, translating, translation, currentClip: currentClip?.value });
+ 		os.contextMenu(menu, ev).then(focus).finally(cleanup);
+ 	}
+ }
+@@ -617,7 +597,7 @@
+ 		return;
+ 	}
+ 
+-	const { menu, cleanup } = getNoteMenu({ note: note, translating, translation, currentClip: currentClip?.value, currentAntenna: currentAntenna?.value ?? undefined });
++	const { menu, cleanup } = getNoteMenu({ note: note, translating, translation, currentClip: currentClip?.value });
+ 	os.popupMenu(menu, menuButton.value).then(focus).finally(cleanup);
+ }
+ 
+@@ -629,12 +609,10 @@
+ 	os.popupMenu(await getNoteClipMenu({ note: note, currentClip: currentClip?.value }), clipButton.value).then(focus);
+ }
+ 
+-async function showRenoteMenu() {
++function showRenoteMenu(): void {
+ 	if (props.mock) {
+ 		return;
+ 	}
+-	const isLoggedIn = await pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+-	if (!isLoggedIn) return;
+ 
+ 	function getUnrenote(): MenuItem {
+ 		return {
+@@ -651,39 +629,28 @@
+ 		};
+ 	}
+ 
+-	const renoteDetailsMenu: MenuItem[] = [{
++	const renoteDetailsMenu: MenuItem = {
+ 		type: 'link',
+ 		text: i18n.ts.renoteDetails,
+ 		icon: 'ti ti-info-circle',
+ 		to: notePage(note),
+-	}];
+-
+-	if (
+-		props.note.channelId != null &&
+-		(inChannel == null || props.note.channelId !== inChannel.value)
+-	) {
+-		renoteDetailsMenu.push({
+-			type: 'link',
+-			text: i18n.ts.viewRenotedChannel,
+-			icon: 'ti ti-device-tv',
+-			to: `/channels/${props.note.channelId}`,
+-		});
+-	}
++	};
+ 
+ 	if (isMyRenote) {
++		pleaseLogin({ openOnRemote: pleaseLoginContext.value });
+ 		os.popupMenu([
+-			...renoteDetailsMenu,
++			renoteDetailsMenu,
+ 			getCopyNoteLinkMenu(note, i18n.ts.copyLinkRenote),
+ 			{ type: 'divider' },
+ 			getUnrenote(),
+ 		], renoteTime.value);
+ 	} else {
+ 		os.popupMenu([
+-			...renoteDetailsMenu,
++			renoteDetailsMenu,
+ 			getCopyNoteLinkMenu(note, i18n.ts.copyLinkRenote),
+ 			{ type: 'divider' },
+ 			getAbuseNoteMenu(note, i18n.ts.reportAbuseRenote),
+-			...(($i?.isModerator || $i?.isAdmin) ? [getUnrenote()] : []),
++			($i?.isModerator || $i?.isAdmin) ? getUnrenote() : undefined,
+ 		], renoteTime.value);
+ 	}
+ }
+@@ -754,7 +721,7 @@
+ 	}
+ 
+ 	&:hover > .article > .main > .footer > .footerButton {
+-		color: var(--MI_THEME-fg);
++		opacity: 1;
+ 	}
+ 
+ 	&.showActionsOnlyHover {
+@@ -1029,7 +996,7 @@
+ .footerButton {
+ 	margin: 0;
+ 	padding: 8px;
+-	color: color-mix(in srgb, var(--MI_THEME-panel), var(--MI_THEME-fg) 70%); // opacityなど不透明度で表現するとレンダリングパフォーマンスに影響するので通常の色の混合で代用
++	opacity: 0.7;
+ 
+ 	&:not(:last-child) {
+ 		margin-right: 28px;
+@@ -1043,6 +1010,7 @@
+ .footerButtonCount {
+ 	display: inline;
+ 	margin: 0 0 0 8px;
++	opacity: 0.7;
+ }
+ 
+ @container (max-width: 580px) {
+@@ -1173,14 +1141,4 @@
+ 	opacity: .8;
+ 	font-size: 95%;
+ }
+-
+-.deleted {
+-	text-align: center;
+-	padding: 32px;
+-	margin: 6px 32px 28px;
+-	--color: light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+-	background-size: auto auto;
+-	background-image: repeating-linear-gradient(135deg, transparent, transparent 10px, var(--color) 4px, var(--color) 14px);
+-	border-radius: 8px;
+-}
+ </style>

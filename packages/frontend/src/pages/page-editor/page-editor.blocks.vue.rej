@@ -1,0 +1,95 @@
+--- packages/frontend/src/pages/page-editor/page-editor.blocks.vue	2026-07-02 10:19:31.602760362 +0900
++++ packages/frontend/src/pages/page-editor/page-editor.blocks.vue	2026-07-02 09:56:55.006926617 +0900
+@@ -4,49 +4,36 @@
+ -->
+ 
+ <template>
+-<MkDraggable
+-	:modelValue="modelValue"
+-	direction="vertical"
+-	withGaps
+-	canNest
+-	manualDragStart
+-	group="pageBlocks"
+-	@update:modelValue="v => emit('update:modelValue', v)"
+->
+-	<template #default="{ item, dragStart }">
+-		<div>
+-			<!-- divが無いとエラーになる -->
+-			<component
+-				:is="getComponent(item.type)"
+-				:modelValue="item"
+-				:dragStartCallback="dragStart"
+-				@update:modelValue="updateItem"
+-				@remove="() => removeItem(item)"
+-			/>
++<Sortable :modelValue="modelValue" tag="div" itemKey="id" handle=".drag-handle" :group="{ name: 'blocks' }" :animation="150" :swapThreshold="0.5" @update:modelValue="v => emit('update:modelValue', v)">
++	<template #item="{element}">
++		<div :class="$style.item">
++			<!-- divが無いとエラーになる https://github.com/SortableJS/vue.draggable.next/issues/189 -->
++			<component :is="getComponent(element.type)" :modelValue="element" @update:modelValue="updateItem" @remove="() => removeItem(element)"/>
+ 		</div>
+ 	</template>
+-</MkDraggable>
++</Sortable>
+ </template>
+ 
+ <script lang="ts" setup>
+-import type { Component } from 'vue';
++import { defineAsyncComponent } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import XSection from './els/page-editor.el.section.vue';
+ import XText from './els/page-editor.el.text.vue';
+ import XImage from './els/page-editor.el.image.vue';
+ import XNote from './els/page-editor.el.note.vue';
+-import MkDraggable from '@/components/MkDraggable.vue';
+ 
+-function getComponent(type: Misskey.entities.Page['content'][number]['type']): Component {
++function getComponent(type: string) {
+ 	switch (type) {
+ 		case 'section': return XSection;
+ 		case 'text': return XText;
+ 		case 'image': return XImage;
+ 		case 'note': return XNote;
+-		default: return XText;
++		default: return null;
+ 	}
+ }
+ 
++const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
++
+ const props = defineProps<{
+ 	modelValue: Misskey.entities.Page['content'];
+ }>();
+@@ -55,7 +42,7 @@
+ 	(ev: 'update:modelValue', value: Misskey.entities.Page['content']): void;
+ }>();
+ 
+-function updateItem(v: Misskey.entities.PageBlock) {
++function updateItem(v) {
+ 	const i = props.modelValue.findIndex(x => x.id === v.id);
+ 	const newValue = [
+ 		...props.modelValue.slice(0, i),
+@@ -65,8 +52,8 @@
+ 	emit('update:modelValue', newValue);
+ }
+ 
+-function removeItem(v: Misskey.entities.PageBlock) {
+-	const i = props.modelValue.findIndex(x => x.id === v.id);
++function removeItem(el) {
++	const i = props.modelValue.findIndex(x => x.id === el.id);
+ 	const newValue = [
+ 		...props.modelValue.slice(0, i),
+ 		...props.modelValue.slice(i + 1),
+@@ -74,3 +61,11 @@
+ 	emit('update:modelValue', newValue);
+ }
+ </script>
++
++<style lang="scss" module>
++.item {
++	& + .item {
++		margin-top: 16px;
++	}
++}
++</style>

@@ -1,0 +1,19 @@
+--- packages/frontend/src/widgets/index.ts	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/index.ts	2026-07-02 09:56:55.022926586 +0900
+@@ -42,7 +42,7 @@
+ export const federationWidgets = [
+ 	'federation',
+ 	'instanceCloud',
+-] as const;
++];
+ 
+ export const widgets = [
+ 	'profile',
+@@ -74,6 +74,4 @@
+ 	'chat',
+ 
+ 	...federationWidgets,
+-] as const;
+-
+-export type WidgetName = typeof widgets[number];
++];

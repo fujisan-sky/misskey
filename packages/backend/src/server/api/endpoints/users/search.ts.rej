@@ -1,0 +1,10 @@
+--- packages/backend/src/server/api/endpoints/users/search.ts	2026-07-02 10:19:31.560760511 +0900
++++ packages/backend/src/server/api/endpoints/users/search.ts	2026-07-02 09:56:54.929926770 +0900
+@@ -13,7 +13,6 @@
+ 	tags: ['users'],
+ 
+ 	requireCredential: false,
+-	requiredRolePolicy: 'canSearchUsers',
+ 
+ 	description: 'Search for users.',
+ 

@@ -1,0 +1,32 @@
+--- packages/frontend/src/components/MkChannelList.stories.impl.ts	2026-07-02 10:19:31.584760426 +0900
++++ packages/frontend/src/components/MkChannelList.stories.impl.ts	2026-07-02 09:56:54.980926669 +0900
+@@ -3,13 +3,14 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
++/* eslint-disable @typescript-eslint/explicit-function-return-type */
++/* eslint-disable import/no-default-export */
++import type { StoryObj } from '@storybook/vue3';
+ import { HttpResponse, http } from 'msw';
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import { channel } from '../../.storybook/fakes.js';
+ import { commonHandlers } from '../../.storybook/mocks.js';
+ import MkChannelList from './MkChannelList.vue';
+-import type { StoryObj } from '@storybook/vue3';
+-import { Paginator } from '@/utility/paginator.js';
+ export const Default = {
+ 	render(args) {
+ 		return {
+@@ -32,7 +33,10 @@
+ 		};
+ 	},
+ 	args: {
+-		paginator: new Paginator('channels/search', {}),
++		pagination: {
++			endpoint: 'channels/search',
++			limit: 10,
++		},
+ 	},
+ 	parameters: {
+ 		chromatic: {

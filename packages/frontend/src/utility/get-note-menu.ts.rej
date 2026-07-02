@@ -1,0 +1,275 @@
+--- packages/frontend/src/utility/get-note-menu.ts	2026-07-02 10:19:31.609760337 +0900
++++ packages/frontend/src/utility/get-note-menu.ts	2026-07-02 09:56:55.018926593 +0900
+@@ -3,6 +3,7 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
++import { defineAsyncComponent } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import { url } from '@@/js/config.js';
+ import { claimAchievement } from './achievements.js';
+@@ -26,11 +27,6 @@
+ import { getPluginHandlers } from '@/plugin.js';
+ import { globalEvents } from '@/events.js';
+ 
+-const isInBrowserTranslationAvailable = (
+-	'LanguageDetector' in window &&
+-	'Translator' in window
+-);
+-
+ export async function getNoteClipMenu(props: {
+ 	note: Misskey.entities.Note;
+ 	currentClip?: Misskey.entities.Clip;
+@@ -43,7 +39,7 @@
+ 		}
+ 	}
+ 
+-	const appearNote = getAppearNote(props.note) ?? props.note;
++	const appearNote = getAppearNote(props.note);
+ 
+ 	const clips = await clipsCache.fetch();
+ 	const menu: MenuItem[] = [...clips.map(clip => ({
+@@ -105,7 +101,7 @@
+ 			const { canceled, result } = await os.form(i18n.ts.createNewClip, {
+ 				name: {
+ 					type: 'string',
+-					default: null as string | null,
++					default: null,
+ 					label: i18n.ts.name,
+ 				},
+ 				description: {
+@@ -182,10 +178,8 @@
+ 	translation: Ref<Misskey.entities.NotesTranslateResponse | null>;
+ 	translating: Ref<boolean>;
+ 	currentClip?: Misskey.entities.Clip;
+-	currentAntenna?: Misskey.entities.Antenna;
+ }) {
+-	const appearNote = getAppearNote(props.note) ?? props.note;
+-	const link = appearNote.url ?? appearNote.uri;
++	const appearNote = getAppearNote(props.note);
+ 
+ 	const cleanups = [] as (() => void)[];
+ 
+@@ -195,7 +189,6 @@
+ 			text: i18n.ts.noteDeleteConfirm,
+ 		}).then(({ canceled }) => {
+ 			if (canceled) return;
+-			if ($i == null) return;
+ 
+ 			misskeyApi('notes/delete', {
+ 				noteId: appearNote.id,
+@@ -215,7 +208,6 @@
+ 			text: i18n.ts.deleteAndEditConfirm,
+ 		}).then(({ canceled }) => {
+ 			if (canceled) return;
+-			if ($i == null) return;
+ 
+ 			misskeyApi('notes/delete', {
+ 				noteId: appearNote.id,
+@@ -263,20 +255,7 @@
+ 		os.apiWithDialog('clips/remove-note', { clipId: props.currentClip.id, noteId: appearNote.id });
+ 	}
+ 
+-	async function removeFromAntenna(): Promise<void> {
+-		if (!props.currentAntenna) return;
+-
+-		const { canceled } = await os.confirm({
+-			type: 'warning',
+-			text: i18n.tsx.removeNoteFromAntennaConfirm({ name: props.currentAntenna.name }),
+-		});
+-		if (canceled) return;
+-
+-		await os.apiWithDialog('antennas/remove-note', { antennaId: props.currentAntenna.id, noteId: appearNote.id });
+-		globalEvents.emit('noteRemovedFromAntenna', props.currentAntenna.id, appearNote.id);
+-	}
+-
+-	async function _promote(): Promise<void> {
++	async function promote(): Promise<void> {
+ 		const { canceled, result: days } = await os.inputNumber({
+ 			title: i18n.ts.numberOfDays,
+ 		});
+@@ -303,48 +282,13 @@
+ 
+ 	async function translate(): Promise<void> {
+ 		if (props.translation.value != null) return;
+-		if (prefer.s['experimental.enableWebTranslatorApi'] && isInBrowserTranslationAvailable && appearNote.text != null) {
+-			props.translating.value = true;
+-			try {
+-				// @ts-expect-error 実験的なAPIなので型定義がない
+-				const detector = await LanguageDetector.create();
+-				const langResult = await detector.detect(appearNote.text);
+-				let localStorageLang = miLocalStorage.getItem('lang');
+-				if (localStorageLang != null) {
+-					localStorageLang = localStorageLang.split('-')[0];
+-				}
+-
+-				// 翻訳元と翻訳先の言語が同じ場合はTranslatorがthrowするのでそのまま返す
+-				if (langResult[0]?.detectedLanguage === localStorageLang || langResult[0]?.detectedLanguage === navigator.language) {
+-					props.translation.value = {
+-						sourceLang: langResult[0]?.detectedLanguage ?? 'unknown',
+-						text: appearNote.text,
+-					};
+-					return;
+-				}
+-
+-				// @ts-expect-error 実験的なAPIなので型定義がない
+-				const translator = await Translator.create({
+-					sourceLanguage: langResult[0]?.detectedLanguage,
+-					targetLanguage: localStorageLang ?? navigator.language,
+-				});
+-				const translated = await translator.translate(appearNote.text);
+-				props.translation.value = {
+-					sourceLang: langResult[0]?.detectedLanguage ?? 'unknown',
+-					text: translated,
+-				};
+-			} finally {
+-				props.translating.value = false;
+-			}
+-		} else if ($i?.policies.canUseTranslator && instance.translatorAvailable) {
+-			props.translating.value = true;
+-			const res = await misskeyApi('notes/translate', {
+-				noteId: appearNote.id,
+-				targetLang: miLocalStorage.getItem('lang') ?? navigator.language,
+-			});
+-			props.translating.value = false;
+-			props.translation.value = res;
+-		}
++		props.translating.value = true;
++		const res = await misskeyApi('notes/translate', {
++			noteId: appearNote.id,
++			targetLang: miLocalStorage.getItem('lang') ?? navigator.language,
++		});
++		props.translating.value = false;
++		props.translation.value = res;
+ 	}
+ 
+ 	const menuItems: MenuItem[] = [];
+@@ -373,25 +317,22 @@
+ 			action: copyContent,
+ 		}, getCopyNoteLinkMenu(appearNote, i18n.ts.copyLink));
+ 
+-		if (link) {
++		if (appearNote.url || appearNote.uri) {
+ 			menuItems.push({
+ 				icon: 'ti ti-link',
+ 				text: i18n.ts.copyRemoteLink,
+ 				action: () => {
+-					copyToClipboard(link);
++					copyToClipboard(appearNote.url ?? appearNote.uri);
+ 				},
+ 			}, {
+ 				icon: 'ti ti-external-link',
+ 				text: i18n.ts.showOnRemote,
+ 				action: () => {
+-					window.open(link, '_blank', 'noopener');
++					window.open(appearNote.url ?? appearNote.uri, '_blank', 'noopener');
+ 				},
+ 			});
+ 		} else {
+-			const embedMenu = getNoteEmbedCodeMenu(appearNote, i18n.ts.embed);
+-			if (embedMenu != null) {
+-				menuItems.push(embedMenu);
+-			}
++			menuItems.push(getNoteEmbedCodeMenu(appearNote, i18n.ts.embed));
+ 		}
+ 
+ 		if (isSupportShare()) {
+@@ -402,7 +343,7 @@
+ 			});
+ 		}
+ 
+-		if ((prefer.s['experimental.enableWebTranslatorApi'] && isInBrowserTranslationAvailable) || ($i.policies.canUseTranslator && instance.translatorAvailable)) {
++		if ($i.policies.canUseTranslator && instance.translatorAvailable) {
+ 			menuItems.push({
+ 				icon: 'ti ti-language-hiragana',
+ 				text: i18n.ts.translate,
+@@ -516,28 +457,12 @@
+ 					action: delEdit,
+ 				});
+ 			}
+-			if (props.currentAntenna != null) {
+-				menuItems.push({
+-					icon: 'ti ti-trash',
+-					text: i18n.ts.removeFromAntenna,
+-					danger: true,
+-					action: removeFromAntenna,
+-				});
+-			}
+ 			menuItems.push({
+ 				icon: 'ti ti-trash',
+ 				text: i18n.ts.delete,
+ 				danger: true,
+ 				action: del,
+ 			});
+-		} else if (props.currentAntenna != null) {
+-			menuItems.push({ type: 'divider' });
+-			menuItems.push({
+-				icon: 'ti ti-trash',
+-				text: i18n.ts.removeFromAntenna,
+-				danger: true,
+-				action: removeFromAntenna,
+-			});
+ 		}
+ 	} else {
+ 		menuItems.push({
+@@ -550,25 +475,22 @@
+ 			action: copyContent,
+ 		}, getCopyNoteLinkMenu(appearNote, i18n.ts.copyLink));
+ 
+-		if (link != null) {
++		if (appearNote.url || appearNote.uri) {
+ 			menuItems.push({
+ 				icon: 'ti ti-link',
+ 				text: i18n.ts.copyRemoteLink,
+ 				action: () => {
+-					copyToClipboard(link);
++					copyToClipboard(appearNote.url ?? appearNote.uri);
+ 				},
+ 			}, {
+ 				icon: 'ti ti-external-link',
+ 				text: i18n.ts.showOnRemote,
+ 				action: () => {
+-					window.open(link, '_blank', 'noopener');
++					window.open(appearNote.url ?? appearNote.uri, '_blank', 'noopener');
+ 				},
+ 			});
+ 		} else {
+-			const embedMenu = getNoteEmbedCodeMenu(appearNote, i18n.ts.embed);
+-			if (embedMenu != null) {
+-				menuItems.push(embedMenu);
+-			}
++			menuItems.push(getNoteEmbedCodeMenu(appearNote, i18n.ts.embed));
+ 		}
+ 	}
+ 
+@@ -620,10 +542,10 @@
+ 
+ export function getRenoteMenu(props: {
+ 	note: Misskey.entities.Note;
+-	renoteButton: ShallowRef<HTMLElement | null | undefined>;
++	renoteButton: ShallowRef<HTMLElement | undefined>;
+ 	mock?: boolean;
+ }) {
+-	const appearNote = getAppearNote(props.note) ?? props.note;
++	const appearNote = getAppearNote(props.note);
+ 
+ 	const channelRenoteItems: MenuItem[] = [];
+ 	const normalRenoteItems: MenuItem[] = [];
+@@ -703,7 +625,7 @@
+ 					});
+ 				}
+ 			},
+-		}, ...(props.mock ? [] : [{
++		}, (props.mock) ? undefined : {
+ 			text: i18n.ts.quote,
+ 			icon: 'ti ti-quote',
+ 			action: () => {
+@@ -711,7 +633,7 @@
+ 					renote: appearNote,
+ 				});
+ 			},
+-		}])]);
++		}]);
+ 
+ 		normalExternalChannelRenoteItems.push({
+ 			type: 'parent',

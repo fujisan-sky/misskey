@@ -1,0 +1,36 @@
+--- packages/frontend/src/pages/admin/overview.queue.chart.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/admin/overview.queue.chart.vue	2026-07-02 09:56:55.001926627 +0900
+@@ -26,10 +26,10 @@
+ 
+ const { handler: externalTooltipHandler } = useChartTooltip();
+ 
+-let chartInstance: Chart | null = null;
++let chartInstance: Chart;
+ 
+-function setData(values: number[]) {
+-	if (chartInstance == null || chartInstance.data.labels == null) return;
++function setData(values) {
++	if (chartInstance == null) return;
+ 	for (const value of values) {
+ 		chartInstance.data.labels.push('');
+ 		chartInstance.data.datasets[0].data.push(value);
+@@ -41,8 +41,8 @@
+ 	chartInstance.update();
+ }
+ 
+-function pushData(value: number) {
+-	if (chartInstance == null || chartInstance.data.labels == null) return;
++function pushData(value) {
++	if (chartInstance == null) return;
+ 	chartInstance.data.labels.push('');
+ 	chartInstance.data.datasets[0].data.push(value);
+ 	if (chartInstance.data.datasets[0].data.length > 100) {
+@@ -67,8 +67,6 @@
+ 	'?' as never;
+ 
+ onMounted(() => {
+-	if (chartEl.value == null) return;
+-
+ 	const vLineColor = store.s.darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+ 
+ 	chartInstance = new Chart(chartEl.value, {

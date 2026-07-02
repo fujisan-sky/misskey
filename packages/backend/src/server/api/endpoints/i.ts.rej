@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/i.ts	2026-07-02 10:19:31.554760532 +0900
++++ packages/backend/src/server/api/endpoints/i.ts	2026-07-02 09:56:54.922926784 +0900
+@@ -57,7 +57,7 @@
+ 				where: {
+ 					userId: user.id,
+ 				},
+-				relations: { user: true },
++				relations: ['user'],
+ 			});
+ 
+ 			if (userProfile == null) {

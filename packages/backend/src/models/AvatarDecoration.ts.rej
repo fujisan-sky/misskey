@@ -1,0 +1,12 @@
+--- packages/backend/src/models/AvatarDecoration.ts	2026-07-02 10:19:31.538760589 +0900
++++ packages/backend/src/models/AvatarDecoration.ts	2026-07-02 09:56:54.904926820 +0900
+@@ -36,9 +36,4 @@
+ 		array: true, length: 128, default: '{}',
+ 	})
+ 	public roleIdsThatCanBeUsedThisDecoration: string[];
+-
+-	@Column('varchar', {
+-		length: 128, nullable: true,
+-	})
+-	public category: string | null;
+ }

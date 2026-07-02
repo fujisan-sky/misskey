@@ -1,0 +1,15 @@
+--- packages/frontend/src/pages/achievements.vue	2026-07-02 10:19:31.597760380 +0900
++++ packages/frontend/src/pages/achievements.vue	2026-07-02 09:56:54.998926633 +0900
+@@ -16,11 +16,9 @@
+ import MkAchievements from '@/components/MkAchievements.vue';
+ import { i18n } from '@/i18n.js';
+ import { definePage } from '@/page.js';
+-import { ensureSignin } from '@/i.js';
++import { $i } from '@/i.js';
+ import { claimAchievement } from '@/utility/achievements.js';
+ 
+-const $i = ensureSignin();
+-
+ let timer: number | null;
+ 
+ function viewAchievements3min() {

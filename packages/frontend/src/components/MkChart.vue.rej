@@ -1,0 +1,172 @@
+--- packages/frontend/src/components/MkChart.vue	2026-07-02 10:19:31.584760426 +0900
++++ packages/frontend/src/components/MkChart.vue	2026-07-02 09:56:54.980926669 +0900
+@@ -94,8 +94,8 @@
+ 
+ const legendEl = useTemplateRef('legendEl');
+ 
+-const sum = (...arr: number[][]) => arr.reduce((r, a) => r.map((b, i) => a[i] + b));
+-const negate = (arr: number[]) => arr.map((x) => -x);
++const sum = (...arr) => arr.reduce((r, a) => r.map((b, i) => a[i] + b));
++const negate = arr => arr.map(x => -x);
+ 
+ const colors = {
+ 	blue: '#008FFB',
+@@ -108,7 +108,7 @@
+ 	cyan: '#00e0e0',
+ };
+ const colorSets = [colors.blue, colors.green, colors.yellow, colors.red, colors.purple];
+-const getColor = (i: number) => {
++const getColor = (i) => {
+ 	return colorSets[i % colorSets.length];
+ };
+ 
+@@ -142,7 +142,7 @@
+ 	return props.span === 'day' ? new Date(y, m, d - ago) : new Date(y, m, d, h - ago);
+ };
+ 
+-const format = (arr: number[]) => {
++const format = (arr) => {
+ 	return arr.map((v, i) => ({
+ 		x: getDate(i).getTime(),
+ 		y: v,
+@@ -371,7 +371,7 @@
+ 	};
+ };
+ 
+-const fetchNotesChart = async (type: 'local' | 'remote' | 'combined'): Promise<typeof chartData> => {
++const fetchNotesChart = async (type: string): Promise<typeof chartData> => {
+ 	const raw = await misskeyApiGet('charts/notes', { limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+@@ -589,10 +589,7 @@
+ };
+ 
+ const fetchInstanceRequestsChart = async (): Promise<typeof chartData> => {
+-	const host = props.args?.host;
+-	if (host == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/instance', { host: host, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/instance', { host: props.args?.host, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'In',
+@@ -614,10 +611,7 @@
+ };
+ 
+ const fetchInstanceUsersChart = async (total: boolean): Promise<typeof chartData> => {
+-	const host = props.args?.host;
+-	if (host == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/instance', { host: host, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/instance', { host: props.args?.host, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Users',
+@@ -632,10 +626,7 @@
+ };
+ 
+ const fetchInstanceNotesChart = async (total: boolean): Promise<typeof chartData> => {
+-	const host = props.args?.host;
+-	if (host == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/instance', { host: host, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/instance', { host: props.args?.host, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Notes',
+@@ -650,10 +641,7 @@
+ };
+ 
+ const fetchInstanceFfChart = async (total: boolean): Promise<typeof chartData> => {
+-	const host = props.args?.host;
+-	if (host == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/instance', { host: host, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/instance', { host: props.args?.host, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Following',
+@@ -676,10 +664,7 @@
+ };
+ 
+ const fetchInstanceDriveUsageChart = async (total: boolean): Promise<typeof chartData> => {
+-	const host = props.args?.host;
+-	if (host == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/instance', { host: host, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/instance', { host: props.args?.host, limit: props.limit, span: props.span });
+ 	return {
+ 		bytes: true,
+ 		series: [{
+@@ -695,10 +680,7 @@
+ };
+ 
+ const fetchInstanceDriveFilesChart = async (total: boolean): Promise<typeof chartData> => {
+-	const host = props.args?.host;
+-	if (host == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/instance', { host: host, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/instance', { host: props.args?.host, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Drive files',
+@@ -713,10 +695,7 @@
+ };
+ 
+ const fetchPerUserNotesChart = async (): Promise<typeof chartData> => {
+-	const userId = props.args?.user?.id;
+-	if (userId == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/user/notes', { userId: userId, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/user/notes', { userId: props.args?.user?.id, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [...(props.args?.withoutAll ? [] : [{
+ 			name: 'All',
+@@ -748,10 +727,7 @@
+ };
+ 
+ const fetchPerUserPvChart = async (): Promise<typeof chartData> => {
+-	const userId = props.args?.user?.id;
+-	if (userId == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/user/pv', { userId: userId, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/user/pv', { userId: props.args?.user?.id, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Unique PV (user)',
+@@ -778,10 +754,7 @@
+ };
+ 
+ const fetchPerUserFollowingChart = async (): Promise<typeof chartData> => {
+-	const userId = props.args?.user?.id;
+-	if (userId == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/user/following', { userId: userId, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/user/following', { userId: props.args?.user?.id, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Local',
+@@ -796,10 +769,7 @@
+ };
+ 
+ const fetchPerUserFollowersChart = async (): Promise<typeof chartData> => {
+-	const userId = props.args?.user?.id;
+-	if (userId == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/user/following', { userId: userId, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/user/following', { userId: props.args?.user?.id, limit: props.limit, span: props.span });
+ 	return {
+ 		series: [{
+ 			name: 'Local',
+@@ -814,10 +784,7 @@
+ };
+ 
+ const fetchPerUserDriveChart = async (): Promise<typeof chartData> => {
+-	const userId = props.args?.user?.id;
+-	if (userId == null) return { series: [] };
+-
+-	const raw = await misskeyApiGet('charts/user/drive', { userId: userId, limit: props.limit, span: props.span });
++	const raw = await misskeyApiGet('charts/user/drive', { userId: props.args?.user?.id, limit: props.limit, span: props.span });
+ 	return {
+ 		bytes: true,
+ 		series: [{

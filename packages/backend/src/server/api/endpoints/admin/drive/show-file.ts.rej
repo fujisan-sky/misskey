@@ -1,0 +1,25 @@
+--- packages/backend/src/server/api/endpoints/admin/drive/show-file.ts	2026-07-02 10:19:31.545760564 +0900
++++ packages/backend/src/server/api/endpoints/admin/drive/show-file.ts	2026-07-02 09:56:54.913926802 +0900
+@@ -157,22 +157,6 @@
+ 				type: 'boolean',
+ 				optional: false, nullable: false,
+ 			},
+-			maybeSensitive: {
+-				type: 'boolean',
+-				optional: false, nullable: false,
+-			},
+-			maybePorn: {
+-				type: 'boolean',
+-				optional: false, nullable: false,
+-			},
+-			requestIp: {
+-				type: 'string',
+-				optional: false, nullable: true,
+-			},
+-			requestHeaders: {
+-				type: 'object',
+-				optional: false, nullable: true,
+-			},
+ 		},
+ 	},
+ } as const;

@@ -1,0 +1,31 @@
+--- packages/frontend/src/widgets/WidgetProfile.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetProfile.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -5,7 +5,7 @@
+ 
+ <template>
+ <div class="_panel">
+-	<div :class="$style.container" :style="{ backgroundImage: $i.bannerUrl ? `url(${ $i.bannerUrl })` : undefined }">
++	<div :class="$style.container" :style="{ backgroundImage: $i.bannerUrl ? `url(${ $i.bannerUrl })` : null }">
+ 		<div :class="$style.avatarContainer">
+ 			<MkAvatar :class="$style.avatar" :user="$i"/>
+ 		</div>
+@@ -24,16 +24,14 @@
+ <script lang="ts" setup>
+ import { useWidgetPropsManager } from './widget.js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
+-import { ensureSignin } from '@/i.js';
++import type { GetFormResultType } from '@/utility/form.js';
++import { $i } from '@/i.js';
+ import { userPage } from '@/filters/user.js';
+ 
+-const $i = ensureSignin();
+-
+ const name = 'profile';
+ 
+ const widgetPropsDef = {
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 

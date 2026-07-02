@@ -1,0 +1,20 @@
+--- packages/backend/src/server/api/endpoints/users/lists/get-memberships.ts	2026-07-02 10:19:31.559760514 +0900
++++ packages/backend/src/server/api/endpoints/users/lists/get-memberships.ts	2026-07-02 09:56:54.929926770 +0900
+@@ -64,8 +64,6 @@
+ 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 30 },
+ 		sinceId: { type: 'string', format: 'misskey:id' },
+ 		untilId: { type: 'string', format: 'misskey:id' },
+-		sinceDate: { type: 'integer' },
+-		untilDate: { type: 'integer' },
+ 	},
+ 	required: ['listId'],
+ } as const;
+@@ -96,7 +94,7 @@
+ 				throw new ApiError(meta.errors.noSuchList);
+ 			}
+ 
+-			const query = this.queryService.makePaginationQuery(this.userListMembershipsRepository.createQueryBuilder('membership'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
++			const query = this.queryService.makePaginationQuery(this.userListMembershipsRepository.createQueryBuilder('membership'), ps.sinceId, ps.untilId)
+ 				.andWhere('membership.userListId = :userListId', { userListId: userList.id })
+ 				.innerJoinAndSelect('membership.user', 'user');
+ 

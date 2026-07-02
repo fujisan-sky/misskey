@@ -1,0 +1,10 @@
+--- packages/frontend/src/analytics.ts	2026-07-02 10:19:31.583760430 +0900
++++ packages/frontend/src/analytics.ts	2026-07-02 09:56:54.978926673 +0900
+@@ -90,7 +90,6 @@
+ 
+ 	// Google Analytics
+ 	if (instance.googleAnalyticsMeasurementId) {
+-		//@ts-expect-error Dynamic import
+ 		const { default: googleAnalytics } = await import('@analytics/google-analytics');
+ 
+ 		plugins.push(googleAnalytics({

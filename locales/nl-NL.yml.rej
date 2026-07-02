@@ -1,0 +1,49 @@
+--- locales/nl-NL.yml	2026-07-02 10:19:31.502760716 +0900
++++ locales/nl-NL.yml	2026-07-02 09:56:54.744927138 +0900
+@@ -970,10 +970,6 @@
+ followingOrFollower: "Gevolgd of volger"
+ confirmShowRepliesAll: "Dit is een onomkeerbare operatie. Weet je zeker dat reacties op anderen van iedereen die je volgt, wil weergeven in je tijdlijn?"
+ information: "Over"
+-previewingThemeRestore: "Herstellen"
+-_imageEditing:
+-  _vars:
+-    filename: "Bestandsnaam"
+ _chat:
+   invitations: "Uitnodigen"
+   noHistory: "Geen geschiedenis gevonden"
+@@ -1018,18 +1014,11 @@
+   jobQueue: "Job Queue"
+   _userList:
+     chooseList: "Kies een lijst."
+-_widgetOptions:
+-  height: "Hoogte"
+ _cw:
+   show: "Laad meer"
+ _visibility:
+   home: "Startpagina"
+   followers: "Volgers"
+-  specified: "Directe notities"
+-_postForm:
+-  _howToUse:
+-    visibility_title: "Zichtbaarheid"
+-    menu_title: "Menu"
+ _profile:
+   name: "Naam"
+   username: "Gebruikersnaam"
+@@ -1072,7 +1061,6 @@
+     list: "Lijsten"
+     channel: "Kanalen"
+     mentions: "Vermeldingen"
+-    direct: "Directe notities"
+ _webhookSettings:
+   name: "Naam"
+   active: "Ingeschakeld"
+@@ -1090,8 +1078,3 @@
+     title: "Niet gevonden"
+ _search:
+   searchScopeAll: "Alle"
+-_watermarkEditor:
+-  image: "Afbeeldingen"
+-  advanced: "Geavanceerd"
+-_qr:
+-  showTabTitle: "Weergave"

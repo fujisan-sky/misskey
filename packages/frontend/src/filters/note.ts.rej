@@ -1,0 +1,10 @@
+--- packages/frontend/src/filters/note.ts	2026-07-02 10:19:31.596760383 +0900
++++ packages/frontend/src/filters/note.ts	2026-07-02 09:56:54.997926635 +0900
+@@ -3,6 +3,6 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-export const notePage = (note: { id: string }) => {
++export const notePage = note => {
+ 	return `/notes/${note.id}`;
+ };

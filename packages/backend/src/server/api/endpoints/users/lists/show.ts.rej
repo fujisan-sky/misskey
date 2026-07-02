@@ -1,0 +1,30 @@
+--- packages/backend/src/server/api/endpoints/users/lists/show.ts	2026-07-02 10:19:31.559760514 +0900
++++ packages/backend/src/server/api/endpoints/users/lists/show.ts	2026-07-02 09:56:54.929926770 +0900
+@@ -22,26 +22,7 @@
+ 	res: {
+ 		type: 'object',
+ 		optional: false, nullable: false,
+-		allOf: [
+-			{
+-				type: 'object',
+-				ref: 'UserList',
+-			},
+-			{
+-				type: 'object',
+-				optional: false, nullable: false,
+-				properties: {
+-					likedCount: {
+-						type: 'number',
+-						optional: true, nullable: false,
+-					},
+-					isLiked: {
+-						type: 'boolean',
+-						optional: true, nullable: false,
+-					},
+-				},
+-			},
+-		],
++		ref: 'UserList',
+ 	},
+ 
+ 	errors: {

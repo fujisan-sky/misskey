@@ -1,0 +1,33 @@
+--- packages/backend/src/server/api/endpoints/i/webhooks/show.ts	2026-07-02 10:19:31.555760529 +0900
++++ packages/backend/src/server/api/endpoints/i/webhooks/show.ts	2026-07-02 09:56:54.924926780 +0900
+@@ -28,7 +28,29 @@
+ 
+ 	res: {
+ 		type: 'object',
+-		ref: 'UserWebhook',
++		properties: {
++			id: {
++				type: 'string',
++				format: 'misskey:id',
++			},
++			userId: {
++				type: 'string',
++				format: 'misskey:id',
++			},
++			name: { type: 'string' },
++			on: {
++				type: 'array',
++				items: {
++					type: 'string',
++					enum: webhookEventTypes,
++				},
++			},
++			url: { type: 'string' },
++			secret: { type: 'string' },
++			active: { type: 'boolean' },
++			latestSentAt: { type: 'string', format: 'date-time', nullable: true },
++			latestStatus: { type: 'integer', nullable: true },
++		},
+ 	},
+ } as const;
+ 

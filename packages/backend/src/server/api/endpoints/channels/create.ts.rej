@@ -1,0 +1,20 @@
+--- packages/backend/src/server/api/endpoints/channels/create.ts	2026-07-02 10:19:31.549760550 +0900
++++ packages/backend/src/server/api/endpoints/channels/create.ts	2026-07-02 09:56:54.917926794 +0900
+@@ -22,8 +22,6 @@
+ 
+ 	kind: 'write:channels',
+ 
+-	requiredRolePolicy: 'canCreateChannel',
+-
+ 	limit: {
+ 		duration: ms('1hour'),
+ 		max: 10,
+@@ -48,7 +46,7 @@
+ 	type: 'object',
+ 	properties: {
+ 		name: { type: 'string', minLength: 1, maxLength: 128 },
+-		description: { type: 'string', nullable: true, maxLength: 2048 },
++		description: { type: 'string', nullable: true, minLength: 1, maxLength: 2048 },
+ 		bannerId: { type: 'string', format: 'misskey:id', nullable: true },
+ 		color: { type: 'string', minLength: 1, maxLength: 16 },
+ 		isSensitive: { type: 'boolean', nullable: true },

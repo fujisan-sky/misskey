@@ -1,0 +1,27 @@
+--- packages/frontend/src/directives/follow-append.ts	2026-07-02 10:19:31.596760383 +0900
++++ packages/frontend/src/directives/follow-append.ts	2026-07-02 09:56:54.997926635 +0900
+@@ -6,12 +6,8 @@
+ import type { Directive } from 'vue';
+ import { getScrollContainer, getScrollPosition } from '@@/js/scroll.js';
+ 
+-interface HTMLElementWithRO extends HTMLElement {
+-	_ro_?: ResizeObserver;
+-}
+-
+-export const followAppendDirective = {
+-	mounted(src, binding) {
++export default {
++	mounted(src, binding, vn) {
+ 		if (binding.value === false) return;
+ 
+ 		let isBottom = true;
+@@ -38,7 +34,7 @@
+ 		src._ro_ = ro;
+ 	},
+ 
+-	unmounted(src) {
++	unmounted(src, binding, vn) {
+ 		if (src._ro_) src._ro_.unobserve(src);
+ 	},
+-} as Directive<HTMLElementWithRO, boolean>;
++} as Directive;

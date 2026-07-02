@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkButton.stories.impl.ts	2026-07-02 10:19:31.584760426 +0900
++++ packages/frontend/src/components/MkButton.stories.impl.ts	2026-07-02 09:56:54.979926671 +0900
+@@ -5,7 +5,7 @@
+ 
+ /* eslint-disable @typescript-eslint/explicit-function-return-type */
+ /* eslint-disable import/no-default-export */
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import type { StoryObj } from '@storybook/vue3';
+ import MkButton from './MkButton.vue';
+ export const Default = {

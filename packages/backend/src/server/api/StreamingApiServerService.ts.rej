@@ -1,0 +1,69 @@
+--- packages/backend/src/server/api/StreamingApiServerService.ts	2026-07-02 10:19:31.544760567 +0900
++++ packages/backend/src/server/api/StreamingApiServerService.ts	2026-07-02 09:56:54.911926806 +0900
+@@ -8,14 +8,17 @@
+ import * as Redis from 'ioredis';
+ import * as WebSocket from 'ws';
+ import { DI } from '@/di-symbols.js';
+-import type { MiAccessToken } from '@/models/_.js';
++import type { UsersRepository, MiAccessToken } from '@/models/_.js';
++import { NotificationService } from '@/core/NotificationService.js';
+ import { bindThis } from '@/decorators.js';
++import { CacheService } from '@/core/CacheService.js';
+ import { MiLocalUser } from '@/models/User.js';
+ import { UserService } from '@/core/UserService.js';
++import { ChannelFollowingService } from '@/core/ChannelFollowingService.js';
+ import { AuthenticateService, AuthenticationError } from './AuthenticateService.js';
+-import MainStreamConnection, { ConnectionRequest } from './stream/Connection.js';
++import MainStreamConnection from './stream/Connection.js';
++import { ChannelsService } from './stream/ChannelsService.js';
+ import type * as http from 'node:http';
+-import { ContextIdFactory, ModuleRef } from '@nestjs/core';
+ 
+ @Injectable()
+ export class StreamingApiServerService {
+@@ -27,9 +30,15 @@
+ 		@Inject(DI.redisForSub)
+ 		private redisForSub: Redis.Redis,
+ 
+-		private moduleRef: ModuleRef,
++		@Inject(DI.usersRepository)
++		private usersRepository: UsersRepository,
++
++		private cacheService: CacheService,
+ 		private authenticateService: AuthenticateService,
++		private channelsService: ChannelsService,
++		private notificationService: NotificationService,
+ 		private usersService: UserService,
++		private channelFollowingService: ChannelFollowingService,
+ 	) {
+ 	}
+ 
+@@ -83,12 +92,13 @@
+ 				return;
+ 			}
+ 
+-			const contextId = ContextIdFactory.create();
+-			this.moduleRef.registerRequestByContextId<ConnectionRequest>({
+-				user,
+-				token: app,
+-			}, contextId);
+-			const stream = await this.moduleRef.create(MainStreamConnection, contextId);
++			const stream = new MainStreamConnection(
++				this.channelsService,
++				this.notificationService,
++				this.cacheService,
++				this.channelFollowingService,
++				user, app,
++			);
+ 
+ 			await stream.init();
+ 
+@@ -111,7 +121,7 @@
+ 			user: MiLocalUser | null;
+ 			app: MiAccessToken | null
+ 		}) => {
+-			const { stream, user } = ctx;
++			const { stream, user, app } = ctx;
+ 
+ 			const ev = new EventEmitter();
+ 

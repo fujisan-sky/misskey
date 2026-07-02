@@ -1,0 +1,61 @@
+--- packages/frontend/src/widgets/WidgetFederation.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetFederation.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -4,7 +4,7 @@
+ -->
+ 
+ <template>
+-<MkContainer :showHeader="widgetProps.showHeader" data-cy-mkw-federation class="mkw-federation">
++<MkContainer :showHeader="widgetProps.showHeader" :foldable="foldable" :scrollable="scrollable" data-cy-mkw-federation class="mkw-federation">
+ 	<template #icon><i class="ti ti-whirl"></i></template>
+ 	<template #header>{{ i18n.ts._widgets.federation }}</template>
+ 
+@@ -30,7 +30,7 @@
+ import { useInterval } from '@@/js/use-interval.js';
+ import { useWidgetPropsManager } from './widget.js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
++import type { GetFormResultType } from '@/utility/form.js';
+ import MkContainer from '@/components/MkContainer.vue';
+ import MkMiniChart from '@/components/MkMiniChart.vue';
+ import { misskeyApi, misskeyApiGet } from '@/utility/misskey-api.js';
+@@ -42,11 +42,10 @@
+ 
+ const widgetPropsDef = {
+ 	showHeader: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.showHeader,
++		type: 'boolean' as const,
+ 		default: true,
+ 	},
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 
+@@ -63,7 +62,7 @@
+ const charts = ref<Misskey.entities.ChartsInstanceResponse[]>([]);
+ const fetching = ref(true);
+ 
+-async function fetchInstances() {
++const fetch = async () => {
+ 	const fetchedInstances = await misskeyApi('federation/instances', {
+ 		sort: '+latestRequestReceivedAt',
+ 		limit: 5,
+@@ -72,14 +71,14 @@
+ 	instances.value = fetchedInstances;
+ 	charts.value = fetchedCharts;
+ 	fetching.value = false;
+-}
++};
+ 
+-useInterval(fetchInstances, 1000 * 60, {
++useInterval(fetch, 1000 * 60, {
+ 	immediate: true,
+ 	afterMounted: true,
+ });
+ 
+-function getInstanceIcon(instance: Misskey.entities.FederationInstance): string {
++function getInstanceIcon(instance): string {
+ 	return getProxiedImageUrlNullable(instance.iconUrl, 'preview') ?? getProxiedImageUrlNullable(instance.faviconUrl, 'preview') ?? '/client-assets/dummy.png';
+ }
+ 

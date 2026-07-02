@@ -1,0 +1,220 @@
+--- packages/frontend/src/components/MkEmojiPicker.vue	2026-07-02 10:19:31.586760419 +0900
++++ packages/frontend/src/components/MkEmojiPicker.vue	2026-07-02 09:56:54.983926663 +0900
+@@ -64,7 +64,6 @@
+ 						<MkCustomEmoji v-if="!emoji.hasOwnProperty('char')" class="emoji" :name="getKey(emoji)" :normal="true"/>
+ 						<MkEmoji v-else class="emoji" :emoji="getKey(emoji)" :normal="true"/>
+ 					</button>
+-					<button v-tooltip="i18n.ts.settings" class="_button config" @click="settings"><i class="ti ti-settings"></i></button>
+ 				</div>
+ 			</section>
+ 
+@@ -140,10 +139,6 @@
+ import { $i } from '@/i.js';
+ import { checkReactionPermissions } from '@/utility/check-reaction-permissions.js';
+ import { prefer } from '@/preferences.js';
+-import { useRouter } from '@/router.js';
+-import { haptic } from '@/utility/haptic.js';
+-
+-const router = useRouter();
+ 
+ const props = withDefaults(defineProps<{
+ 	showPinned?: boolean;
+@@ -152,7 +147,7 @@
+ 	asDrawer?: boolean;
+ 	asWindow?: boolean;
+ 	asReactionPicker?: boolean; // 今は使われてないが将来的に使いそう
+-	targetNote?: Misskey.entities.Note | null;
++	targetNote?: Misskey.entities.Note;
+ }>(), {
+ 	showPinned: true,
+ });
+@@ -326,7 +321,7 @@
+ 
+ 			for (const index of Object.values(store.s.additionalUnicodeEmojiIndexes)) {
+ 				for (const emoji of emojis) {
+-					if (keywords.every(keyword => index[emoji.char]?.some(k => k.includes(keyword)))) {
++					if (keywords.every(keyword => index[emoji.char].some(k => k.includes(keyword)))) {
+ 						matches.add(emoji);
+ 						if (matches.size >= max) break;
+ 					}
+@@ -343,7 +338,7 @@
+ 
+ 			for (const index of Object.values(store.s.additionalUnicodeEmojiIndexes)) {
+ 				for (const emoji of emojis) {
+-					if (index[emoji.char]?.some(k => k.startsWith(newQ))) {
++					if (index[emoji.char].some(k => k.startsWith(newQ))) {
+ 						matches.add(emoji);
+ 						if (matches.size >= max) break;
+ 					}
+@@ -360,7 +355,7 @@
+ 
+ 			for (const index of Object.values(store.s.additionalUnicodeEmojiIndexes)) {
+ 				for (const emoji of emojis) {
+-					if (index[emoji.char]?.some(k => k.includes(newQ))) {
++					if (index[emoji.char].some(k => k.includes(newQ))) {
+ 						matches.add(emoji);
+ 						if (matches.size >= max) break;
+ 					}
+@@ -412,13 +407,13 @@
+ }
+ 
+ /** @see MkEmojiPicker.section.vue */
+-function computeButtonTitle(ev: PointerEvent): void {
++function computeButtonTitle(ev: MouseEvent): void {
+ 	const elm = ev.target as HTMLElement;
+ 	const emoji = elm.dataset.emoji as string;
+ 	elm.title = getEmojiName(emoji);
+ }
+ 
+-function chosen(emoji: string | Misskey.entities.EmojiSimple | UnicodeEmojiDef, ev?: PointerEvent) {
++function chosen(emoji: string | Misskey.entities.EmojiSimple | UnicodeEmojiDef, ev?: MouseEvent) {
+ 	const el = ev && (ev.currentTarget ?? ev.target) as HTMLElement | null | undefined;
+ 	if (el && prefer.s.animation) {
+ 		const rect = el.getBoundingClientRect();
+@@ -432,8 +427,6 @@
+ 	const key = getKey(emoji);
+ 	emit('chosen', key);
+ 
+-	haptic();
+-
+ 	// 最近使った絵文字更新
+ 	if (!pinned.value?.includes(key)) {
+ 		let recents = store.s.recentlyUsedEmojis;
+@@ -496,11 +489,6 @@
+ 	}
+ }
+ 
+-function settings() {
+-	emit('esc');
+-	router.push('/settings/emoji-palette');
+-}
+-
+ onMounted(() => {
+ 	focus();
+ });
+@@ -530,53 +518,47 @@
+ 		--eachSize: 50px;
+ 	}
+ 
+-	&.s4 {
+-		--eachSize: 55px;
+-	}
+-
+-	&.s5 {
+-		--eachSize: 60px;
+-	}
+-
+ 	&.w1 {
+-		--columns: 5;
++		width: calc((var(--eachSize) * 5) + (#{$pad} * 2));
++		--columns: 1fr 1fr 1fr 1fr 1fr;
+ 	}
+ 
+ 	&.w2 {
+-		--columns: 6;
++		width: calc((var(--eachSize) * 6) + (#{$pad} * 2));
++		--columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+ 	}
+ 
+ 	&.w3 {
+-		--columns: 7;
++		width: calc((var(--eachSize) * 7) + (#{$pad} * 2));
++		--columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+ 	}
+ 
+ 	&.w4 {
+-		--columns: 8;
++		width: calc((var(--eachSize) * 8) + (#{$pad} * 2));
++		--columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+ 	}
+ 
+ 	&.w5 {
+-		--columns: 9;
++		width: calc((var(--eachSize) * 9) + (#{$pad} * 2));
++		--columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+ 	}
+ 
+ 	&.h1 {
+-		--rows: 4;
++		height: calc((var(--eachSize) * 4) + (#{$pad} * 2));
+ 	}
+ 
+ 	&.h2 {
+-		--rows: 6;
++		height: calc((var(--eachSize) * 6) + (#{$pad} * 2));
+ 	}
+ 
+ 	&.h3 {
+-		--rows: 8;
++		height: calc((var(--eachSize) * 8) + (#{$pad} * 2));
+ 	}
+ 
+ 	&.h4 {
+-		--rows: 10;
++		height: calc((var(--eachSize) * 10) + (#{$pad} * 2));
+ 	}
+ 
+-	width: calc((var(--eachSize) * var(--columns)) + (#{$pad} * 2));
+-	height: calc((var(--eachSize) * var(--rows)) + (#{$pad} * 2));
+-
+ 	&.asDrawer {
+ 		width: 100% !important;
+ 
+@@ -591,17 +573,9 @@
+ 
+ 				> .body {
+ 					display: grid;
+-					grid-template-columns: repeat(var(--columns), 1fr);
++					grid-template-columns: var(--columns);
+ 					font-size: 30px;
+ 
+-					> .config {
+-						aspect-ratio: 1 / 1;
+-						width: auto;
+-						height: auto;
+-						min-width: 0;
+-						font-size: 14px;
+-					}
+-
+ 					> .item {
+ 						aspect-ratio: 1 / 1;
+ 						width: auto;
+@@ -633,7 +607,7 @@
+ 			::v-deep(section) {
+ 				> .body {
+ 					display: grid;
+-					grid-template-columns: repeat(var(--columns), 1fr);
++					grid-template-columns: var(--columns);
+ 					font-size: 30px;
+ 
+ 					> .item {
+@@ -701,8 +675,13 @@
+ 		height: 100%;
+ 		overflow-y: auto;
+ 		overflow-x: hidden;
++
+ 		scrollbar-width: none;
+ 
++		&::-webkit-scrollbar {
++			display: none;
++		}
++
+ 		> .group {
+ 			&:not(.index) {
+ 				padding: 4px 0 8px 0;
+@@ -741,15 +720,6 @@
+ 				position: relative;
+ 				padding: $pad;
+ 
+-				> .config {
+-					position: relative;
+-					padding: 0 3px;
+-					width: var(--eachSize);
+-					height: var(--eachSize);
+-					contain: strict;
+-					opacity: 0.5;
+-				}
+-
+ 				> .item {
+ 					position: relative;
+ 					padding: 0 3px;

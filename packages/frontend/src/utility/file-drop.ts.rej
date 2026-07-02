@@ -1,0 +1,33 @@
+--- packages/frontend/src/utility/file-drop.ts	2026-07-02 10:19:31.609760337 +0900
++++ packages/frontend/src/utility/file-drop.ts	2026-07-02 09:56:55.018926593 +0900
+@@ -75,18 +75,20 @@
+ 		});
+ 	}
+ 
+-	async function readDirectory(fileSystemDirectoryEntry: FileSystemDirectoryEntry): Promise<DroppedItem[]> {
+-		const allEntries = Array.of<FileSystemEntry>();
+-		const reader = fileSystemDirectoryEntry.createReader();
+-		while (true) {
+-			const entries = await new Promise<FileSystemEntry[]>((res, rej) => reader.readEntries(res, rej));
+-			if (entries.length === 0) {
+-				break;
++	function readDirectory(fileSystemDirectoryEntry: FileSystemDirectoryEntry): Promise<DroppedItem[]> {
++		return new Promise(async (resolve) => {
++			const allEntries = Array.of<FileSystemEntry>();
++			const reader = fileSystemDirectoryEntry.createReader();
++			while (true) {
++				const entries = await new Promise<FileSystemEntry[]>((res, rej) => reader.readEntries(res, rej));
++				if (entries.length === 0) {
++					break;
++				}
++				allEntries.push(...entries);
+ 			}
+-			allEntries.push(...entries);
+-		}
+ 
+-		return await Promise.all(allEntries.map(readEntry));
++			resolve(await Promise.all(allEntries.map(readEntry)));
++		});
+ 	}
+ 
+ 	// 扱いにくいので配列に変換

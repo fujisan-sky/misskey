@@ -1,0 +1,119 @@
+--- packages/frontend/src/pages/admin/invites.vue	2026-07-02 10:19:31.598760376 +0900
++++ packages/frontend/src/pages/admin/invites.vue	2026-07-02 09:56:55.000926629 +0900
+@@ -18,7 +18,7 @@
+ 					<MkInput v-if="!noExpirationDate" v-model="expiresAt" type="datetime-local">
+ 						<template #label>{{ i18n.ts.expirationDate }}</template>
+ 					</MkInput>
+-					<MkInput v-model="createCount" type="number" :min="1">
++					<MkInput v-model="createCount" type="number" min="1">
+ 						<template #label>{{ i18n.ts.createCount }}</template>
+ 					</MkInput>
+ 					<MkButton primary rounded @click="createWithOptions">{{ i18n.ts.create }}</MkButton>
+@@ -26,17 +26,25 @@
+ 			</MkFolder>
+ 
+ 			<div :class="$style.inputs">
+-				<MkSelect v-model="type" :items="typeDef" :class="$style.input">
++				<MkSelect v-model="type" :class="$style.input">
+ 					<template #label>{{ i18n.ts.state }}</template>
++					<option value="all">{{ i18n.ts.all }}</option>
++					<option value="unused">{{ i18n.ts.unused }}</option>
++					<option value="used">{{ i18n.ts.used }}</option>
++					<option value="expired">{{ i18n.ts.expired }}</option>
+ 				</MkSelect>
+-				<MkSelect v-model="sort" :items="sortDef" :class="$style.input">
++				<MkSelect v-model="sort" :class="$style.input">
+ 					<template #label>{{ i18n.ts.sort }}</template>
++					<option value="+createdAt">{{ i18n.ts.createdAt }} ({{ i18n.ts.ascendingOrder }})</option>
++					<option value="-createdAt">{{ i18n.ts.createdAt }} ({{ i18n.ts.descendingOrder }})</option>
++					<option value="+usedAt">{{ i18n.ts.usedAt }} ({{ i18n.ts.ascendingOrder }})</option>
++					<option value="-usedAt">{{ i18n.ts.usedAt }} ({{ i18n.ts.descendingOrder }})</option>
+ 				</MkSelect>
+ 			</div>
+-			<MkPagination :paginator="paginator">
++			<MkPagination ref="pagingComponent" :pagination="pagination">
+ 				<template #default="{ items }">
+ 					<div class="_gaps_s">
+-						<MkInviteCode v-for="item in items" :key="item.id" :invite="item" :onDeleted="deleted" moderator/>
++						<MkInviteCode v-for="item in items" :key="item.id" :invite="(item as any)" :onDeleted="deleted" moderator/>
+ 					</div>
+ 				</template>
+ 			</MkPagination>
+@@ -46,8 +54,8 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import * as Misskey from 'misskey-js';
+-import { computed, markRaw, ref, useTemplateRef } from 'vue';
++import { computed, ref, useTemplateRef } from 'vue';
++import type { PagingCtx } from '@/composables/use-pagination.js';
+ import { i18n } from '@/i18n.js';
+ import * as os from '@/os.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+@@ -59,42 +67,21 @@
+ import MkPagination from '@/components/MkPagination.vue';
+ import MkInviteCode from '@/components/MkInviteCode.vue';
+ import { definePage } from '@/page.js';
+-import { useMkSelect } from '@/composables/use-mkselect.js';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+-const {
+-	model: type,
+-	def: typeDef,
+-} = useMkSelect({
+-	items: [
+-		{ label: i18n.ts.all, value: 'all' },
+-		{ label: i18n.ts.unused, value: 'unused' },
+-		{ label: i18n.ts.used, value: 'used' },
+-		{ label: i18n.ts.expired, value: 'expired' },
+-	],
+-	initialValue: 'all',
+-});
+-const {
+-	model: sort,
+-	def: sortDef,
+-} = useMkSelect({
+-	items: [
+-		{ label: `${i18n.ts.createdAt} (${i18n.ts.ascendingOrder})`, value: '+createdAt' },
+-		{ label: `${i18n.ts.createdAt} (${i18n.ts.descendingOrder})`, value: '-createdAt' },
+-		{ label: `${i18n.ts.usedAt} (${i18n.ts.ascendingOrder})`, value: '+usedAt' },
+-		{ label: `${i18n.ts.usedAt} (${i18n.ts.descendingOrder})`, value: '-usedAt' },
+-	],
+-	initialValue: '+createdAt',
+-});
++const pagingComponent = useTemplateRef('pagingComponent');
+ 
+-const paginator = markRaw(new Paginator('admin/invite/list', {
++const type = ref('all');
++const sort = ref('+createdAt');
++
++const pagination: PagingCtx = {
++	endpoint: 'admin/invite/list' as const,
+ 	limit: 10,
+-	computedParams: computed(() => ({
++	params: computed(() => ({
+ 		type: type.value,
+ 		sort: sort.value,
+ 	})),
+ 	offsetMode: true,
+-}));
++};
+ 
+ const expiresAt = ref('');
+ const noExpirationDate = ref(true);
+@@ -113,11 +100,13 @@
+ 		text: tickets.map(x => x.code).join('\n'),
+ 	});
+ 
+-	tickets.forEach(ticket => paginator.prepend(ticket));
++	tickets.forEach(ticket => pagingComponent.value?.paginator.prepend(ticket));
+ }
+ 
+ function deleted(id: string) {
+-	paginator.removeItem(id);
++	if (pagingComponent.value) {
++		pagingComponent.value.paginator.removeItem(id);
++	}
+ }
+ 
+ const headerActions = computed(() => []);

@@ -1,0 +1,25 @@
+--- packages/backend/src/core/activitypub/type.ts	2026-07-02 10:19:31.533760607 +0900
++++ packages/backend/src/core/activitypub/type.ts	2026-07-02 09:56:54.898926832 +0900
+@@ -34,8 +34,6 @@
+ 	href?: string;
+ 	tag?: IObject | IObject[];
+ 	sensitive?: boolean;
+-	width?: number;
+-	height?: number;
+ }
+ 
+ /**
+@@ -58,10 +56,10 @@
+ /**
+  * Get ActivityStreams Object id
+  */
+-export function getApId(value: string | IObject | undefined): string {
++export function getApId(value: string | IObject): string {
+ 	if (typeof value === 'string') return value;
+-	if (value != null && typeof value.id === 'string') return value.id;
+-	throw new Error('cannot determine id');
++	if (typeof value.id === 'string') return value.id;
++	throw new Error('cannot detemine id');
+ }
+ 
+ /**

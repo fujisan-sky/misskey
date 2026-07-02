@@ -1,0 +1,47 @@
+--- packages/frontend/src/widgets/WidgetInstanceCloud.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetInstanceCloud.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -23,23 +23,21 @@
+ import { useInterval } from '@@/js/use-interval.js';
+ import { useWidgetPropsManager } from './widget.js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
++import type { GetFormResultType } from '@/utility/form.js';
+ import MkContainer from '@/components/MkContainer.vue';
+ import MkTagCloud from '@/components/MkTagCloud.vue';
+ import * as os from '@/os.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+ import { getProxiedImageUrlNullable } from '@/utility/media-proxy.js';
+-import { i18n } from '@/i18n.js';
+ 
+ const name = 'instanceCloud';
+ 
+ const widgetPropsDef = {
+ 	transparent: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.transparent,
++		type: 'boolean' as const,
+ 		default: false,
+ 	},
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 
+@@ -55,7 +53,7 @@
+ const cloud = useTemplateRef('cloud');
+ const activeInstances = shallowRef<Misskey.entities.FederationInstance[] | null>(null);
+ 
+-function onInstanceClick(i: Misskey.entities.FederationInstance) {
++function onInstanceClick(i) {
+ 	os.pageWindow(`/instance-info/${i.host}`);
+ }
+ 
+@@ -72,7 +70,7 @@
+ 	afterMounted: true,
+ });
+ 
+-function getInstanceIcon(instance: Misskey.entities.FederationInstance): string {
++function getInstanceIcon(instance): string {
+ 	return getProxiedImageUrlNullable(instance.iconUrl, 'preview') ?? getProxiedImageUrlNullable(instance.faviconUrl, 'preview') ?? '/client-assets/dummy.png';
+ }
+ 

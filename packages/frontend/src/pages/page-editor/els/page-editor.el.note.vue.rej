@@ -1,0 +1,25 @@
+--- packages/frontend/src/pages/page-editor/els/page-editor.el.note.vue	2026-07-02 10:19:31.602760362 +0900
++++ packages/frontend/src/pages/page-editor/els/page-editor.el.note.vue	2026-07-02 09:56:55.006926617 +0900
+@@ -5,7 +5,7 @@
+ 
+ <template>
+ <!-- eslint-disable vue/no-mutating-props -->
+-<XContainer :draggable="true" :dragStartCallback="dragStartCallback" @remove="() => emit('remove')">
++<XContainer :draggable="true" @remove="() => emit('remove')">
+ 	<template #header><i class="ti ti-note"></i> {{ i18n.ts._pages.blocks.note }}</template>
+ 
+ 	<section style="padding: 16px;" class="_gaps_s">
+@@ -34,13 +34,11 @@
+ import { i18n } from '@/i18n.js';
+ 
+ const props = defineProps<{
+-	dragStartCallback?: (ev: DragEvent) => void;
+ 	modelValue: Misskey.entities.PageBlock & { type: 'note' };
+ }>();
+ 
+ const emit = defineEmits<{
+ 	(ev: 'update:modelValue', value: Misskey.entities.PageBlock & { type: 'note' }): void;
+-	(ev: 'remove'): void;
+ }>();
+ 
+ const id = ref(props.modelValue.note);

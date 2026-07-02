@@ -1,0 +1,25 @@
+--- packages/frontend/src/components/MkFoldableSection.vue	2026-07-02 10:19:31.586760419 +0900
++++ packages/frontend/src/components/MkFoldableSection.vue	2026-07-02 09:56:54.983926663 +0900
+@@ -34,7 +34,7 @@
+ import { onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
+ import { miLocalStorage } from '@/local-storage.js';
+ import { prefer } from '@/preferences.js';
+-import { themeManager } from '@/theme.js';
++import { globalEvents } from '@/events.js';
+ import { getBgColor } from '@/utility/get-bg-color.js';
+ 
+ const miLocalStoragePrefix = 'ui:folder:' as const;
+@@ -92,11 +92,11 @@
+ 
+ onMounted(() => {
+ 	updateBgColor();
+-	themeManager.on('themeChanging', updateBgColor);
++	globalEvents.on('themeChanging', updateBgColor);
+ });
+ 
+ onBeforeUnmount(() => {
+-	themeManager.off('themeChanging', updateBgColor);
++	globalEvents.off('themeChanging', updateBgColor);
+ });
+ </script>
+ 

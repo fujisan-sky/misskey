@@ -1,0 +1,20 @@
+--- packages/backend/src/models/FlashLike.ts	2026-07-02 10:19:31.539760585 +0900
++++ packages/backend/src/models/FlashLike.ts	2026-07-02 09:56:54.905926818 +0900
+@@ -18,7 +18,7 @@
+ 	@Column(id())
+ 	public userId: MiUser['id'];
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -27,7 +27,7 @@
+ 	@Column(id())
+ 	public flashId: MiFlash['id'];
+ 
+-	@ManyToOne(() => MiFlash, {
++	@ManyToOne(type => MiFlash, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()

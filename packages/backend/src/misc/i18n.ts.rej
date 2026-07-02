@@ -1,0 +1,11 @@
+--- packages/backend/src/misc/i18n.ts	2026-07-02 10:19:31.536760596 +0900
++++ packages/backend/src/misc/i18n.ts	2026-07-02 09:56:54.902926824 +0900
+@@ -26,7 +26,7 @@
+ 				}
+ 			}
+ 			return str;
+-		} catch (_) {
++		} catch (e) {
+ 			console.warn(`missing localization '${key}'`);
+ 			return key;
+ 		}

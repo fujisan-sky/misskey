@@ -1,0 +1,35 @@
+--- locales/el-GR.yml	2026-07-02 10:19:31.501760719 +0900
++++ locales/el-GR.yml	2026-07-02 09:56:54.734927158 +0900
+@@ -288,10 +288,6 @@
+ renotes: "Κοινοποίηση σημειώματος"
+ postForm: "Φόρμα δημοσίευσης"
+ information: "Πληροφορίες"
+-widgets: "Μαραφέτια"
+-_imageEditing:
+-  _vars:
+-    filename: "Όνομα αρχείου"
+ _chat:
+   members: "Μέλη"
+   home: "Κεντρικό"
+@@ -357,7 +353,6 @@
+   home: "Κεντρικό"
+   homeDescription: "Δημοσίευση στο κεντρικό χρονολόγιο μόνο"
+   followers: "Ακολουθούν"
+-  specified: "Απευθείας σημειώματα"
+ _profile:
+   name: "Όνομα"
+   username: "Όνομα μέλους"
+@@ -400,7 +395,6 @@
+     antenna: "Αντένες"
+     list: "Λίστα"
+     mentions: "Επισημάνσεις"
+-    direct: "Απευθείας σημειώματα"
+ _webhookSettings:
+   name: "Όνομα"
+ _moderationLogTypes:
+@@ -409,5 +403,3 @@
+   total: "Σύνολο"
+ _search:
+   searchScopeLocal: "Τοπικό"
+-_watermarkEditor:
+-  image: "Εικόνες"

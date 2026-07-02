@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/i/2fa/remove-key.ts	2026-07-02 10:19:31.554760532 +0900
++++ packages/backend/src/server/api/endpoints/i/2fa/remove-key.ts	2026-07-02 09:56:54.922926784 +0900
+@@ -61,7 +61,7 @@
+ 
+ 				try {
+ 					await this.userAuthService.twoFactorAuthenticate(profile, token);
+-				} catch (_) {
++				} catch (e) {
+ 					throw new Error('authentication failed');
+ 				}
+ 			}

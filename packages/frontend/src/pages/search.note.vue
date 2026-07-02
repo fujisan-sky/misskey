@@ -19,11 +19,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<template #header>{{ i18n.ts.options }}</template>
 
 			<div class="_gaps_m">
-				<MkRadios v-model="searchScope">
-					<option v-if="instance.federation !== 'none' && noteSearchableScope === 'global'" value="all">{{ i18n.ts._search.searchScopeAll }}</option>
-					<option value="local">{{ instance.federation === 'none' ? i18n.ts._search.searchScopeAll : i18n.ts._search.searchScopeLocal }}</option>
-					<option v-if="instance.federation !== 'none' && noteSearchableScope === 'global'" value="server">{{ i18n.ts._search.searchScopeServer }}</option>
-					<option value="user">{{ i18n.ts._search.searchScopeUser }}</option>
+				<div style="display: flex; gap: 8px;">
+					<MkInput v-model="rangeStartAt" type="datetime-local">
+						<template #label>{{ i18n.ts._search.postFrom }}</template>
+					</MkInput>
+					<MkInput v-model="rangeEndAt" type="datetime-local">
+						<template #label>{{ i18n.ts._search.postTo }}</template>
+					</MkInput>
+				</div>
+
+				<MkRadios
+					v-model="searchScope"
+					:options="searchScopeDef"
+				>
 				</MkRadios>
 
 				<div v-if="instance.federation !== 'none' && searchScope === 'server'" :class="$style.subOptionRoot">
@@ -71,7 +79,6 @@ SPDX-License-Identifier: AGPL-3.0-only
 								<MkUserCardMini
 									:user="user"
 									:withChart="false"
-									:class="$style.userSelectedCard"
 								/>
 							</div>
 							<div>
@@ -86,15 +93,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 						</div>
 					</div>
 				</div>
-			</div>
-			<div>
-                         	<MkRadios v-model="attachedSelect">
-                                 	<template #label>添付ファイルで絞り込み</template>
-                                 	<option value="all" default>絞らない</option>
-                                 	<option value="image">画像</option>
-                                 	<option value="video">動画</option>
-                                 	<option value="audio">♪</option>
-                        	</MkRadios>
+				<div>
+                         		<MkRadios v-model="attachedSelect"
+					  	:options="[
+					        	{ value: 'all'  , label: i18n.ts.all },
+                                			{ value: 'image', label: '画像' },
+                                			{ value: 'video', label: '動画' },
+                                			{ value: 'audio', label: '♪' },
+					  	]"
+					  	@update:modelValue="search()"
+				 	>
+                                 		<template #label>添付ファイルで絞り込み</template>
+                        		</MkRadios>
+				</div>
 			</div>
 		</MkFoldableSection>
 		<div>
@@ -112,19 +123,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 		</div>
 	</div>
 
-	<MkFoldableSection v-if="notePagination">
+	<MkFoldableSection v-if="paginator">
 		<template #header>{{ i18n.ts.searchResult }}</template>
-		<MkNotesTimeline :key="`searchNotes:${key}`" :pagination="notePagination"/>
+		<MkNotesTimeline :key="`searchNotes:${key}`" :paginator="paginator"/>
 	</MkFoldableSection>
 </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, shallowRef, toRef } from 'vue';
-import type * as Misskey from 'misskey-js';
-import type { PagingCtx } from '@/composables/use-pagination.js';
-import { $i } from '@/i.js';
+import { computed, markRaw, ref, shallowRef, toRef } from 'vue';
 import { host as localHost } from '@@/js/config.js';
+import type * as Misskey from 'misskey-js';
+import { $i } from '@/i.js';
 import { i18n } from '@/i18n.js';
 import { instance } from '@/instance.js';
 import * as os from '@/os.js';
@@ -137,6 +147,8 @@ import MkInput from '@/components/MkInput.vue';
 import MkNotesTimeline from '@/components/MkNotesTimeline.vue';
 import MkRadios from '@/components/MkRadios.vue';
 import MkUserCardMini from '@/components/MkUserCardMini.vue';
+import { Paginator } from '@/utility/paginator.js';
+import type { MkRadiosOption } from '@/components/MkRadios.vue';
 
 const props = withDefaults(defineProps<{
 	query?: string;
@@ -155,10 +167,12 @@ const props = withDefaults(defineProps<{
 const router = useRouter();
 
 const key = ref(0);
-const notePagination = ref<PagingCtx<'notes/search'>>();
+const paginator = shallowRef<Paginator<'notes/search'> | null>(null);
 
 const searchQuery = ref(toRef(props, 'query').value);
 const hostInput = ref(toRef(props, 'host').value);
+const rangeStartAt = ref<string | null>(null);
+const rangeEndAt = ref<string | null>(null);
 
 const user = shallowRef<Misskey.entities.UserDetailed | null>(null);
 
@@ -195,21 +209,53 @@ const searchScope = ref<'all' | 'local' | 'server' | 'user'>((() => {
 	return 'all';
 })());
 
-const attachedSelect = ref<'all' | 'image' | 'video' | 'audio'>('all');
-const searchAttached = computed(() => {
-       if (attachedSelect.value === 'all' ) return null;
-       return attachedSelect.value;
+const searchScopeDef = computed<MkRadiosOption[]>(() => {
+	const options: MkRadiosOption[] = [];
+
+	if (instance.federation !== 'none' && noteSearchableScope === 'global') {
+		options.push({ value: 'all', label: i18n.ts._search.searchScopeAll });
+	}
+
+	options.push({ value: 'local', label: instance.federation === 'none' ? i18n.ts._search.searchScopeAll : i18n.ts._search.searchScopeLocal });
+
+	if (instance.federation !== 'none' && noteSearchableScope === 'global') {
+		options.push({ value: 'server', label: i18n.ts._search.searchScopeServer });
+	}
+
+	options.push({ value: 'user', label: i18n.ts._search.searchScopeUser });
+
+	return options;
+});
+
+type AttachedSelect = 'all' | 'image' | 'video' | 'audio';
+type AttachedFileType = Exclude<AttachedSelect, 'all'>;
+
+const attachedSelect = ref<AttachedSelect>('all');
+
+const searchAttached = computed<AttachedFileType | null>(() => {
+    if (attachedSelect.value === 'all') return null;
+    return attachedSelect.value;
 });
 
 type SearchParams = {
 	readonly query: string;
 	readonly host?: string;
 	readonly userId?: string;
+	readonly attachedFileType?: AttachedFileType;
+	readonly rangeStartAt?: number | null;
+	readonly rangeEndAt?: number | null;
 };
 
 const fixHostIfLocal = (target: string | null | undefined) => {
 	if (!target || target === localHost) return '.';
 	return target;
+};
+
+const searchRange = () => {
+	return {
+		rangeStartAt: rangeStartAt.value ? new Date(rangeStartAt.value).getTime() : null,
+		rangeEndAt: rangeEndAt.value ? new Date(rangeEndAt.value).getTime() : null,
+	};
 };
 
 const searchParams = computed<SearchParams | null>(() => {
@@ -223,6 +269,7 @@ const searchParams = computed<SearchParams | null>(() => {
 			host: fixHostIfLocal(user.value.host),
 			userId: user.value.id,
 			...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+			...searchRange(),
 		};
 	}
 
@@ -238,6 +285,7 @@ const searchParams = computed<SearchParams | null>(() => {
 			query: trimmedQuery,
 			host: fixHostIfLocal(trimmedHost),
 			...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+			...searchRange(),
 		};
 	}
 
@@ -246,12 +294,14 @@ const searchParams = computed<SearchParams | null>(() => {
 			query: trimmedQuery,
 			host: '.',
 			...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+			...searchRange(),
 		};
 	}
 
 	return {
 		query: trimmedQuery,
 		...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+		...searchRange(),
 	};
 });
 
@@ -285,10 +335,18 @@ async function search() {
 			const res = await apLookup(searchParams.value.query);
 
 			if (res.type === 'User') {
-				router.push(`/@${res.object.username}@${res.object.host}`);
+				router.push('/@:acct/:page?', {
+					params: {
+						acct: `${res.object.username}@${res.object.host}`,
+					},
+				});
 			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			} else if (res.type === 'Note') {
-				router.push(`/notes/${res.object.id}`);
+				router.push('/notes/:noteId/:initialTab?', {
+					params: {
+						noteId: res.object.id,
+					},
+				});
 			}
 
 			return;
@@ -303,7 +361,7 @@ async function search() {
 				text: i18n.ts.lookupConfirm,
 			});
 			if (!confirm.canceled) {
-				router.push(`/${searchParams.value.query}`);
+				router.pushByPath(`/${searchParams.value.query}`);
 				return;
 			}
 		}
@@ -314,26 +372,22 @@ async function search() {
 				text: i18n.ts.openTagPageConfirm,
 			});
 			if (!confirm.canceled) {
-				router.push(`/tags/${encodeURIComponent(searchParams.value.query.substring(1))}`);
+				router.push('/tags/:tag', {
+					params: {
+						tag: searchParams.value.query.substring(1),
+					},
+				});
 				return;
 			}
 		}
 	}
 
-	console.log('---note search');
-	if( searchAttached.value ){
-        	console.log(searchAttached.value);
-	}else{
-        	console.log('no searchAttached value');
-	}
-
-	notePagination.value = {
-		endpoint: 'notes/search',
+	paginator.value = markRaw(new Paginator('notes/search', {
 		limit: 10,
 		params: {
 			...searchParams.value,
 		},
-	};
+	}));
 
 	key.value++;
 }

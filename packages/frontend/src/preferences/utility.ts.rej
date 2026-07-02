@@ -1,0 +1,22 @@
+--- packages/frontend/src/preferences/utility.ts	2026-07-02 10:19:31.606760348 +0900
++++ packages/frontend/src/preferences/utility.ts	2026-07-02 09:56:55.012926606 +0900
+@@ -35,8 +35,6 @@
+ 			}
+ 
+ 			store.set('enablePreferencesAutoCloudBackup', true);
+-
+-			cloudBackup();
+ 		} else {
+ 			store.set('enablePreferencesAutoCloudBackup', false);
+ 		}
+@@ -186,9 +184,8 @@
+ 
+ 	const select = await os.select({
+ 		title: i18n.ts._preferencesBackup.selectBackupToRestore,
+-		text: 'ℹ️ ' + i18n.ts._preferencesProfile.shareSameProfileBetweenDevicesIsNotRecommended + ' ' + i18n.ts._preferencesProfile.useSyncBetweenDevicesOptionIfYouWantToSyncSetting,
+ 		items: backups.map(backup => ({
+-			label: backup.name,
++			text: backup.name,
+ 			value: backup.name,
+ 		})),
+ 	});

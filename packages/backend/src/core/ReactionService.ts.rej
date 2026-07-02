@@ -1,0 +1,20 @@
+--- packages/backend/src/core/ReactionService.ts	2026-07-02 10:19:31.530760617 +0900
++++ packages/backend/src/core/ReactionService.ts	2026-07-02 09:56:54.894926840 +0900
+@@ -244,7 +244,7 @@
+ 					},
+ 				});
+ 
+-		this.globalEventService.publishNoteStream(note, 'reacted', {
++		this.globalEventService.publishNoteStream(note.id, 'reacted', {
+ 			reaction: decodedReaction.reaction,
+ 			emoji: customEmoji != null ? {
+ 				name: customEmoji.host ? `${customEmoji.name}@${customEmoji.host}` : `${customEmoji.name}@.`,
+@@ -318,7 +318,7 @@
+ 				.execute();
+ 		}
+ 
+-		this.globalEventService.publishNoteStream(note, 'unreacted', {
++		this.globalEventService.publishNoteStream(note.id, 'unreacted', {
+ 			reaction: this.decodeReaction(exist.reaction).reaction,
+ 			userId: user.id,
+ 		});

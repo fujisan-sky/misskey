@@ -1,0 +1,30 @@
+--- packages/frontend/src/directives/get-size.ts	2026-07-02 10:19:31.596760383 +0900
++++ packages/frontend/src/directives/get-size.ts	2026-07-02 09:56:54.997926635 +0900
+@@ -37,10 +37,8 @@
+ 	info.fn(width, height);
+ }
+ 
+-type SizeCallback = (w: number, h: number) => void;
+-
+-export const getSizeDirective = {
+-	mounted(src, binding) {
++export default {
++	mounted(src, binding, vn) {
+ 		const resize = new ResizeObserver((entries, observer) => {
+ 			calc(src);
+ 		});
+@@ -50,7 +48,7 @@
+ 		calc(src);
+ 	},
+ 
+-	unmounted(src, binding) {
++	unmounted(src, binding, vn) {
+ 		binding.value(0, 0);
+ 		const info = mountings.get(src);
+ 		if (!info) return;
+@@ -58,4 +56,4 @@
+ 		if (info.intersection) info.intersection.disconnect();
+ 		mountings.delete(src);
+ 	},
+-} as Directive<Element, SizeCallback>;
++} as Directive<Element, (w: number, h: number) => void>;

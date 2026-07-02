@@ -1,0 +1,15 @@
+--- packages/frontend/src/components/MkReactionIcon.vue	2026-07-02 10:19:31.589760408 +0900
++++ packages/frontend/src/components/MkReactionIcon.vue	2026-07-02 09:56:54.988926653 +0900
+@@ -24,11 +24,10 @@
+ 
+ if (props.withTooltip) {
+ 	useTooltip(elRef, (showing) => {
+-		if (elRef.value == null) return;
+ 		const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkReactionTooltip.vue')), {
+ 			showing,
+ 			reaction: props.reaction.replace(/^:(\w+):$/, ':$1@.:'),
+-			anchorElement: elRef.value.$el,
++			targetElement: elRef.value.$el,
+ 		}, {
+ 			closed: () => dispose(),
+ 		});

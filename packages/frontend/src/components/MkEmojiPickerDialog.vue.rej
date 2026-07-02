@@ -1,0 +1,16 @@
+--- packages/frontend/src/components/MkEmojiPickerDialog.vue	2026-07-02 10:19:31.586760419 +0900
++++ packages/frontend/src/components/MkEmojiPickerDialog.vue	2026-07-02 09:56:54.983926663 +0900
+@@ -44,11 +44,11 @@
+ 
+ const props = withDefaults(defineProps<{
+ 	manualShowing?: boolean | null;
+-	anchorElement?: HTMLElement | null;
++	anchorElement?: HTMLElement;
+ 	showPinned?: boolean;
+ 	pinnedEmojis?: string[],
+ 	asReactionPicker?: boolean;
+-	targetNote?: Misskey.entities.Note | null;
++	targetNote?: Misskey.entities.Note;
+ 	choseAndClose?: boolean;
+ }>(), {
+ 	manualShowing: null,

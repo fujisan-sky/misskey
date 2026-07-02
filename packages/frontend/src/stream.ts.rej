@@ -1,0 +1,19 @@
+--- packages/frontend/src/stream.ts	2026-07-02 10:19:31.606760348 +0900
++++ packages/frontend/src/stream.ts	2026-07-02 09:56:55.013926604 +0900
+@@ -7,6 +7,8 @@
+ import { markRaw } from 'vue';
+ import { $i } from '@/i.js';
+ import { wsOrigin } from '@@/js/config.js';
++// TODO: No WebsocketモードでStreamMockが使えそう
++//import { StreamMock } from '@/utility/stream-mock.js';
+ 
+ // heart beat interval in ms
+ const HEART_BEAT_INTERVAL = 1000 * 60;
+@@ -18,6 +20,7 @@
+ export function useStream(): Misskey.IStream {
+ 	if (stream) return stream;
+ 
++	// TODO: No Websocketモードもここで判定
+ 	stream = markRaw(new Misskey.Stream(wsOrigin, $i ? {
+ 		token: $i.token,
+ 	} : null));

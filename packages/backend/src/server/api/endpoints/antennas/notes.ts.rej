@@ -1,0 +1,48 @@
+--- packages/backend/src/server/api/endpoints/antennas/notes.ts	2026-07-02 10:19:31.548760553 +0900
++++ packages/backend/src/server/api/endpoints/antennas/notes.ts	2026-07-02 09:56:54.916926796 +0900
+@@ -5,7 +5,6 @@
+ 
+ import { Inject, Injectable } from '@nestjs/common';
+ import * as Redis from 'ioredis';
+-import { Brackets } from 'typeorm';
+ import { Endpoint } from '@/server/api/endpoint-base.js';
+ import type { NotesRepository, AntennasRepository } from '@/models/_.js';
+ import { QueryService } from '@/core/QueryService.js';
+@@ -15,7 +14,6 @@
+ import { FanoutTimelineService } from '@/core/FanoutTimelineService.js';
+ import { GlobalEventService } from '@/core/GlobalEventService.js';
+ import { trackPromise } from '@/misc/promise-tracker.js';
+-import { ChannelMutingService } from '@/core/ChannelMutingService.js';
+ import { ApiError } from '../../error.js';
+ 
+ export const meta = {
+@@ -71,7 +69,6 @@
+ 		private queryService: QueryService,
+ 		private fanoutTimelineService: FanoutTimelineService,
+ 		private globalEventService: GlobalEventService,
+-		private channelMutingService: ChannelMutingService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+ 			const untilId = ps.untilId ?? (ps.untilDate ? this.idService.gen(ps.untilDate!) : null);
+@@ -111,21 +108,6 @@
+ 				.leftJoinAndSelect('reply.user', 'replyUser')
+ 				.leftJoinAndSelect('renote.user', 'renoteUser');
+ 
+-			// -- ミュートされたチャンネル対策
+-			const mutingChannelIds = await this.channelMutingService
+-				.list({ requestUserId: me.id }, { idOnly: true })
+-				.then(x => x.map(x => x.id));
+-			if (mutingChannelIds.length > 0) {
+-				query.andWhere(new Brackets(qb => {
+-					qb.orWhere('note.channelId IS NULL');
+-					qb.orWhere('note.channelId NOT IN (:...mutingChannelIds)', { mutingChannelIds });
+-				}));
+-				query.andWhere(new Brackets(qb => {
+-					qb.orWhere('note.renoteChannelId IS NULL');
+-					qb.orWhere('note.renoteChannelId NOT IN (:...mutingChannelIds)', { mutingChannelIds });
+-				}));
+-			}
+-
+ 			// NOTE: センシティブ除外の設定はこのエンドポイントでは無視する。
+ 			// https://github.com/misskey-dev/misskey/pull/15346#discussion_r1929950255
+ 

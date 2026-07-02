@@ -1,0 +1,40 @@
+--- packages/frontend/src/widgets/WidgetNotifications.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetNotifications.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -18,9 +18,8 @@
+ <script lang="ts" setup>
+ import { defineAsyncComponent } from 'vue';
+ import { useWidgetPropsManager } from './widget.js';
+-import type { notificationTypes as notificationTypes_typeReferenceOnly } from 'misskey-js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
++import type { GetFormResultType } from '@/utility/form.js';
+ import MkContainer from '@/components/MkContainer.vue';
+ import MkStreamingNotificationsTimeline from '@/components/MkStreamingNotificationsTimeline.vue';
+ import * as os from '@/os.js';
+@@ -30,21 +29,19 @@
+ 
+ const widgetPropsDef = {
+ 	showHeader: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.showHeader,
++		type: 'boolean' as const,
+ 		default: true,
+ 	},
+ 	height: {
+-		type: 'number',
+-		label: i18n.ts.height,
++		type: 'number' as const,
+ 		default: 300,
+ 	},
+ 	excludeTypes: {
+-		type: 'array',
++		type: 'array' as const,
+ 		hidden: true,
+-		default: [] as (typeof notificationTypes_typeReferenceOnly[number])[],
++		default: [],
+ 	},
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 

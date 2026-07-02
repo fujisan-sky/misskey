@@ -1,0 +1,93 @@
+--- packages/frontend/src/pages/settings/apps.vue	2026-07-02 10:19:31.603760359 +0900
++++ packages/frontend/src/pages/settings/apps.vue	2026-07-02 09:56:55.008926613 +0900
+@@ -5,18 +5,18 @@
+ 
+ <template>
+ <div class="_gaps_m">
+-	<MkPagination :paginator="paginator">
++	<FormPagination ref="list" :pagination="pagination">
+ 		<template #empty><MkResult type="empty"/></template>
+ 		<template #default="{items}">
+ 			<div class="_gaps">
+ 				<MkFolder v-for="token in items" :key="token.id" :defaultOpen="true">
+ 					<template #icon>
+ 						<img v-if="token.iconUrl" :class="$style.appIcon" :src="token.iconUrl" alt=""/>
+-						<i v-else class="ti ti-plug"></i>
++						<i v-else class="ti ti-plug"/>
+ 					</template>
+ 					<template #label>{{ token.name }}</template>
+ 					<template #caption>{{ token.description }}</template>
+-					<template v-if="token.lastUsedAt != null" #suffix><MkTime :time="token.lastUsedAt"/></template>
++					<template #suffix><MkTime :time="token.lastUsedAt"/></template>
+ 					<template #footer>
+ 						<MkButton danger @click="revoke(token)"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
+ 					</template>
+@@ -28,7 +28,7 @@
+ 								<template #key>{{ i18n.ts.installedDate }}</template>
+ 								<template #value><MkTime :time="token.createdAt" :mode="'detail'"/></template>
+ 							</MkKeyValue>
+-							<MkKeyValue v-if="token.lastUsedAt != null" oneline>
++							<MkKeyValue oneline>
+ 								<template #key>{{ i18n.ts.lastUsedDate }}</template>
+ 								<template #value><MkTime :time="token.lastUsedAt" :mode="'detail'"/></template>
+ 							</MkKeyValue>
+@@ -37,40 +37,42 @@
+ 							<template #label>{{ i18n.ts.permission }}</template>
+ 							<template #suffix>{{ Object.keys(token.permission).length === 0 ? i18n.ts.none : Object.keys(token.permission).length }}</template>
+ 							<ul>
+-								<li v-for="p in token.permission" :key="p">{{ (i18n.ts._permissions as any)[p] ?? p }}</li>
++								<li v-for="p in token.permission" :key="p">{{ i18n.ts._permissions[p] }}</li>
+ 							</ul>
+ 						</MkFolder>
+ 					</div>
+ 				</MkFolder>
+ 			</div>
+ 		</template>
+-	</MkPagination>
++	</FormPagination>
+ </div>
+ </template>
+ 
+ <script lang="ts" setup>
+-import { ref, computed, markRaw } from 'vue';
++import { ref, computed, useTemplateRef } from 'vue';
+ import * as Misskey from 'misskey-js';
+-import MkPagination from '@/components/MkPagination.vue';
++import FormPagination from '@/components/MkPagination.vue';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+ import { i18n } from '@/i18n.js';
+ import { definePage } from '@/page.js';
+ import MkKeyValue from '@/components/MkKeyValue.vue';
+ import MkButton from '@/components/MkButton.vue';
+ import MkFolder from '@/components/MkFolder.vue';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+-const paginator = markRaw(new Paginator('i/apps', {
++const list = useTemplateRef('list');
++
++const pagination = {
++	endpoint: 'i/apps' as const,
+ 	limit: 100,
+ 	noPaging: true,
+ 	params: {
+ 		sort: '+lastUsedAt',
+ 	},
+-}));
++};
+ 
+-function revoke(token: Misskey.entities.IAppsResponse[number]) {
++function revoke(token) {
+ 	misskeyApi('i/revoke-token', { tokenId: token.id }).then(() => {
+-		paginator.reload();
++		list.value?.paginator.reload();
+ 	});
+ }
+ 
+@@ -86,7 +88,6 @@
+ 
+ <style lang="scss" module>
+ .appIcon {
+-	display: block;
+ 	width: 20px;
+ 	height: 20px;
+ 	border-radius: 4px;

@@ -1,0 +1,29 @@
+--- packages/frontend/src/pages/settings/2fa.qrdialog.vue	2026-07-02 10:19:31.603760359 +0900
++++ packages/frontend/src/pages/settings/2fa.qrdialog.vue	2026-07-02 09:56:55.008926613 +0900
+@@ -39,7 +39,7 @@
+ 							<div>
+ 								<a :class="$style.qrRoot" :href="twoFactorData.url"><img :class="$style.qr" :src="twoFactorData.qr"></a>
+ 								<!-- QRコード側にマージンが入っているので直下でOK -->
+-								<div><MkButton inline rounded type="routerLink" :to="twoFactorData.url" :linkBehavior="'browser'">{{ i18n.ts.launchApp }}</MkButton></div>
++								<div><MkButton inline rounded link :to="twoFactorData.url" :linkBehavior="'browser'">{{ i18n.ts.launchApp }}</MkButton></div>
+ 							</div>
+ 							<MkKeyValue :copy="twoFactorData.url">
+ 								<template #key>{{ i18n.ts._2fa.step2Uri }}</template>
+@@ -135,7 +135,7 @@
+ 
+ const dialog = useTemplateRef('dialog');
+ const page = ref(0);
+-const token = ref<string | null>(null);
++const token = ref<string | number | null>(null);
+ const backupCodes = ref<string[]>();
+ 
+ function cancel() {
+@@ -145,7 +145,7 @@
+ async function tokenDone() {
+ 	if (token.value == null) return;
+ 	const res = await os.apiWithDialog('i/2fa/done', {
+-		token: token.value.toString(), // 実装ミスなどでnumberが入る可能性を払拭できないため念のためtoString
++		token: typeof token.value === 'string' ? token.value : token.value.toString(),
+ 	});
+ 
+ 	backupCodes.value = res.backupCodes;

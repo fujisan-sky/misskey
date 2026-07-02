@@ -1,0 +1,45 @@
+--- packages/frontend/src/components/MkPopupMenu.vue	2026-07-02 10:19:31.589760408 +0900
++++ packages/frontend/src/components/MkPopupMenu.vue	2026-07-02 09:56:54.987926655 +0900
+@@ -4,31 +4,8 @@
+ -->
+ 
+ <template>
+-<MkModal
+-	ref="modal"
+-	v-slot="{ type, maxHeight }"
+-	:manualShowing="manualShowing"
+-	:zPriority="'high'"
+-	:anchorElement="anchorElement"
+-	:transparentBg="true"
+-	:returnFocusTo="returnFocusTo"
+-	@click="click"
+-	@close="onModalClose"
+-	@closed="onModalClosed"
+->
+-	<MkMenu
+-		:items="items"
+-		:align="align"
+-		:width="width"
+-		:max-height="maxHeight"
+-		:asDrawer="type === 'drawer'"
+-		:returnFocusTo="returnFocusTo"
+-		:debugDisablePredictionCone="debugDisablePredictionCone"
+-		:debugShowPredictionCone="debugShowPredictionCone"
+-		:class="{ [$style.drawer]: type === 'drawer' }"
+-		@close="onMenuClose"
+-		@hide="hide"
+-	/>
++<MkModal ref="modal" v-slot="{ type, maxHeight }" :manualShowing="manualShowing" :zPriority="'high'" :anchorElement="anchorElement" :transparentBg="true" :returnFocusTo="returnFocusTo" @click="click" @close="onModalClose" @closed="onModalClosed">
++	<MkMenu :items="items" :align="align" :width="width" :max-height="maxHeight" :asDrawer="type === 'drawer'" :returnFocusTo="returnFocusTo" :class="{ [$style.drawer]: type === 'drawer' }" @close="onMenuClose" @hide="hide"/>
+ </MkModal>
+ </template>
+ 
+@@ -44,8 +21,6 @@
+ 	width?: number;
+ 	anchorElement?: HTMLElement | null;
+ 	returnFocusTo?: HTMLElement | null;
+-	debugDisablePredictionCone?: boolean;
+-	debugShowPredictionCone?: boolean;
+ }>();
+ 
+ const emit = defineEmits<{

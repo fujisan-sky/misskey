@@ -1,0 +1,20 @@
+--- packages/backend/src/models/UserListFavorite.ts	2026-07-02 10:19:31.540760582 +0900
++++ packages/backend/src/models/UserListFavorite.ts	2026-07-02 09:56:54.906926816 +0900
+@@ -18,7 +18,7 @@
+ 	@Column(id())
+ 	public userId: MiUser['id'];
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -27,7 +27,7 @@
+ 	@Column(id())
+ 	public userListId: MiUserList['id'];
+ 
+-	@ManyToOne(() => MiUserList, {
++	@ManyToOne(type => MiUserList, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()

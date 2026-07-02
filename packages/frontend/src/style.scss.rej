@@ -1,0 +1,89 @@
+--- packages/frontend/src/style.scss	2026-07-02 10:19:31.606760348 +0900
++++ packages/frontend/src/style.scss	2026-07-02 09:56:55.013926604 +0900
+@@ -22,10 +22,15 @@
+ 	}
+ }
+ 
++::selection {
++	color: var(--MI_THEME-fgOnAccent);
++	background-color: var(--MI_THEME-accent);
++}
++
+ html {
+ 	overflow: auto;
+ 	overflow-wrap: break-word;
+-	font-family: 'Hiragino Maru Gothic Pro', "BIZ UDGothic", Roboto, HelveticaNeue, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
++	font-family: 'Hiragino Maru Gothic Pro', "BIZ UDGothic", Roboto, HelveticaNeue, Arial, sans-serif;
+ 	font-size: 14px;
+ 	line-height: 1.35;
+ 	text-size-adjust: 100%;
+@@ -37,6 +42,32 @@
+ 	color: var(--MI_THEME-fg);
+ 	accent-color: var(--MI_THEME-accent);
+ 
++	&, * {
++		scrollbar-color: var(--MI_THEME-scrollbarHandle) transparent;
++		scrollbar-width: thin;
++
++		&::-webkit-scrollbar {
++			width: 6px;
++			height: 6px;
++		}
++
++		&::-webkit-scrollbar-track {
++			background: inherit;
++		}
++
++		&::-webkit-scrollbar-thumb {
++			background: var(--MI_THEME-scrollbarHandle);
++
++			&:hover {
++				background: var(--MI_THEME-scrollbarHandleHover);
++			}
++
++			&:active {
++				background: var(--MI_THEME-accent);
++			}
++		}
++	}
++
+ 	&.f-1 {
+ 		font-size: 15px;
+ 	}
+@@ -59,6 +90,12 @@
+ 	}
+ }
+ 
++html._themeChangingFallback_ {
++	&, * {
++		transition: background 0.5s ease, border 0.5s ease !important;
++	}
++}
++
+ html._themeChanging_ {
+ 	view-transition-name: theme-changing;
+ }
+@@ -73,11 +110,6 @@
+ 	animation-fill-mode: forwards;
+ }
+ 
+-html::selection {
+-	color: var(--MI_THEME-fgOnAccent);
+-	background-color: var(--MI_THEME-accent);
+-}
+-
+ @keyframes themeChangingOld {
+ 	0% {
+ 		opacity: 1;
+@@ -86,11 +118,7 @@
+ 	100% {
+ 		opacity: 0;
+ 	}
+-}
+ 
+-html, body, main, div {
+-	scrollbar-color: var(--MI_THEME-scrollbarHandle) transparent;
+-	scrollbar-width: thin;
+ }
+ 
+ html,

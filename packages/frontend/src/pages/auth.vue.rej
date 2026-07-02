@@ -1,0 +1,39 @@
+--- packages/frontend/src/pages/auth.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/auth.vue	2026-07-02 09:56:55.003926623 +0900
+@@ -24,7 +24,7 @@
+ 				<h1>{{ i18n.ts._auth.denied }}</h1>
+ 			</div>
+ 			<div v-if="state == 'accepted' && session">
+-				<h1>{{ session.app.isAuthorized ? i18n.ts._auth.alreadyAuthorized : i18n.ts._auth.accepted }}</h1>
++				<h1>{{ session.app.isAuthorized ? i18n.ts['already-authorized'] : i18n.ts.allowed }}</h1>
+ 				<p v-if="session.app.callbackUrl">
+ 					{{ i18n.ts._auth.callback }}
+ 					<MkEllipsis/>
+@@ -67,7 +67,7 @@
+ 	}
+ }
+ 
+-function onLogin(res: Misskey.entities.SigninFlowResponse & { finished: true }) {
++function onLogin(res) {
+ 	login(res.i);
+ }
+ 
+@@ -75,15 +75,14 @@
+ 	if (!$i) return;
+ 
+ 	try {
+-		const result = await misskeyApi('auth/session/show', {
++		session.value = await misskeyApi('auth/session/show', {
+ 			token: props.token,
+ 		});
+-		session.value = result;
+ 
+ 		// 既に連携していた場合
+-		if (result.app.isAuthorized) {
++		if (session.value.app.isAuthorized) {
+ 			await misskeyApi('auth/accept', {
+-				token: result.token,
++				token: session.value.token,
+ 			});
+ 			accepted();
+ 		} else {

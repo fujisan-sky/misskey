@@ -1,0 +1,50 @@
+--- packages/frontend/src/pages/antenna-timeline.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/antenna-timeline.vue	2026-07-02 09:56:55.002926625 +0900
+@@ -19,7 +19,7 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, watch, ref, useTemplateRef, provide } from 'vue';
++import { computed, watch, ref, useTemplateRef } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import MkStreamingNotesTimeline from '@/components/MkStreamingNotesTimeline.vue';
+ import * as os from '@/os.js';
+@@ -37,14 +37,21 @@
+ const antenna = ref<Misskey.entities.Antenna | null>(null);
+ const tlEl = useTemplateRef('tlEl');
+ 
+-provide('currentAntenna', antenna);
++async function timetravel() {
++	const { canceled, result: date } = await os.inputDate({
++		title: i18n.ts.date,
++	});
++	if (canceled) return;
++
++	tlEl.value.timetravel(date);
++}
+ 
+ function settings() {
+-	router.push('/my/antennas/:antennaId', {
+-		params: {
+-			antennaId: props.antennaId,
+-		},
+-	});
++	router.push(`/my/antennas/${props.antennaId}`);
++}
++
++function focus() {
++	tlEl.value.focus();
+ }
+ 
+ watch(() => props.antennaId, async () => {
+@@ -54,6 +61,10 @@
+ }, { immediate: true });
+ 
+ const headerActions = computed(() => antenna.value ? [{
++	icon: 'ti ti-calendar-time',
++	text: i18n.ts.jumpToSpecifiedDate,
++	handler: timetravel,
++}, {
+ 	icon: 'ti ti-settings',
+ 	text: i18n.ts.settings,
+ 	handler: settings,

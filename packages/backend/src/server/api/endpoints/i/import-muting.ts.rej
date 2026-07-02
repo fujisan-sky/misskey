@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/i/import-muting.ts	2026-07-02 10:19:31.554760532 +0900
++++ packages/backend/src/server/api/endpoints/i/import-muting.ts	2026-07-02 09:56:54.923926782 +0900
+@@ -68,7 +68,7 @@
+ 		private accountMoveService: AccountMoveService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+-			const file = await this.driveFilesRepository.findOneBy({ id: ps.fileId, userId: me.id });
++			const file = await this.driveFilesRepository.findOneBy({ id: ps.fileId });
+ 
+ 			if (file == null) throw new ApiError(meta.errors.noSuchFile);
+ 			//if (!file.type.endsWith('/csv')) throw new ApiError(meta.errors.unexpectedFileType);

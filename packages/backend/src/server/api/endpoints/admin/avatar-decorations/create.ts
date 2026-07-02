@@ -59,6 +59,10 @@ export const meta = {
 					format: 'id',
 				},
 			},
+			category: {
+				type: 'string',
+				optional: false, nullable: true,
+			},
 		},
 	},
 	errors: {
@@ -80,6 +84,7 @@ export const paramDef = {
 		roleIdsThatCanBeUsedThisDecoration: { type: 'array', items: {
 			type: 'string',
 		} },
+		category: { type: 'string', nullable: true },
 	},
 	required: ['name', 'description', 'url'],
 } as const;
@@ -105,6 +110,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				description: ps.description,
 				url: ps.url,
 				roleIdsThatCanBeUsedThisDecoration: ps.roleIdsThatCanBeUsedThisDecoration,
+				category: ps.category,
 			}, me);
 
 			const _me = await this.usersRepository.findOneByOrFail({ id: me.id });
@@ -121,6 +127,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				description: pure_description,
 				url: created.url,
 				roleIdsThatCanBeUsedThisDecoration: created.roleIdsThatCanBeUsedThisDecoration,
+				category: created.category,
 			};
 		});
 	}

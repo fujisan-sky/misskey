@@ -1,0 +1,41 @@
+--- packages/frontend/src/pages/user/files.vue	2026-07-02 10:19:31.605760352 +0900
++++ packages/frontend/src/pages/user/files.vue	2026-07-02 09:56:55.011926608 +0900
+@@ -6,7 +6,7 @@
+ <template>
+ <div class="_spacer" style="--MI_SPACER-w: 1100px;">
+ 	<div :class="$style.root">
+-		<MkPagination v-slot="{items}" :paginator="paginator" withControl>
++		<MkPagination v-slot="{items}" :pagination="pagination">
+ 			<div :class="$style.stream">
+ 				<MkNoteMediaGrid v-for="note in items" :note="note" square/>
+ 			</div>
+@@ -16,23 +16,24 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, markRaw } from 'vue';
++import { computed } from 'vue';
+ import * as Misskey from 'misskey-js';
++
+ import MkNoteMediaGrid from '@/components/MkNoteMediaGrid.vue';
+ import MkPagination from '@/components/MkPagination.vue';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+ const props = defineProps<{
+ 	user: Misskey.entities.UserDetailed;
+ }>();
+ 
+-const paginator = markRaw(new Paginator('users/notes', {
++const pagination = {
++	endpoint: 'users/notes' as const,
+ 	limit: 15,
+-	computedParams: computed(() => ({
++	params: computed(() => ({
+ 		userId: props.user.id,
+ 		withFiles: true,
+ 	})),
+-}));
++};
+ </script>
+ 
+ <style lang="scss" module>

@@ -1,0 +1,58 @@
+--- packages/frontend/src/components/index.ts	2026-07-02 10:19:31.595760387 +0900
++++ packages/frontend/src/components/index.ts	2026-07-02 09:56:54.996926637 +0900
+@@ -20,7 +20,6 @@
+ import StackingRouterView from './global/StackingRouterView.vue';
+ import MkLoading from './global/MkLoading.vue';
+ import MkError from './global/MkError.vue';
+-import MkSuspense from './global/MkSuspense.vue';
+ import MkAd from './global/MkAd.vue';
+ import MkPageHeader from './global/MkPageHeader.vue';
+ import MkStickyContainer from './global/MkStickyContainer.vue';
+@@ -32,7 +31,7 @@
+ import PageWithAnimBg from './global/PageWithAnimBg.vue';
+ import SearchMarker from './global/SearchMarker.vue';
+ import SearchLabel from './global/SearchLabel.vue';
+-import SearchText from './global/SearchText.vue';
++import SearchKeyword from './global/SearchKeyword.vue';
+ import SearchIcon from './global/SearchIcon.vue';
+ 
+ import type { App } from 'vue';
+@@ -61,7 +60,6 @@
+ 	MkUrl: MkUrl,
+ 	MkLoading: MkLoading,
+ 	MkError: MkError,
+-	MkSuspense: MkSuspense,
+ 	MkAd: MkAd,
+ 	MkPageHeader: MkPageHeader,
+ 	MkStickyContainer: MkStickyContainer,
+@@ -73,11 +71,11 @@
+ 	PageWithAnimBg: PageWithAnimBg,
+ 	SearchMarker: SearchMarker,
+ 	SearchLabel: SearchLabel,
+-	SearchText: SearchText,
++	SearchKeyword: SearchKeyword,
+ 	SearchIcon: SearchIcon,
+ };
+ 
+-declare module 'vue' {
++declare module '@vue/runtime-core' {
+ 	export interface GlobalComponents {
+ 		I18n: typeof I18n;
+ 		RouterView: typeof RouterView;
+@@ -96,7 +94,6 @@
+ 		MkUrl: typeof MkUrl;
+ 		MkLoading: typeof MkLoading;
+ 		MkError: typeof MkError;
+-		MkSuspense: typeof MkSuspense;
+ 		MkAd: typeof MkAd;
+ 		MkPageHeader: typeof MkPageHeader;
+ 		MkStickyContainer: typeof MkStickyContainer;
+@@ -108,7 +105,7 @@
+ 		PageWithAnimBg: typeof PageWithAnimBg;
+ 		SearchMarker: typeof SearchMarker;
+ 		SearchLabel: typeof SearchLabel;
+-		SearchText: typeof SearchText;
++		SearchKeyword: typeof SearchKeyword;
+ 		SearchIcon: typeof SearchIcon;
+ 	}
+ }

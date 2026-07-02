@@ -1,0 +1,94 @@
+--- packages/backend/src/server/api/endpoints/i/update.ts	2026-07-02 10:21:18.564380729 +0900
++++ packages/backend/src/server/api/endpoints/i/update.ts	2026-07-02 09:56:54.924926780 +0900
+@@ -7,7 +7,7 @@
+ import * as mfm from 'mfm-js';
+ import { Inject, Injectable } from '@nestjs/common';
+ import ms from 'ms';
+-import * as htmlParser from 'node-html-parser';
++import { JSDOM } from 'jsdom';
+ import { extractCustomEmojisFromMfm } from '@/misc/extract-custom-emojis-from-mfm.js';
+ import { extractHashtags } from '@/misc/extract-hashtags.js';
+ import * as Acct from '@/misc/acct.js';
+@@ -210,8 +210,6 @@
+ 				quote: notificationRecieveConfig,
+ 				reaction: notificationRecieveConfig,
+ 				pollEnded: notificationRecieveConfig,
+-				scheduledNotePosted: notificationRecieveConfig,
+-				scheduledNotePostFailed: notificationRecieveConfig,
+ 				receiveFollowRequest: notificationRecieveConfig,
+ 				followRequestAccepted: notificationRecieveConfig,
+ 				roleAssigned: notificationRecieveConfig,
+@@ -297,20 +295,8 @@
+ 			if (ps.chatScope !== undefined) updates.chatScope = ps.chatScope;
+ 
+ 			function checkMuteWordCount(mutedWords: (string[] | string)[], limit: number) {
+-				const count = (arr: (string[] | string)[]) => {
+-					let length = 0;
+-					for (const item of arr) {
+-						if (typeof item === 'string') {
+-							length += item.length;
+-						} else if (Array.isArray(item)) {
+-							for (const subItem of item) {
+-								length += subItem.length;
+-							}
+-						}
+-					}
+-					return length;
+-				};
+-				const length = count(mutedWords);
++				// TODO: ちゃんと数える
++				const length = JSON.stringify(mutedWords).length;
+ 				if (length > limit) {
+ 					throw new ApiError(meta.errors.tooManyMutedWords);
+ 				}
+@@ -325,7 +311,7 @@
+ 
+ 					try {
+ 						new RE2(regexp[1], regexp[2]);
+-					} catch (_) {
++					} catch (err) {
+ 						throw new ApiError(meta.errors.invalidRegexp);
+ 					}
+ 				}
+@@ -412,9 +398,7 @@
+ 				const myRoles = await this.roleService.getUserRoles(user.id);
+ 				const allRoles = await this.roleService.getRoles();
+ 				const decorationIds = decorations
+-					.filter(d => d.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(r => r.id === roleId)).length === 0 ||
+-					       	myRoles.some(r => d.roleIdsThatCanBeUsedThisDecoration.includes(r.id)) || 
+-						( policies.canCreateOwnDeco && (d.description.indexOf(user.id) == 0) ) )
++					.filter(d => d.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(r => r.id === roleId)).length === 0 || myRoles.some(r => d.roleIdsThatCanBeUsedThisDecoration.includes(r.id)))
+ 					.map(d => d.id);
+ 
+ 				if (ps.avatarDecorations.length > policies.avatarDecorationLimit) throw new ApiError(meta.errors.restrictedByRole);
+@@ -573,15 +557,16 @@
+ 		try {
+ 			const html = await this.httpRequestService.getHtml(url);
+ 
+-			const doc = htmlParser.parse(html);
++			const { window } = new JSDOM(html);
++			const doc: Document = window.document;
+ 
+ 			const myLink = `${this.config.url}/@${user.username}`;
+ 
+ 			const aEls = Array.from(doc.getElementsByTagName('a'));
+ 			const linkEls = Array.from(doc.getElementsByTagName('link'));
+ 
+-			const includesMyLink = aEls.some(a => a.attributes.href === myLink);
+-			const includesRelMeLinks = [...aEls, ...linkEls].some(link => link.attributes.rel?.split(/\s+/).includes('me') && link.attributes.href === myLink);
++			const includesMyLink = aEls.some(a => a.href === myLink);
++			const includesRelMeLinks = [...aEls, ...linkEls].some(link => link.rel === 'me' && link.href === myLink);
+ 
+ 			if (includesMyLink || includesRelMeLinks) {
+ 				await this.userProfilesRepository.createQueryBuilder('profile').update()
+@@ -591,7 +576,9 @@
+ 					})
+ 					.execute();
+ 			}
+-		} catch (_) {
++
++			window.close();
++		} catch (err) {
+ 			// なにもしない
+ 		}
+ 	}

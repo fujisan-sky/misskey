@@ -1,0 +1,25 @@
+--- packages/backend/src/server/api/endpoints/endpoints.ts	2026-07-02 10:19:31.552760539 +0900
++++ packages/backend/src/server/api/endpoints/endpoints.ts	2026-07-02 09:56:54.920926788 +0900
+@@ -5,13 +5,7 @@
+ 
+ import { Injectable } from '@nestjs/common';
+ import { Endpoint } from '@/server/api/endpoint-base.js';
+-
+-// 循環参照を回避
+-let endpointsPromise: Promise<typeof import('../endpoints.js').default> | undefined;
+-
+-function getEndpoints() {
+-	return endpointsPromise ??= import('../endpoints.js').then(module => module.default);
+-}
++import endpoints from '../endpoints.js';
+ 
+ export const meta = {
+ 	requireCredential: false,
+@@ -45,7 +39,6 @@
+ 	constructor(
+ 	) {
+ 		super(meta, paramDef, async () => {
+-			const endpoints = await getEndpoints();
+ 			return endpoints.map(x => x.name);
+ 		});
+ 	}

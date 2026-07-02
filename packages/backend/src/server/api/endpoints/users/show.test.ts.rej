@@ -1,0 +1,10 @@
+--- packages/backend/src/server/api/endpoints/users/show.test.ts	2026-07-02 10:19:31.560760511 +0900
++++ packages/backend/src/server/api/endpoints/users/show.test.ts	2026-07-02 09:56:54.929926770 +0900
+@@ -5,7 +5,6 @@
+ 
+ process.env.NODE_ENV = 'test';
+ 
+-import { describe, test, expect } from 'vitest';
+ import { getValidator } from '../../../../../test/prelude/get-api-validator.js';
+ import { paramDef } from './show.js';
+ 

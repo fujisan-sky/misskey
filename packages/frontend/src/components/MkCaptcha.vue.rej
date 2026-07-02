@@ -1,0 +1,137 @@
+--- packages/frontend/src/components/MkCaptcha.vue	2026-07-02 10:19:31.584760426 +0900
++++ packages/frontend/src/components/MkCaptcha.vue	2026-07-02 09:56:54.980926669 +0900
+@@ -7,12 +7,8 @@
+ <div>
+ 	<span v-if="!available">Loading<MkEllipsis/></span>
+ 	<div v-if="props.provider == 'mcaptcha'">
+-		<iframe
+-			v-if="mCaptchaIframeUrl != null"
+-			ref="mCaptchaIframe"
+-			:src="mCaptchaIframeUrl"
+-			style="border: none; max-width: 320px; width: 100%; height: 100%; max-height: 80px;"
+-		></iframe>
++		<div id="mcaptcha__widget-container" class="m-captcha-style"></div>
++		<div ref="captchaEl"></div>
+ 	</div>
+ 	<div v-if="props.provider == 'testcaptcha'" style="background: #eee; border: solid 1px #888; padding: 8px; color: #000; max-width: 320px; display: flex; gap: 10px; align-items: center; box-shadow: 2px 2px 6px #0004; border-radius: 4px;">
+ 		<img src="/client-assets/testcaptcha.png" style="width: 60px; height: 60px; "/>
+@@ -30,8 +26,7 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { ref, useTemplateRef, computed, onMounted, onBeforeUnmount, watch, onUnmounted, nextTick } from 'vue';
+-import type Reciever_typeReferenceOnly from '@mcaptcha/core-glue';
++import { ref, useTemplateRef, computed, onMounted, onBeforeUnmount, watch, onUnmounted } from 'vue';
+ import { store } from '@/store.js';
+ 
+ // APIs provided by Captcha services
+@@ -76,19 +71,6 @@
+ 
+ const captchaEl = useTemplateRef('captchaEl');
+ const captchaWidgetId = ref<string | undefined>(undefined);
+-
+-let mCaptchaReciever: Reciever_typeReferenceOnly | null = null;
+-const mCaptchaIframe = useTemplateRef('mCaptchaIframe');
+-const mCaptchaRemoveState = ref(false);
+-const mCaptchaIframeUrl = computed(() => {
+-	if (props.provider === 'mcaptcha' && !mCaptchaRemoveState.value && props.instanceUrl && props.sitekey) {
+-		const url = new URL('/widget', props.instanceUrl);
+-		url.searchParams.set('sitekey', props.sitekey);
+-		return url.toString();
+-	}
+-	return null;
+-});
+-
+ const testcaptchaInput = ref('');
+ const testcaptchaPassed = ref(false);
+ 
+@@ -102,7 +84,7 @@
+ 	}
+ });
+ 
+-const loaded = !!(window as any)[variable.value];
++const loaded = !!window[variable.value];
+ 
+ const src = computed(() => {
+ 	switch (props.provider) {
+@@ -116,7 +98,7 @@
+ 
+ const scriptId = computed(() => `script-${props.provider}`);
+ 
+-const captcha = computed<Captcha>(() => (window as any)[variable.value] ?? {} as unknown as Captcha);
++const captcha = computed<Captcha>(() => window[variable.value] || {} as unknown as Captcha);
+ 
+ watch(() => [props.instanceUrl, props.sitekey, props.secretKey], async () => {
+ 	// 変更があったときはリフレッシュと再レンダリングをしておかないと、変更後の値で再検証が出来ない
+@@ -147,14 +129,8 @@
+ 			if (_DEV_) console.warn(error);
+ 		}
+ 	}
+-
+ 	testcaptchaPassed.value = false;
+ 	testcaptchaInput.value = '';
+-
+-	if (mCaptchaReciever != null) {
+-		mCaptchaReciever.destroy();
+-		mCaptchaReciever = null;
+-	}
+ }
+ 
+ function remove() {
+@@ -167,10 +143,6 @@
+ 			if (_DEV_) console.warn(error);
+ 		}
+ 	}
+-
+-	if (props.provider === 'mcaptcha') {
+-		mCaptchaRemoveState.value = true;
+-	}
+ }
+ 
+ async function requestRender() {
+@@ -188,29 +160,32 @@
+ 			'error-callback': () => callback(undefined),
+ 		});
+ 	} else if (props.provider === 'mcaptcha' && props.instanceUrl && props.sitekey) {
+-		const { default: Reciever } = await import('@mcaptcha/core-glue');
+-		mCaptchaReciever = new Reciever({
++		const { default: Widget } = await import('@mcaptcha/vanilla-glue');
++		new Widget({
+ 			siteKey: {
+-				key: props.sitekey,
+ 				instanceUrl: new URL(props.instanceUrl),
++				key: props.sitekey,
+ 			},
+-		}, (token: string) => {
+-			callback(token);
+ 		});
+-		mCaptchaReciever.listen();
+-		mCaptchaRemoveState.value = false;
+ 	} else {
+-		window.setTimeout(requestRender, 50);
++		window.setTimeout(requestRender, 1);
+ 	}
+ }
+ 
+ function clearWidget() {
+-	reset();
+-	remove();
++	if (props.provider === 'mcaptcha') {
++		const container = window.document.getElementById('mcaptcha__widget-container');
++		if (container) {
++			container.innerHTML = '';
++		}
++	} else {
++		reset();
++		remove();
+ 
+-	if (captchaEl.value) {
+-		// レンダリング先のコンテナの中身を掃除し、フォームが増殖するのを抑止
+-		captchaEl.value.innerHTML = '';
++		if (captchaEl.value) {
++			// レンダリング先のコンテナの中身を掃除し、フォームが増殖するのを抑止
++			captchaEl.value.innerHTML = '';
++		}
+ 	}
+ }
+ 

@@ -1,0 +1,15 @@
+--- packages/frontend/src/utility/sticky-sidebar.ts	2026-07-02 10:19:31.612760327 +0900
++++ packages/frontend/src/utility/sticky-sidebar.ts	2026-07-02 09:56:55.020926590 +0900
+@@ -3,7 +3,6 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-/*
+ export class StickySidebar {
+ 	private lastScrollTop = 0;
+ 	private container: HTMLElement;
+@@ -54,4 +53,3 @@
+ 		this.lastScrollTop = scrollTop <= 0 ? 0 : scrollTop;
+ 	}
+ }
+-*/

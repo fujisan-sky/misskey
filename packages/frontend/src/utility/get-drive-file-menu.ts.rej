@@ -1,0 +1,54 @@
+--- packages/frontend/src/utility/get-drive-file-menu.ts	2026-07-02 10:19:31.609760337 +0900
++++ packages/frontend/src/utility/get-drive-file-menu.ts	2026-07-02 09:56:55.018926593 +0900
+@@ -24,8 +24,6 @@
+ 		misskeyApi('drive/files/update', {
+ 			fileId: file.id,
+ 			name: name,
+-		}).then(updated => {
+-			globalEvents.emit('driveFilesUpdated', [updated]);
+ 		});
+ 	});
+ }
+@@ -39,8 +37,6 @@
+ 			misskeyApi('drive/files/update', {
+ 				fileId: file.id,
+ 				comment: caption.length === 0 ? null : caption,
+-			}).then(updated => {
+-				globalEvents.emit('driveFilesUpdated', [updated]);
+ 			});
+ 		},
+ 		closed: () => dispose(),
+@@ -48,13 +44,10 @@
+ }
+ 
+ function move(file: Misskey.entities.DriveFile) {
+-	selectDriveFolder(null).then(({ canceled, folders }) => {
+-		if (canceled) return;
++	selectDriveFolder(null).then(folder => {
+ 		misskeyApi('drive/files/update', {
+ 			fileId: file.id,
+-			folderId: folders[0] ? folders[0].id : null,
+-		}).then(updated => {
+-			globalEvents.emit('driveFilesUpdated', [updated]);
++			folderId: folder[0] ? folder[0].id : null,
+ 		});
+ 	});
+ }
+@@ -63,8 +56,6 @@
+ 	misskeyApi('drive/files/update', {
+ 		fileId: file.id,
+ 		isSensitive: !file.isSensitive,
+-	}).then(updated => {
+-		globalEvents.emit('driveFilesUpdated', [updated]);
+ 	}).catch(err => {
+ 		os.alert({
+ 			type: 'error',
+@@ -98,7 +89,7 @@
+ }
+ 
+ export function getDriveFileMenu(file: Misskey.entities.DriveFile, folder?: Misskey.entities.DriveFolder | null): MenuItem[] {
+-	const _isImage = file.type.startsWith('image/');
++	const isImage = file.type.startsWith('image/');
+ 
+ 	const menuItems: MenuItem[] = [];
+ 

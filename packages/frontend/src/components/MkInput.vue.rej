@@ -1,0 +1,138 @@
+--- packages/frontend/src/components/MkInput.vue	2026-07-02 10:19:31.587760415 +0900
++++ packages/frontend/src/components/MkInput.vue	2026-07-02 09:56:54.984926661 +0900
+@@ -33,7 +33,7 @@
+ 			@input="onInput"
+ 		>
+ 		<datalist v-if="datalist" :id="id">
+-			<option v-for="data in datalist" :key="data" :value="data"></option>
++			<option v-for="data in datalist" :key="data" :value="data"/>
+ 		</datalist>
+ 		<div ref="suffixEl" :class="$style.suffix"><slot name="suffix"></slot></div>
+ 	</div>
+@@ -43,28 +43,19 @@
+ </div>
+ </template>
+ 
+-<script lang="ts">
+-type SupportedTypes = 'text' | 'password' | 'email' | 'url' | 'tel' | 'number' | 'search' | 'date' | 'time' | 'datetime-local' | 'color';
+-type ModelValueType<T extends SupportedTypes> =
+-	T extends 'number' ? number :
+-	T extends 'text' | 'password' | 'email' | 'url' | 'tel' | 'search' | 'date' | 'time' | 'datetime-local' | 'color' ? string :
+-	never;
+-</script>
+-
+-<script lang="ts" setup generic="T extends SupportedTypes = 'text'">
++<script lang="ts" setup>
+ import { onMounted, onUnmounted, nextTick, ref, useTemplateRef, watch, computed, toRefs } from 'vue';
+-import { throttle, debounce } from 'throttle-debounce';
++import { debounce } from 'throttle-debounce';
+ import { useInterval } from '@@/js/use-interval.js';
+ import type { InputHTMLAttributes } from 'vue';
+ import type { SuggestionType } from '@/utility/autocomplete.js';
+ import MkButton from '@/components/MkButton.vue';
+ import { i18n } from '@/i18n.js';
+ import { Autocomplete } from '@/utility/autocomplete.js';
+-import { genId } from '@/utility/id.js';
+ 
+ const props = defineProps<{
+-	modelValue: ModelValueType<T> | null;
+-	type?: T;
++	modelValue: string | number | null;
++	type?: InputHTMLAttributes['type'];
+ 	required?: boolean;
+ 	readonly?: boolean;
+ 	disabled?: boolean;
+@@ -81,24 +72,22 @@
+ 	min?: number;
+ 	max?: number;
+ 	inline?: boolean;
+-	debounce?: boolean | number;
+-	throttle?: boolean | number;
++	debounce?: boolean;
+ 	manualSave?: boolean;
+ 	small?: boolean;
+ 	large?: boolean;
+ }>();
+ 
+ const emit = defineEmits<{
+-	(ev: 'change', _ev: InputEvent): void;
++	(ev: 'change', _ev: KeyboardEvent): void;
+ 	(ev: 'keydown', _ev: KeyboardEvent): void;
+ 	(ev: 'enter', _ev: KeyboardEvent): void;
+-	(ev: 'update:modelValue', value: ModelValueType<T>): void;
+-	(ev: 'savingStateChange', saved: boolean, invalid: boolean): void;
++	(ev: 'update:modelValue', value: string | number): void;
+ }>();
+ 
+-const { modelValue } = toRefs(props);
+-const v = ref<ModelValueType<T> | null>(modelValue.value);
+-const id = genId();
++const { modelValue, type, autofocus } = toRefs(props);
++const v = ref(modelValue.value);
++const id = Math.random().toString(); // TODO: uuid?
+ const focused = ref(false);
+ const changed = ref(false);
+ const invalid = ref(false);
+@@ -113,9 +102,10 @@
+ let autocompleteWorker: Autocomplete | null = null;
+ 
+ const focus = () => inputEl.value?.focus();
+-const onInput = (event: InputEvent) => {
++const onInput = (event: Event) => {
++	const ev = event as KeyboardEvent;
+ 	changed.value = true;
+-	emit('change', event);
++	emit('change', ev);
+ };
+ const onKeydown = (ev: KeyboardEvent) => {
+ 	if (ev.isComposing || ev.key === 'Process' || ev.keyCode === 229) return;
+@@ -129,15 +119,14 @@
+ 
+ const updated = () => {
+ 	changed.value = false;
+-	if (props.type === 'number') {
+-		emit('update:modelValue', typeof v.value === 'number' ? v.value as ModelValueType<T> : parseFloat(v.value ?? '0') as ModelValueType<T>);
++	if (type.value === 'number') {
++		emit('update:modelValue', typeof v.value === 'number' ? v.value : parseFloat(v.value ?? '0'));
+ 	} else {
+ 		emit('update:modelValue', v.value ?? '');
+ 	}
+ };
+ 
+-const throttledUpdated = throttle(typeof props.throttle === 'number' ? props.throttle : 1000, updated);
+-const debouncedUpdated = debounce(typeof props.debounce === 'number' ? props.debounce : 1000, updated);
++const debouncedUpdated = debounce(1000, updated);
+ 
+ watch(modelValue, newValue => {
+ 	v.value = newValue;
+@@ -145,9 +134,7 @@
+ 
+ watch(v, () => {
+ 	if (!props.manualSave) {
+-		if (props.throttle === true || typeof props.throttle === 'number') {
+-			throttledUpdated();
+-		} else if (props.debounce === true || typeof props.debounce === 'number') {
++		if (props.debounce) {
+ 			debouncedUpdated();
+ 		} else {
+ 			updated();
+@@ -157,10 +144,6 @@
+ 	invalid.value = inputEl.value?.validity.badInput ?? true;
+ });
+ 
+-watch([changed, invalid], ([newChanged, newInvalid]) => {
+-	emit('savingStateChange', newChanged, newInvalid);
+-}, { immediate: true });
+-
+ // このコンポーネントが作成された時、非表示状態である場合がある
+ // 非表示状態だと要素の幅などは0になってしまうので、定期的に計算する
+ useInterval(() => {
+@@ -183,7 +166,7 @@
+ 
+ onMounted(() => {
+ 	nextTick(() => {
+-		if (props.autofocus) {
++		if (autofocus.value) {
+ 			focus();
+ 		}
+ 	});

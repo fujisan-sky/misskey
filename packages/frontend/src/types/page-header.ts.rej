@@ -1,0 +1,16 @@
+--- packages/frontend/src/types/page-header.ts	2026-07-02 10:19:31.606760348 +0900
++++ packages/frontend/src/types/page-header.ts	2026-07-02 09:56:55.013926604 +0900
+@@ -4,9 +4,8 @@
+  */
+ 
+ export type PageHeaderItem = {
+-	text?: string;
+-	icon: string;
+-	highlighted?: boolean;
+-	danger?: boolean;
+-	handler: (ev: PointerEvent) => void;
++    text: string;
++    icon: string;
++    highlighted?: boolean;
++    handler: (ev: MouseEvent) => void;
+ };

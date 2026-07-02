@@ -1,0 +1,26 @@
+--- packages/backend/src/queue/processors/ExportMutingProcessorService.ts	2026-07-02 10:19:31.542760574 +0900
++++ packages/backend/src/queue/processors/ExportMutingProcessorService.ts	2026-07-02 09:56:54.909926810 +0900
+@@ -58,10 +58,6 @@
+ 			let exportedCount = 0;
+ 			let cursor: MiMuting['id'] | null = null;
+ 
+-			const total = await this.mutingsRepository.countBy({
+-				muterId: user.id,
+-			});
+-
+ 			while (true) {
+ 				const mutes = await this.mutingsRepository.find({
+ 					where: {
+@@ -102,7 +98,11 @@
+ 					exportedCount++;
+ 				}
+ 
+-				job.updateProgress(exportedCount / total * 100);
++				const total = await this.mutingsRepository.countBy({
++					muterId: user.id,
++				});
++
++				job.updateProgress(exportedCount / total);
+ 			}
+ 
+ 			stream.end();

@@ -1,0 +1,22 @@
+--- packages/backend/src/server/api/endpoints/channels/followed.ts	2026-07-02 10:19:31.549760550 +0900
++++ packages/backend/src/server/api/endpoints/channels/followed.ts	2026-07-02 09:56:54.917926794 +0900
+@@ -33,8 +33,6 @@
+ 	properties: {
+ 		sinceId: { type: 'string', format: 'misskey:id' },
+ 		untilId: { type: 'string', format: 'misskey:id' },
+-		sinceDate: { type: 'integer' },
+-		untilDate: { type: 'integer' },
+ 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 5 },
+ 	},
+ 	required: [],
+@@ -55,8 +53,8 @@
+ 					this.channelFollowingsRepository.createQueryBuilder(),
+ 					ps.sinceId,
+ 					ps.untilId,
+-					ps.sinceDate,
+-					ps.untilDate,
++					null,
++					null,
+ 					'followeeId',
+ 				)
+ 				.andWhere({ followerId: me.id });

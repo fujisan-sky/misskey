@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/bubble-game/ranking.ts	2026-07-02 10:19:31.549760550 +0900
++++ packages/backend/src/server/api/endpoints/bubble-game/ranking.ts	2026-07-02 09:56:54.917926794 +0900
+@@ -68,7 +68,7 @@
+ 					score: 'DESC',
+ 				},
+ 				take: 10,
+-				relations: { user: true },
++				relations: ['user'],
+ 			});
+ 
+ 			const users = await this.userEntityService.packMany(records.map(r => r.user!), null);

@@ -1,0 +1,10 @@
+--- packages/backend/src/models/json-schema/page.ts	2026-07-02 10:19:31.541760578 +0900
++++ packages/backend/src/models/json-schema/page.ts	2026-07-02 09:56:54.908926812 +0900
+@@ -174,7 +174,6 @@
+ 		font: {
+ 			type: 'string',
+ 			optional: false, nullable: false,
+-			enum: ['serif', 'sans-serif'],
+ 		},
+ 		script: {
+ 			type: 'string',

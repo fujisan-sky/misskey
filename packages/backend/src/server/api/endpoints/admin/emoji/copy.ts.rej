@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/admin/emoji/copy.ts	2026-07-02 10:21:18.563380732 +0900
++++ packages/backend/src/server/api/endpoints/admin/emoji/copy.ts	2026-07-02 09:56:54.913926802 +0900
+@@ -89,7 +89,7 @@
+ 			try {
+ 				// Create file
+ 				driveFile = await this.driveService.uploadFromUrl({ url: emoji.originalUrl, user: null, force: true });
+-			} catch (_) {
++			} catch (e) {
+ 				// TODO: need to return Drive Error
+ 				throw new ApiError();
+ 			}

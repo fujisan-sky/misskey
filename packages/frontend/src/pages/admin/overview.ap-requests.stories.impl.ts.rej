@@ -1,0 +1,11 @@
+--- packages/frontend/src/pages/admin/overview.ap-requests.stories.impl.ts	2026-07-02 10:19:31.598760376 +0900
++++ packages/frontend/src/pages/admin/overview.ap-requests.stories.impl.ts	2026-07-02 09:56:55.001926627 +0900
+@@ -5,7 +5,7 @@
+ 
+ import type { StoryObj } from '@storybook/vue3';
+ import { http, HttpResponse } from 'msw';
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import { commonHandlers } from '../../../.storybook/mocks.js';
+ import overview_ap_requests from './overview.ap-requests.vue';
+ export const Default = {

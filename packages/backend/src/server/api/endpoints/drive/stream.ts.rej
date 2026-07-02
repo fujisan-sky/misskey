@@ -1,0 +1,20 @@
+--- packages/backend/src/server/api/endpoints/drive/stream.ts	2026-07-02 10:19:31.552760539 +0900
++++ packages/backend/src/server/api/endpoints/drive/stream.ts	2026-07-02 09:56:54.920926788 +0900
+@@ -34,8 +34,6 @@
+ 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+ 		sinceId: { type: 'string', format: 'misskey:id' },
+ 		untilId: { type: 'string', format: 'misskey:id' },
+-		sinceDate: { type: 'integer' },
+-		untilDate: { type: 'integer' },
+ 		type: { type: 'string', pattern: /^[a-zA-Z\/\-*]+$/.toString().slice(1, -1) },
+ 	},
+ 	required: [],
+@@ -51,7 +49,7 @@
+ 		private queryService: QueryService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+-			const query = this.queryService.makePaginationQuery(this.driveFilesRepository.createQueryBuilder('file'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
++			const query = this.queryService.makePaginationQuery(this.driveFilesRepository.createQueryBuilder('file'), ps.sinceId, ps.untilId)
+ 				.andWhere('file.userId = :userId', { userId: me.id });
+ 
+ 			if (ps.type) {

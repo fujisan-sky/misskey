@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkDriveWindow.vue	2026-07-02 10:19:31.586760419 +0900
++++ packages/frontend/src/components/MkDriveWindow.vue	2026-07-02 09:56:54.982926665 +0900
+@@ -6,6 +6,8 @@
+ <template>
+ <MkWindow
+ 	ref="window"
++	:initialWidth="800"
++	:initialHeight="500"
+ 	:canResize="true"
+ 	@closed="emit('closed')"
+ >

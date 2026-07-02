@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkAntennaEditor.stories.impl.ts	2026-07-02 10:19:31.583760430 +0900
++++ packages/frontend/src/components/MkAntennaEditor.stories.impl.ts	2026-07-02 09:56:54.979926671 +0900
+@@ -4,7 +4,7 @@
+  */
+ 
+ /* eslint-disable @typescript-eslint/explicit-function-return-type */
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import type { StoryObj } from '@storybook/vue3';
+ import { HttpResponse, http } from 'msw';
+ import { commonHandlers } from '../../.storybook/mocks.js';

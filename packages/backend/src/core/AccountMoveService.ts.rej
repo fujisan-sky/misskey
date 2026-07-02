@@ -1,0 +1,11 @@
+--- packages/backend/src/core/AccountMoveService.ts	2026-07-02 10:19:31.529760620 +0900
++++ packages/backend/src/core/AccountMoveService.ts	2026-07-02 09:56:54.891926846 +0900
+@@ -75,7 +75,7 @@
+ 	 */
+ 	@bindThis
+ 	public async moveFromLocal(src: MiLocalUser, dst: MiLocalUser | MiRemoteUser): Promise<unknown> {
+-		const _srcUri = this.userEntityService.getUserUri(src);
++		const srcUri = this.userEntityService.getUserUri(src);
+ 		const dstUri = this.userEntityService.getUserUri(dst);
+ 
+ 		// add movedToUri to indicate that the user has moved

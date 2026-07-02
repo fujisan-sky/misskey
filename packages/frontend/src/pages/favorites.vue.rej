@@ -1,0 +1,39 @@
+--- packages/frontend/src/pages/favorites.vue	2026-07-02 10:19:31.601760366 +0900
++++ packages/frontend/src/pages/favorites.vue	2026-07-02 09:56:55.005926619 +0900
+@@ -6,11 +6,13 @@
+ <template>
+ <PageWithHeader>
+ 	<div class="_spacer" style="--MI_SPACER-w: 800px;">
+-		<MkPagination :paginator="paginator">
++		<MkPagination :pagination="pagination">
+ 			<template #empty><MkResult type="empty" :text="i18n.ts.noNotes"/></template>
+ 
+ 			<template #default="{ items }">
+-				<MkNote v-for="item in items" :key="item.id" :note="item.note" :class="$style.note"/>
++				<MkDateSeparatedList v-slot="{ item }" :items="items" :direction="'down'" :noGap="false" :ad="false">
++					<MkNote :key="item.id" :note="item.note" :class="$style.note"/>
++				</MkDateSeparatedList>
+ 			</template>
+ 		</MkPagination>
+ 	</div>
+@@ -18,16 +20,16 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { markRaw } from 'vue';
+ import MkPagination from '@/components/MkPagination.vue';
+ import MkNote from '@/components/MkNote.vue';
++import MkDateSeparatedList from '@/components/MkDateSeparatedList.vue';
+ import { i18n } from '@/i18n.js';
+ import { definePage } from '@/page.js';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+-const paginator = markRaw(new Paginator('i/favorites', {
++const pagination = {
++	endpoint: 'i/favorites' as const,
+ 	limit: 10,
+-}));
++};
+ 
+ definePage(() => ({
+ 	title: i18n.ts.favorites,

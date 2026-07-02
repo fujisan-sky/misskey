@@ -1,0 +1,16 @@
+--- packages/backend/src/misc/cache.ts	2026-07-02 10:19:31.536760596 +0900
++++ packages/backend/src/misc/cache.ts	2026-07-02 09:56:54.901926826 +0900
+@@ -299,8 +299,12 @@
+ 		const now = Date.now();
+ 
+ 		for (const [key, { date }] of this.cache.entries()) {
++			// The map is ordered from oldest to youngest.
++			// We can stop once we find an entry that's still active, because all following entries must *also* be active.
+ 			const age = now - date;
+-			if (age >= this.lifetime) this.cache.delete(key);
++			if (age < this.lifetime) break;
++
++			this.cache.delete(key);
+ 		}
+ 	}
+ 

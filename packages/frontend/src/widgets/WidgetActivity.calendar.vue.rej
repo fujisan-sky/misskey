@@ -1,0 +1,46 @@
+--- packages/frontend/src/widgets/WidgetActivity.calendar.vue	2026-07-02 10:19:31.612760327 +0900
++++ packages/frontend/src/widgets/WidgetActivity.calendar.vue	2026-07-02 09:56:55.020926590 +0900
+@@ -35,8 +35,6 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { deepClone } from '@/utility/clone.js';
+-
+ const props = defineProps<{
+ 	activity: {
+ 		total: number;
+@@ -46,21 +44,10 @@
+ 	}[]
+ }>();
+ 
+-const activity = deepClone(props.activity).map(d => ({
+-	...d,
+-	total: d.notes + d.replies + d.renotes,
+-	x: 0,
+-	date: {
+-		year: 0,
+-		month: 0,
+-		day: 0,
+-		weekday: 0,
+-	},
+-	v: 0,
+-	color: '',
+-}));
+-
+-const peak = Math.max(...activity.map(d => d.total));
++for (const d of props.activity) {
++	d.total = d.notes + d.replies + d.renotes;
++}
++const peak = Math.max(...props.activity.map(d => d.total));
+ 
+ const now = new Date();
+ const year = now.getFullYear();
+@@ -68,7 +55,7 @@
+ const day = now.getDate();
+ 
+ let x = 20;
+-activity.slice().forEach((d, i) => {
++props.activity.slice().forEach((d, i) => {
+ 	d.x = x;
+ 
+ 	const date = new Date(year, month, day - i);

@@ -1,0 +1,50 @@
+--- packages/backend/src/core/GlobalEventService.ts	2026-07-02 10:19:31.530760617 +0900
++++ packages/backend/src/core/GlobalEventService.ts	2026-07-02 09:56:54.893926842 +0900
+@@ -38,7 +38,11 @@
+ 		emojis: Packed<'EmojiDetailed'>[];
+ 	};
+ 	emojiDeleted: {
+-		emojis: Packed<'EmojiDetailed'>[];
++		emojis: {
++			id?: string;
++			name: string;
++			[other: string]: any;
++		}[];
+ 	};
+ 	announcementCreated: {
+ 		announcement: Packed<'Announcement'>;
+@@ -129,9 +133,6 @@
+ type NoteStreamEventTypes = {
+ 	[key in keyof NoteEventTypes]: {
+ 		id: MiNote['id'];
+-		userId: MiNote['userId'];
+-		visibility: MiNote['visibility'];
+-		visibleUserIds: MiNote['visibleUserIds'];
+ 		body: NoteEventTypes[key];
+ 	};
+ };
+@@ -254,8 +255,6 @@
+ 	metaUpdated: { before?: MiMeta; after: MiMeta; };
+ 	followChannel: { userId: MiUser['id']; channelId: MiChannel['id']; };
+ 	unfollowChannel: { userId: MiUser['id']; channelId: MiChannel['id']; };
+-	muteChannel: { userId: MiUser['id']; channelId: MiChannel['id']; };
+-	unmuteChannel: { userId: MiUser['id']; channelId: MiChannel['id']; };
+ 	updateUserProfile: MiUserProfile;
+ 	mute: { muterId: MiUser['id']; muteeId: MiUser['id']; };
+ 	unmute: { muterId: MiUser['id']; muteeId: MiUser['id']; };
+@@ -381,12 +380,9 @@
+ 	}
+ 
+ 	@bindThis
+-	public publishNoteStream<K extends keyof NoteEventTypes>(note: MiNote, type: K, value?: NoteEventTypes[K]): void {
+-		this.publish(`noteStream:${note.id}`, type, {
+-			id: note.id,
+-			userId: note.userId,
+-			visibility: note.visibility,
+-			visibleUserIds: note.visibleUserIds,
++	public publishNoteStream<K extends keyof NoteEventTypes>(noteId: MiNote['id'], type: K, value?: NoteEventTypes[K]): void {
++		this.publish(`noteStream:${noteId}`, type, {
++			id: noteId,
+ 			body: value,
+ 		});
+ 	}

@@ -1,0 +1,22 @@
+--- packages/frontend/src/utility/deep-equal.ts	2026-07-02 10:19:31.608760341 +0900
++++ packages/frontend/src/utility/deep-equal.ts	2026-07-02 09:56:55.017926595 +0900
+@@ -10,9 +10,8 @@
+ 	if (typeof a !== typeof b) return false;
+ 
+ 	if (a === null) return b === null;
++
+ 	if (a === undefined) return b === undefined;
+-	if (b === null) return false;
+-	if (b === undefined) return false;
+ 
+ 	if (Array.isArray(a) && Array.isArray(b)) {
+ 		if (a.length !== b.length) return false;
+@@ -32,7 +31,7 @@
+ 		if (aks.length !== bks.length) return false;
+ 		for (let i = 0; i < aks.length; i++) {
+ 			const k = aks[i];
+-			if (!deepEqual((a as { [key: string]: JsonLike })[k], (b as { [key: string]: JsonLike })[k])) return false;
++			if (!deepEqual(a[k], (b as { [key: string]: JsonLike })[k])) return false;
+ 		}
+ 		return true;
+ 	}

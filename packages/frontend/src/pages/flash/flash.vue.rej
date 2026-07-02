@@ -1,0 +1,138 @@
+--- packages/frontend/src/pages/flash/flash.vue	2026-07-02 10:19:31.601760366 +0900
++++ packages/frontend/src/pages/flash/flash.vue	2026-07-02 09:56:55.005926619 +0900
+@@ -63,13 +63,11 @@
+ <script lang="ts" setup>
+ import { computed, onDeactivated, onUnmounted, ref, watch, shallowRef, defineAsyncComponent } from 'vue';
+ import * as Misskey from 'misskey-js';
+-import { utils } from '@syuilo/aiscript';
+-import { compareVersions } from 'compare-versions';
++import { Interpreter, Parser, values } from '@syuilo/aiscript';
+ import { url } from '@@/js/config.js';
+ import type { Ref } from 'vue';
+ import type { AsUiComponent, AsUiRoot } from '@/aiscript/ui.js';
+ import type { MenuItem } from '@/types/menu.js';
+-import type { Interpreter } from '@syuilo/aiscript';
+ import MkButton from '@/components/MkButton.vue';
+ import * as os from '@/os.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+@@ -104,7 +102,7 @@
+ 	});
+ }
+ 
+-function share(ev: PointerEvent) {
++function share(ev: MouseEvent) {
+ 	if (!flash.value) return;
+ 
+ 	const menuItems: MenuItem[] = [];
+@@ -151,11 +149,9 @@
+ 	});
+ }
+ 
+-async function like() {
++function like() {
+ 	if (!flash.value) return;
+-
+-	const isLoggedIn = await pleaseLogin();
+-	if (!isLoggedIn) return;
++	pleaseLogin();
+ 
+ 	os.apiWithDialog('flash/like', {
+ 		flashId: flash.value.id,
+@@ -167,9 +163,7 @@
+ 
+ async function unlike() {
+ 	if (!flash.value) return;
+-
+-	const isLoggedIn = await pleaseLogin();
+-	if (!isLoggedIn) return;
++	pleaseLogin();
+ 
+ 	const confirm = await os.confirm({
+ 		type: 'warning',
+@@ -186,6 +180,8 @@
+ 
+ watch(() => props.id, fetchFlash, { immediate: true });
+ 
++const parser = new Parser();
++
+ const started = ref(false);
+ const aiscript = shallowRef<Interpreter | null>(null);
+ const root = ref<AsUiRoot>();
+@@ -196,29 +192,13 @@
+ 	run();
+ }
+ 
+-function getIsLegacy(version: string | null): boolean {
+-	if (version == null) return true;
+-	try {
+-		return compareVersions(version, '1.0.0') < 0;
+-	} catch {
+-		return false;
+-	}
+-}
+-
+ async function run() {
+ 	if (aiscript.value) aiscript.value.abort();
+ 	if (!flash.value) return;
+ 
+-	const version = utils.getLangVersion(flash.value.script);
+-	const isLegacy = getIsLegacy(version);
+-
+-	const { Interpreter, Parser, values } = (isLegacy ? (await import('@syuilo/aiscript-0-19-0')) : await import('@syuilo/aiscript')) as typeof import('@syuilo/aiscript');
+-
+-	const parser = new Parser();
+-
+ 	components.value = [];
+ 
+-	const interpreter = new Interpreter({
++	aiscript.value = new Interpreter({
+ 		...createAiScriptEnv({
+ 			storageKey: 'flash:' + flash.value.id,
+ 		}),
+@@ -229,16 +209,14 @@
+ 		THIS_URL: values.STR(`${url}/play/${flash.value.id}`),
+ 	}, {
+ 		in: aiScriptReadline,
+-		out: () => {
++		out: (value) => {
+ 			// nop
+ 		},
+-		log: () => {
++		log: (type, params) => {
+ 			// nop
+ 		},
+ 	});
+ 
+-	aiscript.value = interpreter;
+-
+ 	let ast;
+ 	try {
+ 		ast = parser.parse(flash.value.script);
+@@ -250,8 +228,8 @@
+ 		return;
+ 	}
+ 	try {
+-		await interpreter.exec(ast);
+-	} catch (err: any) {
++		await aiscript.value.exec(ast);
++	} catch (err) {
+ 		os.alert({
+ 			type: 'error',
+ 			title: 'AiScript Error',
+@@ -273,7 +251,7 @@
+ 	});
+ }
+ 
+-function showMenu(ev: PointerEvent) {
++function showMenu(ev: MouseEvent) {
+ 	if (!flash.value) return;
+ 
+ 	const menu: MenuItem[] = [
+@@ -388,7 +366,6 @@
+ 
+ 			> .items {
+ 				display: flex;
+-				flex-wrap: wrap;
+ 				justify-content: center;
+ 				gap: 12px;
+ 				padding: 16px;

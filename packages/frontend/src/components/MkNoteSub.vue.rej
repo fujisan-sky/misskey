@@ -1,0 +1,53 @@
+--- packages/frontend/src/components/MkNoteSub.vue	2026-07-02 10:19:31.588760412 +0900
++++ packages/frontend/src/components/MkNoteSub.vue	2026-07-02 09:56:54.986926657 +0900
+@@ -4,10 +4,7 @@
+ -->
+ 
+ <template>
+-<div v-if="note == null" :class="$style.deleted">
+-	{{ i18n.ts.deletedNote }}
+-</div>
+-<div v-else-if="!muted" :class="[$style.root, { [$style.children]: depth > 1 }]">
++<div v-if="!muted" :class="[$style.root, { [$style.children]: depth > 1 }]">
+ 	<div :class="$style.main">
+ 		<div v-if="note.channel" :class="$style.colorBar" :style="{ background: note.channel.color }"></div>
+ 		<MkAvatar :class="$style.avatar" :user="note.user" link preview/>
+@@ -56,7 +53,7 @@
+ import { checkWordMute } from '@/utility/check-word-mute.js';
+ 
+ const props = withDefaults(defineProps<{
+-	note: Misskey.entities.Note | null;
++	note: Misskey.entities.Note;
+ 	detail?: boolean;
+ 
+ 	// how many notes are in between this one and the note being viewed in detail
+@@ -65,12 +62,12 @@
+ 	depth: 1,
+ });
+ 
+-const muted = ref(props.note && $i ? checkWordMute(props.note, $i, $i.mutedWords) : false);
++const muted = ref($i ? checkWordMute(props.note, $i, $i.mutedWords) : false);
+ 
+ const showContent = ref(false);
+ const replies = ref<Misskey.entities.Note[]>([]);
+ 
+-if (props.detail && props.note) {
++if (props.detail) {
+ 	misskeyApi('notes/children', {
+ 		noteId: props.note.id,
+ 		limit: 5,
+@@ -163,14 +160,4 @@
+ 	margin: 8px 8px 0 8px;
+ 	border-radius: 8px;
+ }
+-
+-.deleted {
+-	text-align: center;
+-	padding: 8px !important;
+-	margin: 8px 8px 0 8px;
+-	--color: light-dark(rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.15));
+-	background-size: auto auto;
+-	background-image: repeating-linear-gradient(135deg, transparent, transparent 10px, var(--color) 4px, var(--color) 14px);
+-	border-radius: 8px;
+-}
+ </style>

@@ -1,0 +1,16 @@
+--- packages/frontend/src/pages/api-console.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/api-console.vue	2026-07-02 09:56:55.002926625 +0900
+@@ -68,12 +68,7 @@
+ 
+ function onEndpointChange() {
+ 	misskeyApi('endpoint', { endpoint: endpoint.value }, withCredential.value ? undefined : null).then(resp => {
+-		if (resp == null) {
+-			body.value = '{}';
+-			return;
+-		}
+-
+-		const endpointBody = {} as Record<string, unknown>;
++		const endpointBody = {};
+ 		for (const p of resp.params) {
+ 			endpointBody[p.name] =
+ 				p.type === 'String' ? '' :

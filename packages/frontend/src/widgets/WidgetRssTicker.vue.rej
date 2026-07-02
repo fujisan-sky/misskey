@@ -1,0 +1,85 @@
+--- packages/frontend/src/widgets/WidgetRssTicker.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetRssTicker.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -31,11 +31,10 @@
+ import * as Misskey from 'misskey-js';
+ import { useWidgetPropsManager } from './widget.js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import MkMarqueeText from '@/components/MkMarqueeText.vue';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
++import MarqueeText from '@/components/MkMarqueeText.vue';
++import type { GetFormResultType } from '@/utility/form.js';
+ import MkContainer from '@/components/MkContainer.vue';
+ import { shuffle } from '@/utility/shuffle.js';
+-import { i18n } from '@/i18n.js';
+ import { url as base } from '@@/js/config.js';
+ import { useInterval } from '@@/js/use-interval.js';
+ 
+@@ -43,50 +42,41 @@
+ 
+ const widgetPropsDef = {
+ 	url: {
+-		type: 'string',
+-		label: i18n.ts._widgetOptions._rss.url,
++		type: 'string' as const,
+ 		default: 'http://feeds.afpbb.com/rss/afpbb/afpbbnews',
+-		manualSave: true,
+ 	},
+ 	shuffle: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions._rssTicker.shuffle,
++		type: 'boolean' as const,
+ 		default: true,
+ 	},
+ 	refreshIntervalSec: {
+-		type: 'number',
+-		label: i18n.ts._widgetOptions._rss.refreshIntervalSec,
++		type: 'number' as const,
+ 		default: 60,
+ 	},
+ 	maxEntries: {
+-		type: 'number',
+-		label: i18n.ts._widgetOptions._rss.maxEntries,
++		type: 'number' as const,
+ 		default: 15,
+ 	},
+ 	duration: {
+-		type: 'range',
+-		label: i18n.ts._widgetOptions._rssTicker.duration,
++		type: 'range' as const,
+ 		default: 70,
+ 		step: 1,
+ 		min: 5,
+ 		max: 200,
+ 	},
+ 	reverse: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions._rssTicker.reverse,
++		type: 'boolean' as const,
+ 		default: false,
+ 	},
+ 	showHeader: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.showHeader,
++		type: 'boolean' as const,
+ 		default: false,
+ 	},
+ 	transparent: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.transparent,
++		type: 'boolean' as const,
+ 		default: false,
+ 	},
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 
+@@ -129,7 +119,7 @@
+ 		});
+ };
+ 
+-watch(fetchEndpoint, tick);
++watch(() => fetchEndpoint, tick);
+ watch(() => widgetProps.refreshIntervalSec, () => {
+ 	if (intervalClear.value) {
+ 		intervalClear.value();

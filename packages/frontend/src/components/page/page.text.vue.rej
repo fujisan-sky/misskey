@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/page/page.text.vue	2026-07-02 10:19:31.595760387 +0900
++++ packages/frontend/src/components/page/page.text.vue	2026-07-02 09:56:54.996926637 +0900
+@@ -22,7 +22,7 @@
+ const MkUrlPreview = defineAsyncComponent(() => import('@/components/MkUrlPreview.vue'));
+ 
+ const props = defineProps<{
+-	block: Extract<Misskey.entities.PageBlock, { type: 'text' }>,
++	block: Misskey.entities.PageBlock,
+ 	page: Misskey.entities.Page,
+ }>();
+ 

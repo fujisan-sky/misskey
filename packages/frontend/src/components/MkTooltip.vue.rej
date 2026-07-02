@@ -1,0 +1,38 @@
+--- packages/frontend/src/components/MkTooltip.vue	2026-07-02 10:19:31.591760401 +0900
++++ packages/frontend/src/components/MkTooltip.vue	2026-07-02 09:56:54.990926649 +0900
+@@ -31,7 +31,7 @@
+ 
+ const props = withDefaults(defineProps<{
+ 	showing: boolean;
+-	anchorElement?: HTMLElement;
++	targetElement?: HTMLElement;
+ 	x?: number;
+ 	y?: number;
+ 	text?: string;
+@@ -58,7 +58,7 @@
+ function setPosition() {
+ 	if (el.value == null) return;
+ 	const data = calcPopupPosition(el.value, {
+-		anchorElement: props.anchorElement,
++		anchorElement: props.targetElement,
+ 		direction: props.direction,
+ 		align: 'center',
+ 		innerMargin: props.innerMargin,
+@@ -71,7 +71,7 @@
+ 	el.value.style.top = data.top + 'px';
+ }
+ 
+-let loopHandler: number | null = null;
++let loopHandler;
+ 
+ onMounted(() => {
+ 	nextTick(() => {
+@@ -87,7 +87,7 @@
+ });
+ 
+ onUnmounted(() => {
+-	if (loopHandler != null) window.cancelAnimationFrame(loopHandler);
++	window.cancelAnimationFrame(loopHandler);
+ });
+ </script>
+ 

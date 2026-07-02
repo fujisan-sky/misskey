@@ -1,0 +1,38 @@
+--- packages/frontend/src/utility/virtual.d.ts	2026-07-02 10:19:31.612760327 +0900
++++ packages/frontend/src/utility/virtual.d.ts	2026-07-02 09:56:55.020926590 +0900
+@@ -3,25 +3,16 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-type XGeneratedSearchIndexItem = {
+-	id: string;
+-	parentId?: string;
+-	path?: string;
+-	label: string;
+-	keywords: string[];
+-	texts: string[];
+-	icon?: string;
+-	inlining?: string[];
+-};
+-
+-declare module 'search-index' {
+-	export type GeneratedSearchIndexItem = XGeneratedSearchIndexItem;
+-}
+-
+ declare module 'search-index:settings' {
+-	export const searchIndexes: XGeneratedSearchIndexItem[];
+-}
++	export type GeneratedSearchIndexItem = {
++		id: string;
++		parentId?: string;
++		path?: string;
++		label: string;
++		keywords: string[];
++		icon?: string;
++		inlining?: string[];
++	};
+ 
+-declare module 'search-index:admin' {
+-	export const searchIndexes: XGeneratedSearchIndexItem[];
++	export const searchIndexes: GeneratedSearchIndexItem[];
+ }

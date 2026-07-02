@@ -84,7 +84,36 @@ const emit = defineEmits<{
 
 const dialog = useTemplateRef('dialog');
 const exceeded = computed(() => ($i.policies.avatarDecorationLimit - $i.avatarDecorations.length) <= 0);
-const locked = computed(() => props.decoration.roleIdsThatCanBeUsedThisDecoration.length > 0 && !$i.roles.some(r => props.decoration.roleIdsThatCanBeUsedThisDecoration.includes(r.id)));
+const locked = computed(() => {
+	//console.info( props.decoration.name )
+	if ( props.decoration.roleIdsThatCanBeUsedThisDecoration.length <= 0 ){
+		return false;
+	}
+	if ( $i.roles.some(r => props.decoration.roleIdsThatCanBeUsedThisDecoration.includes(r.id)) ){
+		//console.info("match role")
+		return false;
+	}
+	if ( !($i.policies.canCreateOwnDeco) ){
+		//console.info("No Own Deco policy")
+		return true;
+	}
+	let  byName = 'noName';
+        if ( $i.name ){
+        	byName = $i.name;
+        }else{
+        	byName = $i.username;
+        }
+	//console.info( "---name--" )
+	//console.info(byName)
+	const byNamePlus = "/" + byName + "さん";
+	//console.info(byNamePlus)
+	if ( props.decoration.name.includes(byNamePlus) ){
+		//console.info("find Own Deco ")
+		return false;
+	}
+	//console.info("not find Own Docd ")
+	return true;
+	});
 const angle = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].angle : null) ?? 0);
 const flipH = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].flipH : null) ?? false);
 const offsetX = ref((props.usingIndex != null ? $i.avatarDecorations[props.usingIndex].offsetX : null) ?? 0);

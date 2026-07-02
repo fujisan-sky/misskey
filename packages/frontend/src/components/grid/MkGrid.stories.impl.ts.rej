@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/grid/MkGrid.stories.impl.ts	2026-07-02 10:19:31.594760390 +0900
++++ packages/frontend/src/components/grid/MkGrid.stories.impl.ts	2026-07-02 09:56:54.995926639 +0900
+@@ -4,7 +4,7 @@
+  */
+ 
+ /* eslint-disable @typescript-eslint/explicit-function-return-type */
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import type { StoryObj } from '@storybook/vue3';
+ import { ref } from 'vue';
+ import { commonHandlers } from '../../../.storybook/mocks.js';

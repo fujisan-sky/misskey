@@ -1,0 +1,68 @@
+--- packages/frontend/src/pages/pages.vue	2026-07-02 10:19:31.602760362 +0900
++++ packages/frontend/src/pages/pages.vue	2026-07-02 09:56:55.007926615 +0900
+@@ -7,7 +7,7 @@
+ <PageWithHeader v-model:tab="tab" :actions="headerActions" :tabs="headerTabs" :swipable="true">
+ 	<div class="_spacer" style="--MI_SPACER-w: 700px;">
+ 		<div v-if="tab === 'featured'">
+-			<MkPagination v-slot="{items}" :paginator="featuredPagesPaginator">
++			<MkPagination v-slot="{items}" :pagination="featuredPagesPagination">
+ 				<div class="_gaps">
+ 					<MkPagePreview v-for="page in items" :key="page.id" :page="page"/>
+ 				</div>
+@@ -16,7 +16,7 @@
+ 
+ 		<div v-else-if="tab === 'my'" class="_gaps">
+ 			<MkButton class="new" @click="create()"><i class="ti ti-plus"></i></MkButton>
+-			<MkPagination v-slot="{items}" :paginator="myPagesPaginator">
++			<MkPagination v-slot="{items}" :pagination="myPagesPagination">
+ 				<div class="_gaps">
+ 					<MkPagePreview v-for="page in items" :key="page.id" :page="page"/>
+ 				</div>
+@@ -24,7 +24,7 @@
+ 		</div>
+ 
+ 		<div v-else-if="tab === 'liked'">
+-			<MkPagination v-slot="{items}" :paginator="likedPagesPaginator">
++			<MkPagination v-slot="{items}" :pagination="likedPagesPagination">
+ 				<div class="_gaps">
+ 					<MkPagePreview v-for="like in items" :key="like.page.id" :page="like.page"/>
+ 				</div>
+@@ -35,28 +35,30 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, markRaw, ref } from 'vue';
++import { computed, ref } from 'vue';
+ import MkPagePreview from '@/components/MkPagePreview.vue';
+ import MkPagination from '@/components/MkPagination.vue';
+ import MkButton from '@/components/MkButton.vue';
+ import { i18n } from '@/i18n.js';
+ import { definePage } from '@/page.js';
+ import { useRouter } from '@/router.js';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+ const router = useRouter();
+ 
+ const tab = ref('featured');
+ 
+-const featuredPagesPaginator = markRaw(new Paginator('pages/featured', {
++const featuredPagesPagination = {
++	endpoint: 'pages/featured' as const,
+ 	noPaging: true,
+-}));
+-const myPagesPaginator = markRaw(new Paginator('i/pages', {
++};
++const myPagesPagination = {
++	endpoint: 'i/pages' as const,
+ 	limit: 5,
+-}));
+-const likedPagesPaginator = markRaw(new Paginator('i/page-likes', {
++};
++const likedPagesPagination = {
++	endpoint: 'i/page-likes' as const,
+ 	limit: 5,
+-}));
++};
+ 
+ function create() {
+ 	router.push('/pages/new');

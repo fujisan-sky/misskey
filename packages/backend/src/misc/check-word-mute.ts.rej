@@ -1,0 +1,11 @@
+--- packages/backend/src/misc/check-word-mute.ts	2026-07-02 10:19:31.536760596 +0900
++++ packages/backend/src/misc/check-word-mute.ts	2026-07-02 09:56:54.902926824 +0900
+@@ -56,7 +56,7 @@
+ 
+ 				try {
+ 					return new RE2(regexp[1], regexp[2]).test(text);
+-				} catch (_) {
++				} catch (err) {
+ 					// This should never happen due to input sanitisation.
+ 					return false;
+ 				}

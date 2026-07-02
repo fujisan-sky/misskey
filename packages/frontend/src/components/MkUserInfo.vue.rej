@@ -1,0 +1,35 @@
+--- packages/frontend/src/components/MkUserInfo.vue	2026-07-02 10:19:31.592760398 +0900
++++ packages/frontend/src/components/MkUserInfo.vue	2026-07-02 09:56:54.991926647 +0900
+@@ -6,9 +6,7 @@
+ <template>
+ <div class="_panel" :class="$style.root">
+ 	<div :class="$style.banner" :style="user.bannerUrl ? { backgroundImage: `url(${prefer.s.disableShowingAnimatedImages ? getStaticImageUrl(user.bannerUrl) : user.bannerUrl})` } : ''"></div>
+-	<MkA :to="userPage(user)">
+-		<MkAvatar :class="$style.avatar" :user="user" indicator/>
+-	</MkA>
++	<MkAvatar :class="$style.avatar" :user="user" indicator/>
+ 	<div :class="$style.title">
+ 		<MkA :class="$style.name" :to="userPage(user)"><MkUserName :user="user" :nowrap="false"/></MkA>
+ 		<p :class="$style.username"><MkAcct :user="user"/></p>
+@@ -21,15 +19,15 @@
+ 		<span v-else style="opacity: 0.7;">{{ i18n.ts.noAccountDescription }}</span>
+ 	</div>
+ 	<div :class="$style.status">
+-		<MkA :class="$style.statusItem" :to="userPage(user, 'notes')">
++		<div :class="$style.statusItem">
+ 			<p :class="$style.statusItemLabel">{{ i18n.ts.notes }}</p><span :class="$style.statusItemValue">{{ number(user.notesCount) }}</span>
+-		</MkA>
+-		<MkA v-if="isFollowingVisibleForMe(user)" :class="$style.statusItem" :to="userPage(user, 'following')">
++		</div>
++		<div v-if="isFollowingVisibleForMe(user)" :class="$style.statusItem">
+ 			<p :class="$style.statusItemLabel">{{ i18n.ts.following }}</p><span :class="$style.statusItemValue">{{ number(user.followingCount) }}</span>
+-		</MkA>
+-		<MkA v-if="isFollowersVisibleForMe(user)" :class="$style.statusItem" :to="userPage(user, 'followers')">
++		</div>
++		<div v-if="isFollowersVisibleForMe(user)" :class="$style.statusItem">
+ 			<p :class="$style.statusItemLabel">{{ i18n.ts.followers }}</p><span :class="$style.statusItemValue">{{ number(user.followersCount) }}</span>
+-		</MkA>
++		</div>
+ 	</div>
+ 	<MkFollowButton v-if="user.id != $i?.id" :class="$style.follow" :user="user" mini/>
+ </div>

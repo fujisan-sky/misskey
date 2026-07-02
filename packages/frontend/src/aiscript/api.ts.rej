@@ -1,0 +1,131 @@
+--- packages/frontend/src/aiscript/api.ts	2026-07-02 10:19:31.582760433 +0900
++++ packages/frontend/src/aiscript/api.ts	2026-07-02 09:56:54.978926673 +0900
+@@ -40,81 +40,33 @@
+ 		CUSTOM_EMOJIS: utils.jsToVal(customEmojis.value),
+ 		LOCALE: values.STR(lang),
+ 		SERVER_URL: values.STR(url),
+-		'Mk:dialog': values.FN_NATIVE(async ([_title, _text, _type]) => {
+-			let title: string | undefined = undefined;
+-			let text: string | undefined = undefined;
+-			let type: typeof DIALOG_TYPES[number] = 'info';
+-
+-			if (_title != null) {
+-				if (utils.isString(_title)) {
+-					title = _title.value;
+-				} else {
+-					utils.assertNull(_title);
+-				}
+-			}
+-
+-			if (_text != null) {
+-				if (utils.isString(_text)) {
+-					text = _text.value;
+-				} else {
+-					utils.assertNull(_text);
+-				}
+-			}
+-
+-			if (_type != null) {
+-				if (utils.isString(_type)) {
+-					assertStringAndIsIn(_type, DIALOG_TYPES);
+-					type = _type.value;
+-				} else {
+-					utils.assertNull(_type);
+-				}
++		'Mk:dialog': values.FN_NATIVE(async ([title, text, type]) => {
++			utils.assertString(title);
++			utils.assertString(text);
++			if (type != null) {
++				assertStringAndIsIn(type, DIALOG_TYPES);
+ 			}
+-
+ 			await os.alert({
+-				type,
+-				title,
+-				text,
++				type: type ? type.value : 'info',
++				title: title.value,
++				text: text.value,
+ 			});
+ 			return values.NULL;
+ 		}),
+-		'Mk:confirm': values.FN_NATIVE(async ([_title, _text, _type]) => {
+-			let title: string | undefined = undefined;
+-			let text: string | undefined = undefined;
+-			let type: typeof DIALOG_TYPES[number] = 'question';
+-
+-			if (_title != null) {
+-				if (utils.isString(_title)) {
+-					title = _title.value;
+-				} else {
+-					utils.assertNull(_title);
+-				}
+-			}
+-
+-			if (_text != null) {
+-				if (utils.isString(_text)) {
+-					text = _text.value;
+-				} else {
+-					utils.assertNull(_text);
+-				}
+-			}
+-
+-			if (_type != null) {
+-				if (utils.isString(_type)) {
+-					assertStringAndIsIn(_type, DIALOG_TYPES);
+-					type = _type.value;
+-				} else {
+-					utils.assertNull(_type);
+-				}
++		'Mk:confirm': values.FN_NATIVE(async ([title, text, type]) => {
++			utils.assertString(title);
++			utils.assertString(text);
++			if (type != null) {
++				assertStringAndIsIn(type, DIALOG_TYPES);
+ 			}
+-
+ 			const confirm = await os.confirm({
+-				type,
+-				title,
+-				text,
++				type: type ? type.value : 'question',
++				title: title.value,
++				text: text.value,
+ 			});
+ 			return confirm.canceled ? values.FALSE : values.TRUE;
+ 		}),
+-		'Mk:toast': values.FN_NATIVE(([text]) => {
++		'Mk:toast': values.FN_NATIVE(async ([text]) => {
+ 			utils.assertString(text);
+ 			os.toast(text.value);
+ 			return values.NULL;
+@@ -124,25 +76,17 @@
+ 			if (ep.value.includes('://') || ep.value.includes('..')) {
+ 				throw new errors.AiScriptRuntimeError('invalid endpoint');
+ 			}
+-
+-			let actualToken: string | null = null;
+-			if (token != null && !utils.isNull(token)) {
++			if (token) {
+ 				utils.assertString(token);
+ 				// バグがあればundefinedもあり得るため念のため
+-				if (typeof token.value !== 'string') throw new errors.AiScriptRuntimeError('invalid token');
+-				actualToken = token.value;
+-			}
+-
+-			if (actualToken == null) {
+-				actualToken = opts.token ?? null;
++				if (typeof token.value !== 'string') throw new Error('invalid token');
+ 			}
+-
++			const actualToken: string | null = token?.value ?? opts.token ?? null;
+ 			if (param == null) {
+ 				throw new errors.AiScriptRuntimeError('expected param');
+ 			}
+-
+ 			utils.assertObject(param);
+-			return misskeyApi(ep.value as keyof Misskey.Endpoints, utils.valToJs(param) as object, actualToken).then(res => {
++			return misskeyApi(ep.value, utils.valToJs(param) as object, actualToken).then(res => {
+ 				return utils.jsToVal(res);
+ 			}, err => {
+ 				return values.ERROR('request_failed', utils.jsToVal(err));

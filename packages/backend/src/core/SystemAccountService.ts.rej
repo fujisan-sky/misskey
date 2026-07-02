@@ -1,0 +1,11 @@
+--- packages/backend/src/core/SystemAccountService.ts	2026-07-02 10:19:31.531760613 +0900
++++ packages/backend/src/core/SystemAccountService.ts	2026-07-02 09:56:54.895926838 +0900
+@@ -89,7 +89,7 @@
+ 
+ 		const systemAccount = await this.systemAccountsRepository.findOne({
+ 			where: { type: type },
+-			relations: { user: true },
++			relations: ['user'],
+ 		});
+ 
+ 		if (systemAccount) {

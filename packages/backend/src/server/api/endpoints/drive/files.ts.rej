@@ -1,0 +1,20 @@
+--- packages/backend/src/server/api/endpoints/drive/files.ts	2026-07-02 10:19:31.551760543 +0900
++++ packages/backend/src/server/api/endpoints/drive/files.ts	2026-07-02 09:56:54.919926790 +0900
+@@ -34,8 +34,6 @@
+ 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+ 		sinceId: { type: 'string', format: 'misskey:id' },
+ 		untilId: { type: 'string', format: 'misskey:id' },
+-		sinceDate: { type: 'integer' },
+-		untilDate: { type: 'integer' },
+ 		folderId: { type: 'string', format: 'misskey:id', nullable: true, default: null },
+ 		type: { type: 'string', nullable: true, pattern: /^[a-zA-Z\/\-*]+$/.toString().slice(1, -1) },
+ 		sort: { type: 'string', nullable: true, enum: ['+createdAt', '-createdAt', '+name', '-name', '+size', '-size', null] },
+@@ -53,7 +51,7 @@
+ 		private queryService: QueryService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+-			const query = this.queryService.makePaginationQuery(this.driveFilesRepository.createQueryBuilder('file'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
++			const query = this.queryService.makePaginationQuery(this.driveFilesRepository.createQueryBuilder('file'), ps.sinceId, ps.untilId)
+ 				.andWhere('file.userId = :userId', { userId: me.id });
+ 
+ 			if (ps.folderId) {

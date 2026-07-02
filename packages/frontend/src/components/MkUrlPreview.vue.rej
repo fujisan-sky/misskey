@@ -1,0 +1,86 @@
+--- packages/frontend/src/components/MkUrlPreview.vue	2026-07-02 10:19:31.591760401 +0900
++++ packages/frontend/src/components/MkUrlPreview.vue	2026-07-02 09:56:54.991926647 +0900
+@@ -83,10 +83,10 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, defineAsyncComponent, onDeactivated, onUnmounted, ref } from 'vue';
++import { defineAsyncComponent, onDeactivated, onUnmounted, ref } from 'vue';
+ import { url as local } from '@@/js/config.js';
+ import { versatileLang } from '@@/js/intl-const.js';
+-import type { SummalyResult } from '@misskey-dev/summaly';
++import type { summaly } from '@misskey-dev/summaly';
+ import { i18n } from '@/i18n.js';
+ import * as os from '@/os.js';
+ import { deviceKind } from '@/utility/device-kind.js';
+@@ -96,6 +96,8 @@
+ import { prefer } from '@/preferences.js';
+ import { maybeMakeRelative } from '@@/js/url.js';
+ 
++type SummalyResult = Awaited<ReturnType<typeof summaly>>;
++
+ const props = withDefaults(defineProps<{
+ 	url: string;
+ 	detail?: boolean;
+@@ -115,14 +117,17 @@
+ const attr = self ? 'to' : 'href';
+ const target = self ? null : '_blank';
+ const fetching = ref(true);
+-const summalyResult = ref<SummalyResult | null>(null);
+-const title = computed(() => summalyResult.value?.title ?? null);
+-const description = computed(() => summalyResult.value?.description ?? null);
+-const thumbnail = computed(() => summalyResult.value?.thumbnail ?? null);
+-const icon = computed(() => summalyResult.value?.icon ?? null);
+-const sitename = computed(() => summalyResult.value?.sitename ?? null);
+-const sensitive = computed(() => summalyResult.value?.sensitive ?? false);
+-const player = computed(() => summalyResult.value?.player ?? { url: null, width: null, height: null });
++const title = ref<string | null>(null);
++const description = ref<string | null>(null);
++const thumbnail = ref<string | null>(null);
++const icon = ref<string | null>(null);
++const sitename = ref<string | null>(null);
++const sensitive = ref<boolean>(false);
++const player = ref({
++	url: null,
++	width: null,
++	height: null,
++} as SummalyResult['player']);
+ const playerEnabled = ref(false);
+ const tweetId = ref<string | null>(null);
+ const tweetExpanded = ref(props.detail);
+@@ -134,7 +139,7 @@
+ 	playerEnabled.value = false;
+ });
+ 
+-const requestUrl = new URL(props.url, window.location.href);
++const requestUrl = new URL(props.url);
+ if (!['http:', 'https:'].includes(requestUrl.protocol)) throw new Error('invalid url');
+ 
+ if (requestUrl.hostname === 'twitter.com' || requestUrl.hostname === 'mobile.twitter.com' || requestUrl.hostname === 'x.com' || requestUrl.hostname === 'mobile.x.com') {
+@@ -169,7 +174,13 @@
+ 		fetching.value = false;
+ 		unknownUrl.value = false;
+ 
+-		summalyResult.value = info;
++		title.value = info.title;
++		description.value = info.description;
++		thumbnail.value = info.thumbnail;
++		icon.value = info.icon;
++		sitename.value = info.sitename;
++		player.value = info.player;
++		sensitive.value = info.sensitive ?? false;
+ 	});
+ 
+ function adjustTweetHeight(message: MessageEvent) {
+@@ -182,10 +193,8 @@
+ }
+ 
+ function openPlayer(): void {
+-	if (!summalyResult.value) return;
+-
+ 	const { dispose } = os.popup(defineAsyncComponent(() => import('@/components/MkYouTubePlayer.vue')), {
+-		urlOrSummalyResult: summalyResult.value,
++		url: requestUrl.href,
+ 	}, {
+ 		closed: () => {
+ 			dispose();

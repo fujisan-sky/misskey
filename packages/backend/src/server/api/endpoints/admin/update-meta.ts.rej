@@ -1,0 +1,85 @@
+--- packages/backend/src/server/api/endpoints/admin/update-meta.ts	2026-07-02 10:19:31.548760553 +0900
++++ packages/backend/src/server/api/endpoints/admin/update-meta.ts	2026-07-02 09:56:54.916926796 +0900
+@@ -3,8 +3,7 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { Injectable, Inject } from '@nestjs/common';
+-import { DI } from '@/di-symbols.js';
++import { Injectable } from '@nestjs/common';
+ import type { MiMeta } from '@/models/Meta.js';
+ import { ModerationLogService } from '@/core/ModerationLogService.js';
+ import { Endpoint } from '@/server/api/endpoint-base.js';
+@@ -68,14 +67,6 @@
+ 		description: { type: 'string', nullable: true },
+ 		defaultLightTheme: { type: 'string', nullable: true },
+ 		defaultDarkTheme: { type: 'string', nullable: true },
+-		clientOptions: {
+-			type: 'object', nullable: false,
+-			properties: {
+-				entrancePageStyle: { type: 'string', nullable: false, enum: ['classic', 'simple'] },
+-				showTimelineForVisitor: { type: 'boolean', nullable: false },
+-				showActivitiesForVisitor: { type: 'boolean', nullable: false },
+-			},
+-		},
+ 		cacheRemoteFiles: { type: 'boolean' },
+ 		cacheRemoteSensitiveFiles: { type: 'boolean' },
+ 		emailRequiredForSignup: { type: 'boolean' },
+@@ -214,10 +205,6 @@
+ 		proxyRemoteFiles: { type: 'boolean' },
+ 		signToActivityPubGet: { type: 'boolean' },
+ 		allowExternalApRedirect: { type: 'boolean' },
+-		enableRemoteNotesCleaning: { type: 'boolean' },
+-		remoteNotesCleaningExpiryDaysForEachNotes: { type: 'number' },
+-		remoteNotesCleaningMaxProcessingDurationInMinutes: { type: 'number' },
+-		showRoleBadgesOfRemoteUsers: { type: 'boolean' },
+ 	},
+ 	required: [],
+ } as const;
+@@ -225,9 +212,6 @@
+ @Injectable()
+ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
+ 	constructor(
+-		@Inject(DI.meta)
+-		private serverSettings: MiMeta,
+-
+ 		private metaService: MetaService,
+ 		private moderationLogService: ModerationLogService,
+ 	) {
+@@ -339,13 +323,6 @@
+ 				set.defaultDarkTheme = ps.defaultDarkTheme;
+ 			}
+ 
+-			if (ps.clientOptions !== undefined) {
+-				set.clientOptions = {
+-					...this.serverSettings.clientOptions,
+-					...ps.clientOptions,
+-				};
+-			}
+-
+ 			if (ps.cacheRemoteFiles !== undefined) {
+ 				set.cacheRemoteFiles = ps.cacheRemoteFiles;
+ 			}
+@@ -746,22 +723,6 @@
+ 				set.allowExternalApRedirect = ps.allowExternalApRedirect;
+ 			}
+ 
+-			if (ps.enableRemoteNotesCleaning !== undefined) {
+-				set.enableRemoteNotesCleaning = ps.enableRemoteNotesCleaning;
+-			}
+-
+-			if (ps.remoteNotesCleaningExpiryDaysForEachNotes !== undefined) {
+-				set.remoteNotesCleaningExpiryDaysForEachNotes = ps.remoteNotesCleaningExpiryDaysForEachNotes;
+-			}
+-
+-			if (ps.remoteNotesCleaningMaxProcessingDurationInMinutes !== undefined) {
+-				set.remoteNotesCleaningMaxProcessingDurationInMinutes = ps.remoteNotesCleaningMaxProcessingDurationInMinutes;
+-			}
+-
+-			if (ps.showRoleBadgesOfRemoteUsers !== undefined) {
+-				set.showRoleBadgesOfRemoteUsers = ps.showRoleBadgesOfRemoteUsers;
+-			}
+-
+ 			const before = await this.metaService.fetch(true);
+ 
+ 			await this.metaService.update(set);

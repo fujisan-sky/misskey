@@ -1,0 +1,31 @@
+--- packages/backend/src/misc/id/ulid.ts	2026-07-02 10:19:31.536760596 +0900
++++ packages/backend/src/misc/id/ulid.ts	2026-07-02 09:56:54.902926824 +0900
+@@ -5,19 +5,12 @@
+ 
+ // Crockford's Base32
+ // https://github.com/ulid/spec#encoding
++import { parseBigInt32 } from '@/misc/bigint.js';
+ 
+ const CHARS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+ 
+ export const ulidRegExp = /^[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}$/;
+ 
+-function parseBigIntCrockford(str: string): bigint {
+-	let result = 0n;
+-	for (let i = 0; i < str.length; i++) {
+-		result = result * 32n + BigInt(CHARS.indexOf(str[i]));
+-	}
+-	return result;
+-}
+-
+ function parseBase32(timestamp: string) {
+ 	let time = 0;
+ 	for (let i = 0; i < timestamp.length; i++) {
+@@ -33,6 +26,6 @@
+ export function parseUlidFull(id: string): { date: number; additional: bigint; } {
+ 	return {
+ 		date: parseBase32(id.slice(0, 10)),
+-		additional: parseBigIntCrockford(id.slice(10, 26)),
++		additional: parseBigInt32(id.slice(10, 26)),
+ 	};
+ }

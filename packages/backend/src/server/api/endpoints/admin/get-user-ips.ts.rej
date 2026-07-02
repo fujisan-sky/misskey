@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/admin/get-user-ips.ts	2026-07-02 10:19:31.546760560 +0900
++++ packages/backend/src/server/api/endpoints/admin/get-user-ips.ts	2026-07-02 09:56:54.914926800 +0900
+@@ -13,7 +13,7 @@
+ 	tags: ['admin'],
+ 
+ 	requireCredential: true,
+-	requireAdmin: true,
++	requireModerator: true,
+ 	kind: 'read:admin:user-ips',
+ 	res: {
+ 		type: 'array',

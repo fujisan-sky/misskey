@@ -1,0 +1,14 @@
+--- packages/frontend/src/components/MkChannelFollowButton.stories.impl.ts	2026-07-02 10:19:31.584760426 +0900
++++ packages/frontend/src/components/MkChannelFollowButton.stories.impl.ts	2026-07-02 09:56:54.980926669 +0900
+@@ -2,9 +2,9 @@
+  * SPDX-FileCopyrightText: syuilo and misskey-project
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+-
++ 
+ import { HttpResponse, http } from 'msw';
+-import { action } from 'storybook/actions';
++import { action } from '@storybook/addon-actions';
+ import { expect, userEvent, within } from '@storybook/test';
+ import { channel } from '../../.storybook/fakes.js';
+ import { commonHandlers } from '../../.storybook/mocks.js';

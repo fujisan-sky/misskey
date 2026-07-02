@@ -1,0 +1,25 @@
+--- packages/backend/src/models/json-schema/channel.ts	2026-07-02 10:19:31.541760578 +0900
++++ packages/backend/src/models/json-schema/channel.ts	2026-07-02 09:56:54.907926814 +0900
+@@ -40,11 +40,6 @@
+ 			format: 'url',
+ 			nullable: true, optional: false,
+ 		},
+-		bannerId: {
+-			type: 'string',
+-			nullable: true, optional: false,
+-			format: 'id',
+-		},
+ 		pinnedNoteIds: {
+ 			type: 'array',
+ 			nullable: false, optional: false,
+@@ -85,10 +80,6 @@
+ 			type: 'boolean',
+ 			optional: true, nullable: false,
+ 		},
+-		isMuting: {
+-			type: 'boolean',
+-			optional: true, nullable: false,
+-		},
+ 		pinnedNotes: {
+ 			type: 'array',
+ 			optional: true, nullable: false,

@@ -1,0 +1,20 @@
+--- packages/frontend/src/pages/admin/custom-emojis-manager.remote.vue	2026-07-02 10:19:31.598760376 +0900
++++ packages/frontend/src/pages/admin/custom-emojis-manager.remote.vue	2026-07-02 09:56:55.000926629 +0900
+@@ -306,7 +306,7 @@
+ function onGridCellValueChange(event: GridCellValueChangeEvent) {
+ 	const { row, column, newValue } = event;
+ 	if (gridItems.value.length > row.index && column.setting.bindTo in gridItems.value[row.index]) {
+-		(gridItems.value[row.index] as any)[column.setting.bindTo] = newValue;
++		gridItems.value[row.index][column.setting.bindTo] = newValue;
+ 	}
+ }
+ 
+@@ -419,7 +419,7 @@
+ }
+ 
+ .changedRow {
+-	background-color: var(--MI_THEME-infoBg) !important;
++	background-color: var(--MI_THEME-infoBg);
+ }
+ 
+ .searchArea {

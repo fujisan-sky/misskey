@@ -1,0 +1,107 @@
+--- packages/backend/src/core/SearchService.ts	2026-07-02 10:21:18.562380736 +0900
++++ packages/backend/src/core/SearchService.ts	2026-07-02 09:56:54.895926838 +0900
+@@ -17,7 +17,7 @@
+ import { QueryService } from '@/core/QueryService.js';
+ import { IdService } from '@/core/IdService.js';
+ import { LoggerService } from '@/core/LoggerService.js';
+-import type { Index, Meilisearch } from 'meilisearch';
++import type { Index, MeiliSearch } from 'meilisearch';
+ 
+ type K = string;
+ type V = string | number | boolean;
+@@ -39,8 +39,6 @@
+ 	channelId?: MiNote['channelId'] | null;
+ 	host?: string | null;
+ 	attachedFileType?:  string | null;
+-	rangeStartAt?: number | null;
+-	rangeEndAt?: number | null;
+ };
+ 
+ export type SearchPagination = {
+@@ -88,7 +86,7 @@
+ 		private config: Config,
+ 
+ 		@Inject(DI.meilisearch)
+-		private meilisearch: Meilisearch | null,
++		private meilisearch: MeiliSearch | null,
+ 
+ 		@Inject(DI.notesRepository)
+ 		private notesRepository: NotesRepository,
+@@ -206,10 +204,11 @@
+ 				return this.searchNoteByLike(q, me, opts, pagination);
+ 			}
+ 			case 'meilisearch': {
+-				return this.searchNoteByMeilisearch(q, me, opts, pagination);
++				return this.searchNoteByMeiliSearch(q, me, opts, pagination);
+ 			}
+ 			default: {
+-				const _: never = this.provider;
++				// eslint-disable-next-line @typescript-eslint/no-unused-vars
++				const typeCheck: never = this.provider;
+ 				return [];
+ 			}
+ 		}
+@@ -245,22 +244,12 @@
+ 
+ 		if (opts.host) {
+ 			if (opts.host === '.') {
+-				query.andWhere('note.userHost IS NULL');
++				query.andWhere('user.host IS NULL');
+ 			} else {
+-				query.andWhere('note.userHost = :host', { host: opts.host });
++				query.andWhere('user.host = :host', { host: opts.host });
+ 			}
+ 		}
+ 
+-		if (opts.rangeStartAt != null) {
+-			const date = this.idService.gen(opts.rangeStartAt - 1);
+-			query.andWhere('note.id > :rangeStartAt', { rangeStartAt: date });
+-		}
+-
+-		if (opts.rangeEndAt != null) {
+-			const date = this.idService.gen(opts.rangeEndAt + 1);
+-			query.andWhere('note.id < :rangeEndAt', { rangeEndAt: date });
+-		}
+-
+ 		this.queryService.generateVisibilityQuery(query, me);
+ 		this.queryService.generateBaseNoteFilteringQuery(query, me);
+ 
+@@ -268,14 +257,14 @@
+ 	}
+ 
+ 	@bindThis
+-	private async searchNoteByMeilisearch(
++	private async searchNoteByMeiliSearch(
+ 		q: string,
+ 		me: MiUser | null,
+ 		opts: SearchOpts,
+ 		pagination: SearchPagination,
+ 	): Promise<MiNote[]> {
+ 		if (!this.meilisearch || !this.meilisearchNoteIndex) {
+-			throw new Error('Meilisearch is not available');
++			throw new Error('MeiliSearch is not available');
+ 		}
+ 
+ 		const filter: Q = {
+@@ -287,21 +276,11 @@
+ 			k: 'createdAt',
+ 			v: this.idService.parse(pagination.untilId).date.getTime(),
+ 		});
+-		if (opts.rangeEndAt) filter.qs.push({
+-			op: '<=',
+-			k: 'createdAt',
+-			v: opts.rangeEndAt,
+-		});
+ 		if (pagination.sinceId) filter.qs.push({
+ 			op: '>',
+ 			k: 'createdAt',
+ 			v: this.idService.parse(pagination.sinceId).date.getTime(),
+ 		});
+-		if (opts.rangeStartAt) filter.qs.push({
+-			op: '>=',
+-			k: 'createdAt',
+-			v: opts.rangeStartAt,
+-		});
+ 		if (opts.userId) filter.qs.push({ op: '=', k: 'userId', v: opts.userId });
+ 		if (opts.channelId) filter.qs.push({ op: '=', k: 'channelId', v: opts.channelId });
+ 		if (opts.host) {

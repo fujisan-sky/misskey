@@ -1,0 +1,20 @@
+--- packages/frontend/src/components/MkPagingButtons.vue	2026-07-02 10:19:31.589760408 +0900
++++ packages/frontend/src/components/MkPagingButtons.vue	2026-07-02 09:56:54.987926655 +0900
+@@ -10,7 +10,7 @@
+ 	<div :class="$style.buttons">
+ 		<div v-if="prevDotVisible" :class="$style.headTailButtons">
+ 			<MkButton @click="onToHeadButtonClicked">{{ min }}</MkButton>
+-			<span class="ti ti-dots"></span>
++			<span class="ti ti-dots"/>
+ 		</div>
+ 
+ 		<MkButton
+@@ -22,7 +22,7 @@
+ 		</MkButton>
+ 
+ 		<div v-if="nextDotVisible" :class="$style.headTailButtons">
+-			<span class="ti ti-dots"></span>
++			<span class="ti ti-dots"/>
+ 			<MkButton @click="onToTailButtonClicked">{{ max }}</MkButton>
+ 		</div>
+ 	</div>

@@ -1,0 +1,13 @@
+--- locales/kab-KAB.yml	2026-07-02 10:19:31.502760716 +0900
++++ locales/kab-KAB.yml	2026-07-02 09:56:54.743927140 +0900
+@@ -57,10 +57,6 @@
+ file: "Ifuyla"
+ account: "Imiḍan"
+ replies: "Err"
+-_imageFrameEditor:
+-  font: "Tasefsit"
+-  fontSerif: "Serif"
+-  fontSansSerif: "Sans Serif"
+ _email:
+   _follow:
+     title: "Yeṭṭafaṛ-ik·em-id"

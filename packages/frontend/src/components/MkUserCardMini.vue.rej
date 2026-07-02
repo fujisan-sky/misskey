@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkUserCardMini.vue	2026-07-02 10:19:31.592760398 +0900
++++ packages/frontend/src/components/MkUserCardMini.vue	2026-07-02 09:56:54.991926647 +0900
+@@ -8,7 +8,7 @@
+ 	<MkAvatar :class="$style.avatar" :user="user" indicator/>
+ 	<div :class="$style.body">
+ 		<span :class="$style.name"><MkUserName :user="user"/></span>
+-		<span :class="$style.sub"><slot name="sub"><span class="_monospace">@{{ acct(user) }}</span></slot></span>
++		<span :class="$style.sub"><span class="_monospace">@{{ acct(user) }}</span></span>
+ 	</div>
+ 	<MkMiniChart v-if="chartValues" :class="$style.chart" :src="chartValues"/>
+ </div>

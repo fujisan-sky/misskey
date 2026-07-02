@@ -332,6 +332,16 @@ export class ChatService {
 	}
 
 	@bindThis
+	public async readAllChatMessages(
+		readerId: MiUser['id'],
+	): Promise<void> {
+		const redisPipeline = this.redisClient.pipeline();
+		// TODO: newUserChatMessageExists とか newRoomChatMessageExists も消したい(けどキーの列挙が必要になって面倒)
+		redisPipeline.del(`newChatMessagesExists:${readerId}`);
+		await redisPipeline.exec();
+	}
+
+	@bindThis
 	public findMessageById(messageId: MiChatMessage['id']) {
 		return this.chatMessagesRepository.findOneBy({ id: messageId });
 	}
@@ -563,6 +573,27 @@ export class ChatService {
 	}
 
 	@bindThis
+	public async hasPermissionToViewRoomInfo(meId: MiUser['id'], room: MiChatRoom) {
+		if (room.ownerId === meId) {
+			return true;
+		}
+
+		if (await this.isRoomMember(room, meId)) {
+			return true;
+		}
+
+		if (await this.chatRoomInvitationsRepository.findOneBy({ roomId: room.id, userId: meId })) {
+			return true;
+		}
+
+		if (await this.roleService.isModerator({ id: meId })) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@bindThis
 	public async hasPermissionToDeleteRoom(meId: MiUser['id'], room: MiChatRoom) {
 		if (room.ownerId === meId) {
 			return true;
@@ -613,7 +644,10 @@ export class ChatService {
 
 	@bindThis
 	public async findRoomById(roomId: MiChatRoom['id']) {
-		return this.chatRoomsRepository.findOne({ where: { id: roomId }, relations: ['owner'] });
+		return this.chatRoomsRepository.findOne({
+			where: { id: roomId },
+			relations: { owner: true },
+		});
 	}
 
 	@bindThis
@@ -857,7 +891,7 @@ export class ChatService {
 		const room = message.toRoomId ? await this.chatRoomsRepository.findOneByOrFail({ id: message.toRoomId }) : null;
 
 		if (room) {
-			if (!await this.isRoomMember(room, userId)) {
+			if (!(await this.isRoomMember(room, userId))) {
 				throw new Error('cannot react to others message');
 			}
 		}

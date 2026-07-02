@@ -1,0 +1,49 @@
+--- packages/backend/src/server/api/endpoints/notes/show.ts	2026-07-02 10:19:31.557760521 +0900
++++ packages/backend/src/server/api/endpoints/notes/show.ts	2026-07-02 09:56:54.926926776 +0900
+@@ -29,16 +29,10 @@
+ 			id: '24fcbfc6-2e37-42b6-8388-c29b3861a08d',
+ 		},
+ 
+-		contentRestrictedByUser: {
+-			message: 'Content restricted by user. Please sign in to view.',
+-			code: 'CONTENT_RESTRICTED_BY_USER',
+-			id: 'fbcc002d-37d9-4944-a6b0-d9e29f2d33ab',
+-		},
+-
+-		contentRestrictedByServer: {
+-			message: 'Content restricted by server settings. Please sign in to view.',
+-			code: 'CONTENT_RESTRICTED_BY_SERVER',
+-			id: '145f88d2-b03d-4087-8143-a78928883c4b',
++		signinRequired: {
++			message: 'Signin required.',
++			code: 'SIGNIN_REQUIRED',
++			id: '8e75455b-738c-471d-9f80-62693f33372e',
+ 		},
+ 	},
+ } as const;
+@@ -61,21 +55,21 @@
+ 		private getterService: GetterService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+-			const note = await this.getterService.getNoteWithRelations(ps.noteId).catch(err => {
++			const note = await this.getterService.getNoteWithUser(ps.noteId).catch(err => {
+ 				if (err.id === '9725d0ce-ba28-4dde-95a7-2cbb2c15de24') throw new ApiError(meta.errors.noSuchNote);
+ 				throw err;
+ 			});
+ 
+ 			if (note.user!.requireSigninToViewContents && me == null) {
+-				throw new ApiError(meta.errors.contentRestrictedByUser);
++				throw new ApiError(meta.errors.signinRequired);
+ 			}
+ 
+ 			if (this.serverSettings.ugcVisibilityForVisitor === 'none' && me == null) {
+-				throw new ApiError(meta.errors.contentRestrictedByServer);
++				throw new ApiError(meta.errors.signinRequired);
+ 			}
+ 
+ 			if (this.serverSettings.ugcVisibilityForVisitor === 'local' && note.userHost != null && me == null) {
+-				throw new ApiError(meta.errors.contentRestrictedByServer);
++				throw new ApiError(meta.errors.signinRequired);
+ 			}
+ 
+ 			return await this.noteEntityService.pack(note, me, {

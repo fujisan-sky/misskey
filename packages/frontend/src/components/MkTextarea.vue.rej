@@ -1,0 +1,63 @@
+--- packages/frontend/src/components/MkTextarea.vue	2026-07-02 10:19:31.591760401 +0900
++++ packages/frontend/src/components/MkTextarea.vue	2026-07-02 09:56:54.990926649 +0900
+@@ -63,11 +63,10 @@
+ }>();
+ 
+ const emit = defineEmits<{
+-	(ev: 'change', _ev: InputEvent): void;
++	(ev: 'change', _ev: KeyboardEvent): void;
+ 	(ev: 'keydown', _ev: KeyboardEvent): void;
+ 	(ev: 'enter'): void;
+ 	(ev: 'update:modelValue', value: string): void;
+-	(ev: 'savingStateChange', saved: boolean, invalid: boolean): void;
+ }>();
+ 
+ const { modelValue, autofocus } = toRefs(props);
+@@ -80,16 +79,12 @@
+ const preview = ref(false);
+ let autocompleteWorker: Autocomplete | null = null;
+ 
+-function focus() {
+-	inputEl.value?.focus();
+-}
+-
+-function onInput(ev: InputEvent) {
++const focus = () => inputEl.value?.focus();
++const onInput = (ev) => {
+ 	changed.value = true;
+ 	emit('change', ev);
+-}
+-
+-function onKeydown(ev: KeyboardEvent) {
++};
++const onKeydown = (ev: KeyboardEvent) => {
+ 	if (ev.isComposing || ev.key === 'Process' || ev.keyCode === 229) return;
+ 
+ 	emit('keydown', ev);
+@@ -107,12 +102,12 @@
+ 		});
+ 		ev.preventDefault();
+ 	}
+-}
++};
+ 
+-function updated() {
++const updated = () => {
+ 	changed.value = false;
+ 	emit('update:modelValue', v.value ?? '');
+-}
++};
+ 
+ const debouncedUpdated = debounce(1000, updated);
+ 
+@@ -132,10 +127,6 @@
+ 	invalid.value = inputEl.value?.validity.badInput ?? true;
+ });
+ 
+-watch([changed, invalid], ([newChanged, newInvalid]) => {
+-	emit('savingStateChange', newChanged, newInvalid);
+-}, { immediate: true });
+-
+ onMounted(() => {
+ 	nextTick(() => {
+ 		if (autofocus.value) {

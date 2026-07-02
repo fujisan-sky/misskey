@@ -1,0 +1,24 @@
+--- packages/frontend/src/ui/_common_/statusbar-rss.vue	2026-07-02 10:19:31.607760345 +0900
++++ packages/frontend/src/ui/_common_/statusbar-rss.vue	2026-07-02 09:56:55.014926602 +0900
+@@ -29,18 +29,18 @@
+ <script lang="ts" setup>
+ import { ref } from 'vue';
+ import * as Misskey from 'misskey-js';
+-import { useInterval } from '@@/js/use-interval.js';
+ import MkMarqueeText from '@/components/MkMarqueeText.vue';
++import { useInterval } from '@@/js/use-interval.js';
+ import { shuffle } from '@/utility/shuffle.js';
+ 
+ const props = defineProps<{
+-	url: string;
++	url?: string;
+ 	shuffle?: boolean;
+ 	display?: 'marquee' | 'oneByOne';
+ 	marqueeDuration?: number;
+ 	marqueeReverse?: boolean;
+ 	oneByOneInterval?: number;
+-	refreshIntervalSec: number;
++	refreshIntervalSec?: number;
+ }>();
+ 
+ const items = ref<Misskey.entities.FetchRssResponse['items']>([]);

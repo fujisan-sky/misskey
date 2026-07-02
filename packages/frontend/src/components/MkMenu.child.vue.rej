@@ -1,0 +1,62 @@
+--- packages/frontend/src/components/MkMenu.child.vue	2026-07-02 10:19:31.588760412 +0900
++++ packages/frontend/src/components/MkMenu.child.vue	2026-07-02 09:56:54.985926659 +0900
+@@ -5,15 +5,7 @@
+ 
+ <template>
+ <div ref="el" :class="$style.root">
+-	<MkMenu
+-		:items="items"
+-		:align="align"
+-		:width="width"
+-		:asDrawer="false"
+-		:debugDisablePredictionCone="debugDisablePredictionCone"
+-		:debugShowPredictionCone="debugShowPredictionCone"
+-		@close="onChildClosed"
+-	/>
++	<MkMenu :items="items" :align="align" :width="width" :asDrawer="false" @close="onChildClosed"/>
+ </div>
+ </template>
+ 
+@@ -24,11 +16,9 @@
+ 
+ const props = defineProps<{
+ 	items: MenuItem[];
+-	anchorElement: HTMLElement;
++	targetElement: HTMLElement;
+ 	rootElement: HTMLElement;
+ 	width?: number;
+-	debugDisablePredictionCone?: boolean;
+-	debugShowPredictionCone?: boolean;
+ }>();
+ 
+ const emit = defineEmits<{
+@@ -46,10 +36,10 @@
+ function setPosition() {
+ 	if (el.value == null) return;
+ 	const rootRect = props.rootElement.getBoundingClientRect();
+-	const parentRect = props.anchorElement.getBoundingClientRect();
++	const parentRect = props.targetElement.getBoundingClientRect();
+ 	const myRect = el.value.getBoundingClientRect();
+ 
+-	let left = props.anchorElement.offsetWidth;
++	let left = props.targetElement.offsetWidth;
+ 	let top = (parentRect.top - rootRect.top) - 8;
+ 	if (rootRect.left + left + myRect.width >= (window.innerWidth - SCROLLBAR_THICKNESS)) {
+ 		left = -myRect.width;
+@@ -69,7 +59,7 @@
+ 	}
+ }
+ 
+-watch(() => props.anchorElement, () => {
++watch(() => props.targetElement, () => {
+ 	setPosition();
+ });
+ 
+@@ -90,7 +80,6 @@
+ });
+ 
+ defineExpose({
+-	rootElement: el,
+ 	checkHit: (ev: MouseEvent) => {
+ 		return (ev.target === el.value || el.value?.contains(ev.target as Node));
+ 	},

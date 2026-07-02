@@ -1,0 +1,25 @@
+--- packages/frontend/src/di.ts	2026-07-02 10:19:31.596760383 +0900
++++ packages/frontend/src/di.ts	2026-07-02 09:56:54.996926637 +0900
+@@ -3,20 +3,18 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import type { InjectionKey, Ref, ComputedRef } from 'vue';
+-import type { PageMetadata } from '@/page.js';
++import type { InjectionKey, Ref } from 'vue';
+ import type { Router } from '@/router.js';
+ 
+ export const DI = {
+ 	routerCurrentDepth: Symbol() as InjectionKey<number>,
+ 	router: Symbol() as InjectionKey<Router>,
+ 	mock: Symbol() as InjectionKey<boolean>,
+-	pageMetadata: Symbol() as InjectionKey<Ref<PageMetadata | null>>,
++	pageMetadata: Symbol() as InjectionKey<Ref<Record<string, any> | null>>,
+ 	viewId: Symbol() as InjectionKey<string>,
+ 	currentStickyTop: Symbol() as InjectionKey<Ref<number>>,
+ 	currentStickyBottom: Symbol() as InjectionKey<Ref<number>>,
+ 	mfmEmojiReactCallback: Symbol() as InjectionKey<(emoji: string) => void>,
+ 	inModal: Symbol() as InjectionKey<boolean>,
+ 	inAppSearchMarkerId: Symbol() as InjectionKey<Ref<string | null>>,
+-	inChannel: Symbol() as InjectionKey<ComputedRef<string | null> | null>, // 現在開いているチャンネルのID
+ };

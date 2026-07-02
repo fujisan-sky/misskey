@@ -1,0 +1,13 @@
+--- packages/backend/src/server/api/endpoints/chat/rooms/show.ts	2026-07-02 10:19:31.550760546 +0900
++++ packages/backend/src/server/api/endpoints/chat/rooms/show.ts	2026-07-02 09:56:54.919926790 +0900
+@@ -54,10 +54,6 @@
+ 				throw new ApiError(meta.errors.noSuchRoom);
+ 			}
+ 
+-			if (!await this.chatService.hasPermissionToViewRoomInfo(me.id, room)) {
+-				throw new ApiError(meta.errors.noSuchRoom);
+-			}
+-
+ 			return this.chatEntityService.packRoom(room, me);
+ 		});
+ 	}

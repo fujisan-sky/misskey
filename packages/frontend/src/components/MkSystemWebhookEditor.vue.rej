@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkSystemWebhookEditor.vue	2026-07-02 10:19:31.591760401 +0900
++++ packages/frontend/src/components/MkSystemWebhookEditor.vue	2026-07-02 09:56:54.990926649 +0900
+@@ -245,7 +245,7 @@
+ 					secret.value = res.secret;
+ 					isActive.value = res.isActive;
+ 					for (const ev of Object.keys(events.value)) {
+-						events.value[ev as SystemWebhookEventType] = res.on.includes(ev as SystemWebhookEventType);
++						events.value[ev] = res.on.includes(ev as SystemWebhookEventType);
+ 					}
+ 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 				} catch (ex: any) {

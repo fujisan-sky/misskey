@@ -1,0 +1,95 @@
+--- packages/frontend/src/components/MkSignin.vue	2026-07-02 10:19:31.590760405 +0900
++++ packages/frontend/src/components/MkSignin.vue	2026-07-02 09:56:54.989926651 +0900
+@@ -20,7 +20,6 @@
+ 			key="input"
+ 			:message="message"
+ 			:openOnRemote="openOnRemote"
+-			:initialUsername="initialUsername"
+ 
+ 			@usernameSubmitted="onUsernameSubmitted"
+ 			@passkeyClick="onPasskeyLogin"
+@@ -67,8 +66,8 @@
+ <script setup lang="ts">
+ import { nextTick, onBeforeUnmount, ref, shallowRef, useTemplateRef } from 'vue';
+ import * as Misskey from 'misskey-js';
+-import { browserSupportsWebAuthn } from '@simplewebauthn/browser';
+-import type { PublicKeyCredentialRequestOptionsJSON, AuthenticationResponseJSON } from '@simplewebauthn/browser';
++import { supported as webAuthnSupported, parseRequestOptionsFromJSON } from '@github/webauthn-json/browser-ponyfill';
++import type { AuthenticationPublicKeyCredential } from '@github/webauthn-json/browser-ponyfill';
+ import type { OpenOnRemoteOptions } from '@/utility/please-login.js';
+ import type { PwResponse } from '@/components/MkSignin.password.vue';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+@@ -90,12 +89,10 @@
+ 	autoSet?: boolean;
+ 	message?: string,
+ 	openOnRemote?: OpenOnRemoteOptions,
+-	initialUsername?: string;
+ }>(), {
+ 	autoSet: false,
+ 	message: '',
+ 	openOnRemote: undefined,
+-	initialUsername: undefined,
+ });
+ 
+ const page = ref<'input' | 'password' | 'totp' | 'passkey'>('input');
+@@ -108,18 +105,20 @@
+ const password = ref('');
+ 
+ //#region Passkey Passwordless
+-const credentialRequest = shallowRef<PublicKeyCredentialRequestOptionsJSON | null>(null);
++const credentialRequest = shallowRef<CredentialRequestOptions | null>(null);
+ const passkeyContext = ref('');
+ const doingPasskeyFromInputPage = ref(false);
+ 
+ function onPasskeyLogin(): void {
+-	if (browserSupportsWebAuthn()) {
++	if (webAuthnSupported()) {
+ 		doingPasskeyFromInputPage.value = true;
+ 		waiting.value = true;
+ 		misskeyApi('signin-with-passkey', {})
+ 			.then((res) => {
+ 				passkeyContext.value = res.context ?? '';
+-				credentialRequest.value = res.option;
++				credentialRequest.value = parseRequestOptionsFromJSON({
++					publicKey: res.option,
++				});
+ 
+ 				page.value = 'passkey';
+ 				waiting.value = false;
+@@ -128,12 +127,12 @@
+ 	}
+ }
+ 
+-function onPasskeyDone(credential: AuthenticationResponseJSON): void {
++function onPasskeyDone(credential: AuthenticationPublicKeyCredential): void {
+ 	waiting.value = true;
+ 
+ 	if (doingPasskeyFromInputPage.value) {
+ 		misskeyApi('signin-with-passkey', {
+-			credential: credential,
++			credential: credential.toJSON(),
+ 			context: passkeyContext.value,
+ 		}).then((res) => {
+ 			if (res.signinResponse == null) {
+@@ -147,7 +146,7 @@
+ 		tryLogin({
+ 			username: userInfo.value.username,
+ 			password: password.value,
+-			credential: credential,
++			credential: credential.toJSON(),
+ 		});
+ 	}
+ }
+@@ -249,8 +248,10 @@
+ 					break;
+ 				}
+ 				case 'passkey': {
+-					if (browserSupportsWebAuthn()) {
+-						credentialRequest.value = res.authRequest;
++					if (webAuthnSupported()) {
++						credentialRequest.value = parseRequestOptionsFromJSON({
++							publicKey: res.authRequest,
++						});
+ 						page.value = 'passkey';
+ 					} else {
+ 						page.value = 'totp';

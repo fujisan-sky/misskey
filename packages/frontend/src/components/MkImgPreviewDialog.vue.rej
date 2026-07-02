@@ -1,0 +1,32 @@
+--- packages/frontend/src/components/MkImgPreviewDialog.vue	2026-07-02 10:19:31.587760415 +0900
++++ packages/frontend/src/components/MkImgPreviewDialog.vue	2026-07-02 09:56:54.984926661 +0900
+@@ -11,16 +11,15 @@
+ 	@close="close"
+ 	@esc="close"
+ 	@click="close"
+-	@closed="emit('closed')"
+ >
+ 	<template #header>{{ file.name }}</template>
+ 	<div :class="$style.container">
+-		<img :src="file.url" :alt="file.comment || file.name" :class="$style.img"/>
++		<img :src="file.url" :alt="file.comment ?? file.name" :class="$style.img"/>
+ 	</div>
+ </MkModalWindow>
+ </template>
+ <script lang="ts" setup>
+-import { ref } from 'vue';
++import { defineProps, ref } from 'vue';
+ import MkModalWindow from './MkModalWindow.vue';
+ import type * as Misskey from 'misskey-js';
+ 
+@@ -28,10 +27,6 @@
+ 	file: Misskey.entities.DriveFile;
+ }>();
+ 
+-const emit = defineEmits<{
+-	(ev: 'closed'): void;
+-}>();
+-
+ const modal = ref<typeof MkModalWindow | null>(null);
+ 
+ function close() {

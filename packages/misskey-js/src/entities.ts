@@ -10,7 +10,12 @@ import {
 	User,
 	UserDetailedNotMe,
 } from './autogen/models.js';
-import type { AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/types';
+import type {
+	AuthenticationResponseJSON,
+	RegistrationResponseJSON,
+	PublicKeyCredentialCreationOptionsJSON,
+	PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/browser';
 
 export * from './autogen/entities.js';
 export * from './autogen/models.js';
@@ -24,12 +29,17 @@ type NonNullableRecord<T> = {
 type AllNullRecord<T> = {
 	[P in keyof T]: null;
 };
+type AllNullOrOptionalRecord<T> = {
+	[P in keyof T]: never;
+};
 
 export type PureRenote =
 	Omit<Note, 'renote' | 'renoteId' | 'reply' | 'replyId' | 'text' | 'cw' | 'files' | 'fileIds' | 'poll'>
-	& AllNullRecord<Pick<Note, 'reply' | 'replyId' | 'text' | 'cw' | 'poll'>>
+	& AllNullRecord<Pick<Note, 'text'>>
+	& AllNullOrOptionalRecord<Pick<Note, 'reply' | 'replyId' | 'cw' | 'poll'>>
 	& { files: []; fileIds: []; }
-	& NonNullableRecord<Pick<Note, 'renote' | 'renoteId'>>;
+	& NonNullableRecord<Pick<Note, 'renoteId'>>
+	& Pick<Note, 'renote'>; // リノート対象が削除された場合、renoteIdはあるがrenoteはnullになる
 
 export type PageEvent = {
 	pageId: Page['id'];
@@ -44,7 +54,7 @@ export type ModerationLog = {
 	id: ID;
 	createdAt: DateString;
 	userId: User['id'];
-	user: UserDetailedNotMe | null;
+	user: UserDetailedNotMe;
 } & ({
 	type: 'updateServerSettings';
 	info: ModerationLogPayloads['updateServerSettings'];
@@ -198,6 +208,9 @@ export type ModerationLog = {
 } | {
 	type: 'deleteChatRoom';
 	info: ModerationLogPayloads['deleteChatRoom'];
+} | {
+	type: 'updateProxyAccountDescription';
+	info: ModerationLogPayloads['updateProxyAccountDescription'];
 });
 
 export type ServerStats = {
@@ -261,6 +274,7 @@ export type SignupRequest = {
 	'g-recaptcha-response'?: string | null;
 	'turnstile-response'?: string | null;
 	'm-captcha-response'?: string | null;
+	'testcaptcha-response'?: string | null;
 };
 
 export type SignupResponse = MeDetailed & {
@@ -285,6 +299,7 @@ export type SigninFlowRequest = {
 	'g-recaptcha-response'?: string | null;
 	'turnstile-response'?: string | null;
 	'm-captcha-response'?: string | null;
+	'testcaptcha-response'?: string | null;
 };
 
 export type SigninFlowResponse = {
@@ -312,6 +327,15 @@ export type SigninWithPasskeyInitResponse = {
 
 export type SigninWithPasskeyResponse = {
 	signinResponse: SigninFlowResponse & { finished: true };
+};
+
+export type I2faRegisterKeyResponse = PublicKeyCredentialCreationOptionsJSON;
+
+export type I2faKeyDoneRequest = {
+	password: string;
+	token?: string | null;
+	name: string;
+	credential: RegistrationResponseJSON;
 };
 
 type Values<T extends Record<PropertyKey, unknown>> = T[keyof T];

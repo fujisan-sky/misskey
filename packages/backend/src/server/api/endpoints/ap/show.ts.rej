@@ -1,0 +1,31 @@
+--- packages/backend/src/server/api/endpoints/ap/show.ts	2026-07-02 10:19:31.548760553 +0900
++++ packages/backend/src/server/api/endpoints/ap/show.ts	2026-07-02 09:56:54.916926796 +0900
+@@ -18,9 +18,9 @@
+ import { NoteEntityService } from '@/core/entities/NoteEntityService.js';
+ import { UtilityService } from '@/core/UtilityService.js';
+ import { bindThis } from '@/decorators.js';
++import { ApiError } from '../../error.js';
+ import { IdentifiableError } from '@/misc/identifiable-error.js';
+ import { FetchAllowSoftFailMask } from '@/core/activitypub/misc/check-against-url.js';
+-import { ApiError } from '../../error.js';
+ 
+ export const meta = {
+ 	tags: ['federation'],
+@@ -148,7 +148,7 @@
+ 		if (this.utilityService.isSelfHost(host)) return null;
+ 
+ 		// リモートから一旦オブジェクトフェッチ
+-		const resolver = await this.apResolverService.createResolver();
++		const resolver = this.apResolverService.createResolver();
+ 		// allow ap/show exclusively to lookup URLs that are cross-origin or non-canonical (like https://alice.example.com/@bob@bob.example.com -> https://bob.example.com/@bob)
+ 		const object = await resolver.resolve(uri, FetchAllowSoftFailMask.CrossOrigin | FetchAllowSoftFailMask.NonCanonicalId).catch((err) => {
+ 			if (err instanceof IdentifiableError) {
+@@ -215,7 +215,7 @@
+ 					type: 'Note',
+ 					object,
+ 				};
+-			} catch (_) {
++			} catch (e) {
+ 				return null;
+ 			}
+ 		}

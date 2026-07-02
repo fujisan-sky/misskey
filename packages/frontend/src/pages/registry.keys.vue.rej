@@ -1,0 +1,21 @@
+--- packages/frontend/src/pages/registry.keys.vue	2026-07-02 10:19:31.602760362 +0900
++++ packages/frontend/src/pages/registry.keys.vue	2026-07-02 09:56:55.007926615 +0900
+@@ -21,7 +21,7 @@
+ 			<MkButton primary @click="createKey">{{ i18n.ts._registry.createKey }}</MkButton>
+ 
+ 			<FormSection v-if="keys">
+-				<template #label>{{ i18n.ts._registry.keys }}</template>
++				<template #label>{{ i18n.ts.keys }}</template>
+ 				<div class="_gaps_s">
+ 					<FormLink v-for="key in keys" :to="`/registry/value/${props.domain}/${scope.join('/')}/${key[0]}`" class="_monospace">{{ key[0] }}<template #suffix>{{ key[1].toUpperCase() }}</template></FormLink>
+ 				</div>
+@@ -79,9 +79,7 @@
+ 			default: scope.value.join('/'),
+ 		},
+ 	});
+-
+ 	if (canceled) return;
+-
+ 	os.apiWithDialog('i/registry/set', {
+ 		scope: result.scope.split('/'),
+ 		key: result.key,

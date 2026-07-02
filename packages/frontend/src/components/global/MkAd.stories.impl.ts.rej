@@ -1,0 +1,31 @@
+--- packages/frontend/src/components/global/MkAd.stories.impl.ts	2026-07-02 10:19:31.593760394 +0900
++++ packages/frontend/src/components/global/MkAd.stories.impl.ts	2026-07-02 09:56:54.993926643 +0900
+@@ -3,9 +3,10 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
++/* eslint-disable @typescript-eslint/explicit-function-return-type */
+ import { expect, userEvent, waitFor, within } from '@storybook/test';
+-import MkAd from './MkAd.vue';
+ import type { StoryObj } from '@storybook/vue3';
++import MkAd from './MkAd.vue';
+ import { i18n } from '@/i18n.js';
+ 
+ const common = {
+@@ -67,7 +68,7 @@
+ 		await expect(imgAgain).toBeInTheDocument();
+ 	},
+ 	args: {
+-		preferForms: [],
++		prefer: [],
+ 		specify: {
+ 			id: 'someadid',
+ 			ratio: 1,
+@@ -75,7 +76,6 @@
+ 			place: '',
+ 			imageUrl: '',
+ 			dayOfWeek: 7,
+-			isSensitive: false,
+ 		},
+ 	},
+ 	parameters: {

@@ -1,0 +1,37 @@
+--- packages/frontend/src/pages/chat/home.home.vue	2026-07-02 10:19:31.600760369 +0900
++++ packages/frontend/src/pages/chat/home.home.vue	2026-07-02 09:56:55.003926623 +0900
+@@ -64,7 +64,7 @@
+ const searched = ref(false);
+ const searchResults = ref<Misskey.entities.ChatMessage[]>([]);
+ 
+-function start(ev: PointerEvent) {
++function start(ev: MouseEvent) {
+ 	os.popupMenu([{
+ 		text: i18n.ts._chat.individualChat,
+ 		caption: i18n.ts._chat.individualChat_description,
+@@ -86,11 +86,7 @@
+ async function startUser() {
+ 	// TODO: localOnly は連合に対応したら消す
+ 	os.selectUser({ localOnly: true }).then(user => {
+-		router.push('/chat/user/:userId', {
+-			params: {
+-				userId: user.id,
+-			},
+-		});
++		router.push(`/chat/user/${user.id}`);
+ 	});
+ }
+ 
+@@ -105,11 +101,7 @@
+ 		name: result,
+ 	});
+ 
+-	router.push('/chat/room/:roomId', {
+-		params: {
+-			roomId: room.id,
+-		},
+-	});
++	router.push(`/chat/room/${room.id}`);
+ }
+ 
+ async function search() {

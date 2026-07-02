@@ -1,0 +1,11 @@
+--- packages/frontend/src/utility/timeline-date-separate.ts	2026-07-02 10:19:31.612760327 +0900
++++ packages/frontend/src/utility/timeline-date-separate.ts	2026-07-02 09:56:55.020926590 +0900
+@@ -104,7 +104,7 @@
+ 		for (let i = 0; i < items.value.length; i++) {
+ 			const item = items.value[i];
+ 			const date = new Date(item.createdAt);
+-			const _nextDate = items.value[i + 1] ? new Date(items.value[i + 1].createdAt) : null;
++			const nextDate = items.value[i + 1] ? new Date(items.value[i + 1].createdAt) : null;
+ 
+ 			if (tl.length === 0 || (
+ 				span === 'day' && tl[tl.length - 1].date.getTime() !== date.getTime()

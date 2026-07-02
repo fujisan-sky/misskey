@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkDivider.vue	2026-07-02 10:19:31.585760422 +0900
++++ packages/frontend/src/components/MkDivider.vue	2026-07-02 09:56:54.982926665 +0900
+@@ -12,7 +12,7 @@
+ 		borderWidth ? { borderWidth: borderWidth } : {},
+ 		borderColor ? { borderColor: borderColor } : {},
+ 	]"
+-></div>
++/>
+ </template>
+ 
+ <script setup lang="ts">

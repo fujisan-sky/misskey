@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/notes/create.test.ts	2026-07-02 10:19:31.556760525 +0900
++++ packages/backend/src/server/api/endpoints/notes/create.test.ts	2026-07-02 09:56:54.925926778 +0900
+@@ -8,7 +8,7 @@
+ import { readFile } from 'node:fs/promises';
+ import { fileURLToPath } from 'node:url';
+ import { dirname } from 'node:path';
+-import { describe, test, expect } from 'vitest';
++import { describe, test, expect } from '@jest/globals';
+ import { getValidator } from '../../../../../test/prelude/get-api-validator.js';
+ import { paramDef } from './create.js';
+ 

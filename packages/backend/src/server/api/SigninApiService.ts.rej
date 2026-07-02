@@ -1,0 +1,86 @@
+--- packages/backend/src/server/api/SigninApiService.ts	2026-07-02 10:19:31.544760567 +0900
++++ packages/backend/src/server/api/SigninApiService.ts	2026-07-02 09:56:54.911926806 +0900
+@@ -15,7 +15,6 @@
+ 	UserSecurityKeysRepository,
+ 	UsersRepository,
+ } from '@/models/_.js';
+-import type Logger from '@/logger.js';
+ import type { Config } from '@/config.js';
+ import { getIpHash } from '@/misc/get-ip-hash.js';
+ import type { MiLocalUser } from '@/models/User.js';
+@@ -24,17 +23,14 @@
+ import { WebAuthnService } from '@/core/WebAuthnService.js';
+ import { UserAuthService } from '@/core/UserAuthService.js';
+ import { CaptchaService } from '@/core/CaptchaService.js';
+-import { LoggerService } from '@/core/LoggerService.js';
+ import { FastifyReplyError } from '@/misc/fastify-reply-error.js';
+ import { RateLimiterService } from './RateLimiterService.js';
+ import { SigninService } from './SigninService.js';
+-import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
++import type { AuthenticationResponseJSON } from '@simplewebauthn/types';
+ import type { FastifyReply, FastifyRequest } from 'fastify';
+ 
+ @Injectable()
+ export class SigninApiService {
+-	private logger: Logger;
+-
+ 	constructor(
+ 		@Inject(DI.config)
+ 		private config: Config,
+@@ -54,7 +50,6 @@
+ 		@Inject(DI.signinsRepository)
+ 		private signinsRepository: SigninsRepository,
+ 
+-		private loggerService: LoggerService,
+ 		private idService: IdService,
+ 		private rateLimiterService: RateLimiterService,
+ 		private signinService: SigninService,
+@@ -62,7 +57,6 @@
+ 		private webAuthnService: WebAuthnService,
+ 		private captchaService: CaptchaService,
+ 	) {
+-		this.logger = this.loggerService.getLogger('Signin');
+ 	}
+ 
+ 	@bindThis
+@@ -96,21 +90,16 @@
+ 		}
+ 
+ 		// not more than 1 attempt per second and not more than 10 attempts per hour
+-		if (this.config.enableIpRateLimit) {
+-			if (process.env.NODE_ENV === 'production' && (request.ip === '::1' || request.ip === '127.0.0.1')) {
+-				this.logger.warn('Recieved signin request from localhost IP address for rate limiting in production environment. This is likely due to an improper trustProxy setting in the config file.');
+-			}
+-			const rateLimit = await this.rateLimiterService.limit({ key: 'signin', duration: 60 * 60 * 1000, max: 10, minInterval: 1000 }, getIpHash(request.ip));
+-			if (rateLimit != null) {
+-				reply.code(429);
+-				return {
+-					error: {
+-						message: 'Too many failed attempts to sign in. Try again later.',
+-						code: 'TOO_MANY_AUTHENTICATION_FAILURES',
+-						id: '22d05606-fbcf-421a-a2db-b32610dcfd1b',
+-					},
+-				};
+-			}
++		const rateLimit = await this.rateLimiterService.limit({ key: 'signin', duration: 60 * 60 * 1000, max: 10, minInterval: 1000 }, getIpHash(request.ip));
++		if (rateLimit != null) {
++			reply.code(429);
++			return {
++				error: {
++					message: 'Too many failed attempts to sign in. Try again later.',
++					code: 'TOO_MANY_AUTHENTICATION_FAILURES',
++					id: '22d05606-fbcf-421a-a2db-b32610dcfd1b',
++				},
++			};
+ 		}
+ 
+ 		if (typeof username !== 'string') {
+@@ -231,7 +220,7 @@
+ 
+ 			try {
+ 				await this.userAuthService.twoFactorAuthenticate(profile, token);
+-			} catch (_) {
++			} catch (e) {
+ 				return await fail(403, {
+ 					id: 'cdf1235b-ac71-46d4-a3a6-84ccce48df6f',
+ 				});

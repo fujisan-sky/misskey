@@ -1,0 +1,22 @@
+--- packages/backend/src/queue/processors/ExportNotesProcessorService.ts	2026-07-02 10:19:31.543760571 +0900
++++ packages/backend/src/queue/processors/ExportNotesProcessorService.ts	2026-07-02 09:56:54.909926810 +0900
+@@ -37,8 +37,6 @@
+ 		let exportedNotesCount = 0;
+ 		let cursor: MiNote['id'] | null = null;
+ 
+-		const totalPromise = notesRepository.countBy({ userId });
+-
+ 		const serialize = (
+ 			note: MiNote,
+ 			poll: MiPoll | null,
+@@ -90,8 +88,8 @@
+ 					exportedNotesCount++;
+ 				}
+ 
+-				const total = await totalPromise;
+-				job.updateProgress(exportedNotesCount / total * 100);
++				const total = await notesRepository.countBy({ userId });
++				job.updateProgress(exportedNotesCount / total);
+ 			},
+ 		});
+ 	}

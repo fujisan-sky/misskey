@@ -1,0 +1,46 @@
+--- packages/frontend/src/widgets/WidgetPhotos.vue	2026-07-02 10:19:31.613760323 +0900
++++ packages/frontend/src/widgets/WidgetPhotos.vue	2026-07-02 09:56:55.021926588 +0900
+@@ -26,7 +26,7 @@
+ import * as Misskey from 'misskey-js';
+ import { useWidgetPropsManager } from './widget.js';
+ import type { WidgetComponentEmits, WidgetComponentExpose, WidgetComponentProps } from './widget.js';
+-import type { FormWithDefault, GetFormResultType } from '@/utility/form.js';
++import type { GetFormResultType } from '@/utility/form.js';
+ import { useStream } from '@/stream.js';
+ import { getStaticImageUrl } from '@/utility/media-proxy.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+@@ -38,16 +38,14 @@
+ 
+ const widgetPropsDef = {
+ 	showHeader: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.showHeader,
++		type: 'boolean' as const,
+ 		default: true,
+ 	},
+ 	transparent: {
+-		type: 'boolean',
+-		label: i18n.ts._widgetOptions.transparent,
++		type: 'boolean' as const,
+ 		default: false,
+ 	},
+-} satisfies FormWithDefault;
++};
+ 
+ type WidgetProps = GetFormResultType<typeof widgetPropsDef>;
+ 
+@@ -64,12 +62,12 @@
+ const images = ref<Misskey.entities.DriveFile[]>([]);
+ const fetching = ref(true);
+ 
+-function onDriveFileCreated(file: Misskey.entities.DriveFile) {
++const onDriveFileCreated = (file) => {
+ 	if (/^image\/.+$/.test(file.type)) {
+ 		images.value.unshift(file);
+ 		if (images.value.length > 9) images.value.pop();
+ 	}
+-}
++};
+ 
+ const thumbnail = (image: Misskey.entities.DriveFile): string => {
+ 	return prefer.s.disableShowingAnimatedImages

@@ -1,0 +1,43 @@
+--- packages/frontend/src/components/MkDrive.folder.vue	2026-07-02 10:19:31.585760422 +0900
++++ packages/frontend/src/components/MkDrive.folder.vue	2026-07-02 09:56:54.982926665 +0900
+@@ -57,7 +57,7 @@
+ const emit = defineEmits<{
+ 	(ev: 'chosen', v: Misskey.entities.DriveFolder): void;
+ 	(ev: 'unchose', v: Misskey.entities.DriveFolder): void;
+-	(ev: 'upload', files: File[], folder: Misskey.entities.DriveFolder): void;
++	(ev: 'upload', files: File[], folder: Misskey.entities.DriveFolder);
+ 	(ev: 'dragstart'): void;
+ 	(ev: 'dragend'): void;
+ }>();
+@@ -231,17 +231,17 @@
+ }
+ 
+ function move() {
+-	selectDriveFolder(null).then(({ canceled, folders }) => {
+-		if (canceled || (folders[0] && folders[0].id === props.folder.id)) return;
++	selectDriveFolder(null).then(folder => {
++		if (folder[0] && folder[0].id === props.folder.id) return;
+ 
+ 		misskeyApi('drive/folders/update', {
+ 			folderId: props.folder.id,
+-			parentId: folders[0] ? folders[0].id : null,
++			parentId: folder[0] ? folder[0].id : null,
+ 		}).then(() => {
+ 			globalEvents.emit('driveFoldersUpdated', [{
+ 				...props.folder,
+-				parentId: folders[0] ? folders[0].id : null,
+-				parent: folders[0] ?? null,
++				parentId: folder[0] ? folder[0].id : null,
++				parent: folder[0] ?? null,
+ 			}]);
+ 		});
+ 	});
+@@ -277,7 +277,7 @@
+ 	prefer.commit('uploadFolder', props.folder.id);
+ }
+ 
+-function onContextmenu(ev: PointerEvent) {
++function onContextmenu(ev: MouseEvent) {
+ 	let menu: MenuItem[];
+ 	menu = [{
+ 		text: i18n.ts.openInWindow,

@@ -1,0 +1,13 @@
+--- packages/misskey-js/src/note.ts	2026-07-02 10:19:31.617760309 +0900
++++ packages/misskey-js/src/note.ts	2026-07-02 09:56:55.028926574 +0900
+@@ -2,8 +2,8 @@
+ 
+ export function isPureRenote(note: Note): note is PureRenote {
+ 	return (
+-		note.renoteId != null &&
+-		note.replyId == null &&
++		note.renote != null &&
++		note.reply == null &&
+ 		note.text == null &&
+ 		note.cw == null &&
+ 		(note.fileIds == null || note.fileIds.length === 0) &&

@@ -167,8 +167,12 @@ function onKeydown(ev: KeyboardEvent) {
 	}
 }
 
-function chooseFile(ev: MouseEvent) {
-	selectFile(ev.currentTarget ?? ev.target, i18n.ts.selectFile).then(selectedFile => {
+function chooseFile(ev: PointerEvent) {
+	selectFile({
+		anchorElement: ev.currentTarget ?? ev.target,
+		multiple: false,
+		label: i18n.ts.selectFile,
+	}).then(selectedFile => {
 		file.value = selectedFile;
 	});
 }

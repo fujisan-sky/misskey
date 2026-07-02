@@ -1,0 +1,47 @@
+--- packages/backend/src/core/chart/charts/per-user-drive.ts	2026-07-02 10:19:31.534760603 +0900
++++ packages/backend/src/core/chart/charts/per-user-drive.ts	2026-07-02 09:56:54.899926830 +0900
+@@ -5,13 +5,12 @@
+ 
+ import { Injectable, Inject } from '@nestjs/common';
+ import { DataSource } from 'typeorm';
+-import * as Redis from 'ioredis';
+ import type { DriveFilesRepository } from '@/models/_.js';
+ import type { MiDriveFile } from '@/models/DriveFile.js';
++import { AppLockService } from '@/core/AppLockService.js';
+ import { DI } from '@/di-symbols.js';
+ import { DriveFileEntityService } from '@/core/entities/DriveFileEntityService.js';
+ import { bindThis } from '@/decorators.js';
+-import { acquireChartInsertLock } from '@/misc/distributed-lock.js';
+ import Chart from '../core.js';
+ import { ChartLoggerService } from '../ChartLoggerService.js';
+ import { name, schema } from './entities/per-user-drive.js';
+@@ -26,16 +25,14 @@
+ 		@Inject(DI.db)
+ 		private db: DataSource,
+ 
+-		@Inject(DI.redis)
+-		private redisClient: Redis.Redis,
+-
+ 		@Inject(DI.driveFilesRepository)
+ 		private driveFilesRepository: DriveFilesRepository,
+ 
++		private appLockService: AppLockService,
+ 		private driveFileEntityService: DriveFileEntityService,
+ 		private chartLoggerService: ChartLoggerService,
+ 	) {
+-		super(db, (k) => acquireChartInsertLock(redisClient, k), chartLoggerService.logger, name, schema, true);
++		super(db, (k) => appLockService.getChartInsertLock(k), chartLoggerService.logger, name, schema, true);
+ 	}
+ 
+ 	protected async tickMajor(group: string): Promise<Partial<KVs<typeof schema>>> {
+@@ -56,10 +53,6 @@
+ 
+ 	@bindThis
+ 	public async update(file: MiDriveFile, isAdditional: boolean): Promise<void> {
+-		// MiDriveFile.userId is nullable (system-owned files such as the instance
+-		// icon/banner, fetched system avatars, custom emoji image uploads, etc.).
+-		// Per-user drive accounting is not defined for ownerless files, so skip.
+-		if (file.userId == null) return;
+ 		const fileSizeKb = file.size / 1000;
+ 		await this.commit({
+ 			'totalCount': isAdditional ? 1 : -1,

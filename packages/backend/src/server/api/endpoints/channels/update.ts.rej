@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/channels/update.ts	2026-07-02 10:19:31.549760550 +0900
++++ packages/backend/src/server/api/endpoints/channels/update.ts	2026-07-02 09:56:54.918926792 +0900
+@@ -50,7 +50,7 @@
+ 	properties: {
+ 		channelId: { type: 'string', format: 'misskey:id' },
+ 		name: { type: 'string', minLength: 1, maxLength: 128 },
+-		description: { type: 'string', nullable: true, maxLength: 2048 },
++		description: { type: 'string', nullable: true, minLength: 1, maxLength: 2048 },
+ 		bannerId: { type: 'string', format: 'misskey:id', nullable: true },
+ 		isArchived: { type: 'boolean', nullable: true },
+ 		pinnedNoteIds: {

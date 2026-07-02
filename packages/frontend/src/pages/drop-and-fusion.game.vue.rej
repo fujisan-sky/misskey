@@ -1,0 +1,29 @@
+--- packages/frontend/src/pages/drop-and-fusion.game.vue	2026-07-02 10:19:31.600760369 +0900
++++ packages/frontend/src/pages/drop-and-fusion.game.vue	2026-07-02 09:56:55.004926621 +0900
+@@ -58,7 +58,7 @@
+ 			<div ref="containerEl" :class="[$style.gameContainer, { [$style.gameOver]: isGameOver && !replaying }]" @contextmenu.stop.prevent @click.stop.prevent="onClick" @touchmove.stop.prevent="onTouchmove" @touchend="onTouchend" @mousemove="onMousemove">
+ 				<img v-if="store.s.darkMode" src="/client-assets/drop-and-fusion/frame-dark.svg" :class="$style.mainFrameImg"/>
+ 				<img v-else src="/client-assets/drop-and-fusion/frame-light.svg" :class="$style.mainFrameImg"/>
+-				<canvas ref="canvasEl" :class="$style.canvas"></canvas>
++				<canvas ref="canvasEl" :class="$style.canvas"/>
+ 				<Transition
+ 					:enterActiveClass="$style.transition_combo_enterActive"
+ 					:leaveActiveClass="$style.transition_combo_leaveActive"
+@@ -82,7 +82,7 @@
+ 					</Transition>
+ 					<template v-if="dropReady && currentPick">
+ 						<img src="/client-assets/drop-and-fusion/drop-arrow.svg" :class="$style.currentMonoArrow"/>
+-						<div :class="$style.dropGuide"></div>
++						<div :class="$style.dropGuide"/>
+ 					</template>
+ 				</div>
+ 				<div v-if="isGameOver && !replaying" :class="$style.gameOverLabel">
+@@ -729,7 +729,7 @@
+ 	}, 1500);
+ }
+ 
+-function onClick(ev: PointerEvent) {
++function onClick(ev: MouseEvent) {
+ 	if (!containerElRect) return;
+ 	if (replaying.value) return;
+ 	const x = (ev.clientX - containerElRect.left) / viewScale;

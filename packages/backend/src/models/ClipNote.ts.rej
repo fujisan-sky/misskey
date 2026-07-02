@@ -1,0 +1,20 @@
+--- packages/backend/src/models/ClipNote.ts	2026-07-02 10:19:31.539760585 +0900
++++ packages/backend/src/models/ClipNote.ts	2026-07-02 09:56:54.904926820 +0900
+@@ -21,7 +21,7 @@
+ 	})
+ 	public noteId: MiNote['id'];
+ 
+-	@ManyToOne(() => MiNote, {
++	@ManyToOne(type => MiNote, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -34,7 +34,7 @@
+ 	})
+ 	public clipId: MiClip['id'];
+ 
+-	@ManyToOne(() => MiClip, {
++	@ManyToOne(type => MiClip, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()

@@ -1,0 +1,13 @@
+--- packages/backend/src/server/api/endpoints/flash/update.ts	2026-07-02 10:19:31.553760536 +0900
++++ packages/backend/src/server/api/endpoints/flash/update.ts	2026-07-02 09:56:54.921926786 +0900
+@@ -73,8 +73,8 @@
+ 				updatedAt: new Date(),
+ 				...Object.fromEntries(
+ 					Object.entries(ps).filter(
+-						([key, val]) => (key !== 'flashId') && Object.hasOwn(paramDef.properties, key),
+-					),
++						([key, val]) => (key !== 'flashId') && Object.hasOwn(paramDef.properties, key)
++					)
+ 				),
+ 			});
+ 		});

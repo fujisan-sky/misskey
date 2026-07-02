@@ -1,0 +1,18 @@
+--- packages/backend/src/server/api/endpoints/admin/ad/update.ts	2026-07-02 10:19:31.544760567 +0900
++++ packages/backend/src/server/api/endpoints/admin/ad/update.ts	2026-07-02 09:56:54.912926804 +0900
+@@ -39,7 +39,6 @@
+ 		expiresAt: { type: 'integer' },
+ 		startsAt: { type: 'integer' },
+ 		dayOfWeek: { type: 'integer' },
+-		isSensitive: { type: 'boolean' },
+ 	},
+ 	required: ['id'],
+ } as const;
+@@ -67,7 +66,6 @@
+ 				expiresAt: ps.expiresAt ? new Date(ps.expiresAt) : undefined,
+ 				startsAt: ps.startsAt ? new Date(ps.startsAt) : undefined,
+ 				dayOfWeek: ps.dayOfWeek,
+-				isSensitive: ps.isSensitive,
+ 			});
+ 
+ 			const updatedAd = await this.adsRepository.findOneByOrFail({ id: ad.id });

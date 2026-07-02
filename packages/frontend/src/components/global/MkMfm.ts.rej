@@ -1,0 +1,38 @@
+--- packages/frontend/src/components/global/MkMfm.ts	2026-07-02 10:19:31.593760394 +0900
++++ packages/frontend/src/components/global/MkMfm.ts	2026-07-02 09:56:54.994926641 +0900
+@@ -233,7 +233,7 @@
+ 						if (!useAnim) {
+ 							return genEl(token.children, scale);
+ 						}
+-						return h(MkSparkle, {}, { default: () => genEl(token.children, scale) });
++						return h(MkSparkle, {}, genEl(token.children, scale));
+ 					}
+ 					case 'rotate': {
+ 						const degrees = safeParseFloat(token.props.args.deg) ?? 90;
+@@ -319,7 +319,7 @@
+ 						]);
+ 					}
+ 					case 'clickable': {
+-						return h('span', { onClick(ev: PointerEvent): void {
++						return h('span', { onClick(ev: MouseEvent): void {
+ 							ev.stopPropagation();
+ 							ev.preventDefault();
+ 							const clickEv = typeof token.props.args.ev === 'string' ? token.props.args.ev : '';
+@@ -363,7 +363,7 @@
+ 					url: token.props.url,
+ 					rel: 'nofollow noopener',
+ 					navigationBehavior: props.linkNavigationBehavior,
+-				}, { default: () => genEl(token.children, scale, true) })];
++				}, genEl(token.children, scale, true))];
+ 			}
+ 
+ 			case 'mention': {
+@@ -381,7 +381,7 @@
+ 					to: isNote ? `/tags/${encodeURIComponent(token.props.hashtag)}` : `/user-tags/${encodeURIComponent(token.props.hashtag)}`,
+ 					style: 'color:var(--MI_THEME-hashtag);',
+ 					behavior: props.linkNavigationBehavior,
+-				}, { default: () => `#${token.props.hashtag}` })];
++				}, `#${token.props.hashtag}`)];
+ 			}
+ 
+ 			case 'blockCode': {

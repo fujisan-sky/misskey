@@ -1,0 +1,11 @@
+--- packages/frontend/src/instance.ts	2026-07-02 10:19:31.596760383 +0900
++++ packages/frontend/src/instance.ts	2026-07-02 09:56:54.997926635 +0900
+@@ -43,7 +43,7 @@
+ 	});
+ 
+ 	for (const [k, v] of Object.entries(meta)) {
+-		(instance[k as keyof typeof meta] as any) = v;
++		instance[k] = v;
+ 	}
+ 
+ 	miLocalStorage.setItem('instance', JSON.stringify(instance));

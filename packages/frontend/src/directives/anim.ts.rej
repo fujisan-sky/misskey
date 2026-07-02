@@ -1,0 +1,26 @@
+--- packages/frontend/src/directives/anim.ts	2026-07-02 10:19:31.596760383 +0900
++++ packages/frontend/src/directives/anim.ts	2026-07-02 09:56:54.997926635 +0900
+@@ -5,8 +5,8 @@
+ 
+ import type { Directive } from 'vue';
+ 
+-export const animDirective = {
+-	beforeMount(src) {
++export default {
++	beforeMount(src, binding, vn) {
+ 		src.style.opacity = '0';
+ 		src.style.transform = 'scale(0.9)';
+ 		// ページネーションと相性が悪いので
+@@ -14,10 +14,10 @@
+ 		src.classList.add('_zoom');
+ 	},
+ 
+-	mounted(src) {
++	mounted(src, binding, vn) {
+ 		window.setTimeout(() => {
+ 			src.style.opacity = '1';
+ 			src.style.transform = 'none';
+ 		}, 1);
+ 	},
+-} as Directive<HTMLElement>;
++} as Directive;

@@ -1,0 +1,31 @@
+--- packages/backend/src/core/entities/ReversiGameEntityService.ts	2026-07-02 10:19:31.535760599 +0900
++++ packages/backend/src/core/entities/ReversiGameEntityService.ts	2026-07-02 09:56:54.901926826 +0900
+@@ -14,10 +14,6 @@
+ import { IdService } from '@/core/IdService.js';
+ import { UserEntityService } from './UserEntityService.js';
+ 
+-function assertBw(bw: string): bw is Packed<'ReversiGameDetailed'>['bw'] {
+-	return ['random', '1', '2'].includes(bw);
+-}
+-
+ @Injectable()
+ export class ReversiGameEntityService {
+ 	constructor(
+@@ -62,7 +58,7 @@
+ 			surrenderedUserId: game.surrenderedUserId,
+ 			timeoutUserId: game.timeoutUserId,
+ 			black: game.black,
+-			bw: assertBw(game.bw) ? game.bw : 'random',
++			bw: game.bw,
+ 			isLlotheo: game.isLlotheo,
+ 			canPutEverywhere: game.canPutEverywhere,
+ 			loopedBoard: game.loopedBoard,
+@@ -120,7 +116,7 @@
+ 			surrenderedUserId: game.surrenderedUserId,
+ 			timeoutUserId: game.timeoutUserId,
+ 			black: game.black,
+-			bw: assertBw(game.bw) ? game.bw : 'random',
++			bw: game.bw,
+ 			isLlotheo: game.isLlotheo,
+ 			canPutEverywhere: game.canPutEverywhere,
+ 			loopedBoard: game.loopedBoard,

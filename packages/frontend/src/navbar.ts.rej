@@ -1,0 +1,60 @@
+--- packages/frontend/src/navbar.ts	2026-07-02 10:19:31.597760380 +0900
++++ packages/frontend/src/navbar.ts	2026-07-02 09:56:54.998926633 +0900
+@@ -6,7 +6,6 @@
+ import { computed, reactive } from 'vue';
+ import { ui } from '@@/js/config.js';
+ import { clearCache } from './utility/clear-cache.js';
+-import type { ComputedRef } from 'vue';
+ import { $i } from '@/i.js';
+ import { miLocalStorage } from '@/local-storage.js';
+ import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
+@@ -15,17 +14,7 @@
+ import { i18n } from '@/i18n.js';
+ import { unisonReload } from '@/utility/unison-reload.js';
+ 
+-export const navbarItemDef = reactive<{
+-	[key: string]: {
+-		title: string;
+-		icon: string;
+-		show?: ComputedRef<boolean>;
+-		indicated?: ComputedRef<boolean>;
+-		indicateValue?: ComputedRef<string>;
+-		to?: string;
+-		action?: (ev: PointerEvent) => void;
+-	};
+-}>({
++export const navbarItemDef = reactive({
+ 	notifications: {
+ 		title: i18n.ts.notifications,
+ 		icon: 'ti ti-bell',
+@@ -77,12 +66,6 @@
+ 			lookup();
+ 		},
+ 	},
+-	qr: {
+-		title: i18n.ts.qr,
+-		icon: 'ti ti-qrcode',
+-		show: computed(() => $i != null),
+-		to: '/qr',
+-	},
+ 	lists: {
+ 		title: i18n.ts.lists,
+ 		icon: 'ti ti-list',
+@@ -128,7 +111,7 @@
+ 		to: '/channels',
+ 	},
+ 	chat: {
+-		title: i18n.ts.directMessage_short,
++		title: i18n.ts.chat,
+ 		icon: 'ti ti-messages',
+ 		to: '/chat',
+ 		show: computed(() => $i != null && $i.policies.chatAvailability !== 'unavailable'),
+@@ -148,7 +131,7 @@
+ 	ui: {
+ 		title: i18n.ts.switchUi,
+ 		icon: 'ti ti-devices',
+-		action: (ev) => {
++		action: (ev: MouseEvent) => {
+ 			os.popupMenu([{
+ 				text: i18n.ts.default,
+ 				active: ui === 'default' || ui === null,

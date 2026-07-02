@@ -1,0 +1,103 @@
+--- packages/frontend/src/pages/reversi/index.vue	2026-07-02 10:19:31.603760359 +0900
++++ packages/frontend/src/pages/reversi/index.vue	2026-07-02 09:56:55.007926615 +0900
+@@ -31,7 +31,7 @@
+ 
+ 		<MkFolder v-if="$i" :defaultOpen="true">
+ 			<template #label>{{ i18n.ts._reversi.myGames }}</template>
+-			<MkPagination :paginator="myGamesPaginator">
++			<MkPagination :pagination="myGamesPagination" :disableAutoLoad="true">
+ 				<template #default="{ items }">
+ 					<div :class="$style.gamePreviews">
+ 						<MkA v-for="g in items" :key="g.id" v-panel :class="[$style.gamePreview, !g.isStarted && !g.isEnded && $style.gamePreviewWaiting, g.isStarted && !g.isEnded && $style.gamePreviewActive]" tabindex="-1" :to="`/reversi/g/${g.id}`">
+@@ -58,7 +58,7 @@
+ 
+ 		<MkFolder :defaultOpen="true">
+ 			<template #label>{{ i18n.ts._reversi.allGames }}</template>
+-			<MkPagination :paginator="gamesPaginator">
++			<MkPagination :pagination="gamesPagination" :disableAutoLoad="true">
+ 				<template #default="{ items }">
+ 					<div :class="$style.gamePreviews">
+ 						<MkA v-for="g in items" :key="g.id" v-panel :class="[$style.gamePreview, !g.isStarted && !g.isEnded && $style.gamePreviewWaiting, g.isStarted && !g.isEnded && $style.gamePreviewActive]" tabindex="-1" :to="`/reversi/g/${g.id}`">
+@@ -105,7 +105,7 @@
+ </template>
+ 
+ <script lang="ts" setup>
+-import { markRaw, onDeactivated, onMounted, onUnmounted, ref } from 'vue';
++import { onDeactivated, onMounted, onUnmounted, ref } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import { useInterval } from '@@/js/use-interval.js';
+ import { misskeyApi } from '@/utility/misskey-api.js';
+@@ -120,18 +120,19 @@
+ import * as os from '@/os.js';
+ import { pleaseLogin } from '@/utility/please-login.js';
+ import * as sound from '@/utility/sound.js';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+-const myGamesPaginator = markRaw(new Paginator('reversi/games', {
++const myGamesPagination = {
++	endpoint: 'reversi/games' as const,
+ 	limit: 10,
+ 	params: {
+ 		my: true,
+ 	},
+-}));
++};
+ 
+-const gamesPaginator = markRaw(new Paginator('reversi/games', {
++const gamesPagination = {
++	endpoint: 'reversi/games' as const,
+ 	limit: 10,
+-}));
++};
+ 
+ const router = useRouter();
+ 
+@@ -168,11 +169,7 @@
+ 		playbackRate: 1,
+ 	});
+ 
+-	router.push('/reversi/g/:gameId', {
+-		params: {
+-			gameId: game.id,
+-		},
+-	});
++	router.push(`/reversi/g/${game.id}`);
+ }
+ 
+ async function matchHeatbeat() {
+@@ -197,8 +194,7 @@
+ }
+ 
+ async function matchUser() {
+-	const isLoggedIn = await pleaseLogin();
+-	if (!isLoggedIn) return;
++	pleaseLogin();
+ 
+ 	const user = await os.selectUser({ includeSelf: false, localOnly: true });
+ 	if (user == null) return;
+@@ -208,9 +204,8 @@
+ 	matchHeatbeat();
+ }
+ 
+-async function matchAny(ev: PointerEvent) {
+-	const isLoggedIn = await pleaseLogin();
+-	if (!isLoggedIn) return;
++function matchAny(ev: MouseEvent) {
++	pleaseLogin();
+ 
+ 	os.popupMenu([{
+ 		text: i18n.ts._reversi.allowIrregularRules,
+@@ -239,11 +234,11 @@
+ 	}
+ }
+ 
+-async function accept(user: Misskey.entities.UserLite) {
++async function accept(user) {
+ 	const game = await misskeyApi('reversi/match', {
+ 		userId: user.id,
+ 	});
+-	if (game != null) {
++	if (game) {
+ 		startGame(game);
+ 	}
+ }

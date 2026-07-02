@@ -1,0 +1,11 @@
+--- packages/frontend/src/components/MkDriveFileThumbnail.vue	2026-07-02 10:19:31.586760419 +0900
++++ packages/frontend/src/components/MkDriveFileThumbnail.vue	2026-07-02 09:56:54.982926665 +0900
+@@ -22,7 +22,7 @@
+ 		:forceBlurhash="forceBlurhash"
+ 	/>
+ 	<img
+-		v-else-if="isThumbnailAvailable && file.thumbnailUrl != null"
++		v-else-if="isThumbnailAvailable"
+ 		:src="file.thumbnailUrl"
+ 		:alt="file.name"
+ 		:title="file.name"

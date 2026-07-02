@@ -1,0 +1,87 @@
+--- packages/misskey-js/src/entities.ts	2026-07-02 10:19:31.617760309 +0900
++++ packages/misskey-js/src/entities.ts	2026-07-02 09:56:55.028926574 +0900
+@@ -10,12 +10,7 @@
+ 	User,
+ 	UserDetailedNotMe,
+ } from './autogen/models.js';
+-import type {
+-	AuthenticationResponseJSON,
+-	RegistrationResponseJSON,
+-	PublicKeyCredentialCreationOptionsJSON,
+-	PublicKeyCredentialRequestOptionsJSON,
+-} from '@simplewebauthn/browser';
++import type { AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON } from '@simplewebauthn/types';
+ 
+ export * from './autogen/entities.js';
+ export * from './autogen/models.js';
+@@ -29,17 +24,12 @@
+ type AllNullRecord<T> = {
+ 	[P in keyof T]: null;
+ };
+-type AllNullOrOptionalRecord<T> = {
+-	[P in keyof T]: never;
+-};
+ 
+ export type PureRenote =
+ 	Omit<Note, 'renote' | 'renoteId' | 'reply' | 'replyId' | 'text' | 'cw' | 'files' | 'fileIds' | 'poll'>
+-	& AllNullRecord<Pick<Note, 'text'>>
+-	& AllNullOrOptionalRecord<Pick<Note, 'reply' | 'replyId' | 'cw' | 'poll'>>
++	& AllNullRecord<Pick<Note, 'reply' | 'replyId' | 'text' | 'cw' | 'poll'>>
+ 	& { files: []; fileIds: []; }
+-	& NonNullableRecord<Pick<Note, 'renoteId'>>
+-	& Pick<Note, 'renote'>; // リノート対象が削除された場合、renoteIdはあるがrenoteはnullになる
++	& NonNullableRecord<Pick<Note, 'renote' | 'renoteId'>>;
+ 
+ export type PageEvent = {
+ 	pageId: Page['id'];
+@@ -54,7 +44,7 @@
+ 	id: ID;
+ 	createdAt: DateString;
+ 	userId: User['id'];
+-	user: UserDetailedNotMe;
++	user: UserDetailedNotMe | null;
+ } & ({
+ 	type: 'updateServerSettings';
+ 	info: ModerationLogPayloads['updateServerSettings'];
+@@ -208,9 +198,6 @@
+ } | {
+ 	type: 'deleteChatRoom';
+ 	info: ModerationLogPayloads['deleteChatRoom'];
+-} | {
+-	type: 'updateProxyAccountDescription';
+-	info: ModerationLogPayloads['updateProxyAccountDescription'];
+ });
+ 
+ export type ServerStats = {
+@@ -274,7 +261,6 @@
+ 	'g-recaptcha-response'?: string | null;
+ 	'turnstile-response'?: string | null;
+ 	'm-captcha-response'?: string | null;
+-	'testcaptcha-response'?: string | null;
+ };
+ 
+ export type SignupResponse = MeDetailed & {
+@@ -299,7 +285,6 @@
+ 	'g-recaptcha-response'?: string | null;
+ 	'turnstile-response'?: string | null;
+ 	'm-captcha-response'?: string | null;
+-	'testcaptcha-response'?: string | null;
+ };
+ 
+ export type SigninFlowResponse = {
+@@ -329,15 +314,6 @@
+ 	signinResponse: SigninFlowResponse & { finished: true };
+ };
+ 
+-export type I2faRegisterKeyResponse = PublicKeyCredentialCreationOptionsJSON;
+-
+-export type I2faKeyDoneRequest = {
+-	password: string;
+-	token?: string | null;
+-	name: string;
+-	credential: RegistrationResponseJSON;
+-};
+-
+ type Values<T extends Record<PropertyKey, unknown>> = T[keyof T];
+ 
+ export type PartialRolePolicyOverride = Partial<{ [k in keyof RolePolicies]: Omit<Values<Role['policies']>, 'value'> & { value: RolePolicies[k] } }>;

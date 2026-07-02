@@ -1,0 +1,20 @@
+--- packages/backend/src/server/api/endpoints/notes/renotes.ts	2026-07-02 10:19:31.557760521 +0900
++++ packages/backend/src/server/api/endpoints/notes/renotes.ts	2026-07-02 09:56:54.926926776 +0900
+@@ -43,8 +43,6 @@
+ 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
+ 		sinceId: { type: 'string', format: 'misskey:id' },
+ 		untilId: { type: 'string', format: 'misskey:id' },
+-		sinceDate: { type: 'integer' },
+-		untilDate: { type: 'integer' },
+ 	},
+ 	required: ['noteId'],
+ } as const;
+@@ -65,7 +63,7 @@
+ 				throw err;
+ 			});
+ 
+-			const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
++			const query = this.queryService.makePaginationQuery(this.notesRepository.createQueryBuilder('note'), ps.sinceId, ps.untilId)
+ 				.andWhere('note.renoteId = :renoteId', { renoteId: note.id })
+ 				.innerJoinAndSelect('note.user', 'user')
+ 				.leftJoinAndSelect('note.reply', 'reply')

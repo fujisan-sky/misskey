@@ -1,0 +1,11 @@
+--- packages/backend/src/server/api/endpoints/notes/thread-muting/create.ts	2026-07-02 10:19:31.557760521 +0900
++++ packages/backend/src/server/api/endpoints/notes/thread-muting/create.ts	2026-07-02 09:56:54.926926776 +0900
+@@ -59,7 +59,7 @@
+ 				throw err;
+ 			});
+ 
+-			const _mutedNotes = await this.notesRepository.find({
++			const mutedNotes = await this.notesRepository.find({
+ 				where: [{
+ 					id: note.threadId ?? note.id,
+ 				}, {

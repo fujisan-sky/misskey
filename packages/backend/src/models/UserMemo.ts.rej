@@ -1,0 +1,20 @@
+--- packages/backend/src/models/UserMemo.ts	2026-07-02 10:19:31.540760582 +0900
++++ packages/backend/src/models/UserMemo.ts	2026-07-02 09:56:54.906926816 +0900
+@@ -20,7 +20,7 @@
+ 	})
+ 	public userId: MiUser['id'];
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()
+@@ -33,7 +33,7 @@
+ 	})
+ 	public targetUserId: MiUser['id'];
+ 
+-	@ManyToOne(() => MiUser, {
++	@ManyToOne(type => MiUser, {
+ 		onDelete: 'CASCADE',
+ 	})
+ 	@JoinColumn()

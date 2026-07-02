@@ -1,0 +1,53 @@
+--- packages/frontend/src/pages/user/follow-list.vue	2026-07-02 10:19:31.605760352 +0900
++++ packages/frontend/src/pages/user/follow-list.vue	2026-07-02 09:56:55.011926608 +0900
+@@ -5,39 +5,40 @@
+ 
+ <template>
+ <div>
+-	<MkPagination v-slot="{items}" :paginator="type === 'following' ? followingPaginator : followersPaginator" withControl>
++	<MkPagination v-slot="{items}" ref="list" :pagination="type === 'following' ? followingPagination : followersPagination">
+ 		<div :class="$style.users">
+-			<MkUserInfo v-for="user in items.map(x => type === 'following' ? x.followee! : x.follower!)" :key="user.id" :user="user"/>
++			<MkUserInfo v-for="user in items.map(x => type === 'following' ? x.followee : x.follower)" :key="user.id" :user="user"/>
+ 		</div>
+ 	</MkPagination>
+ </div>
+ </template>
+ 
+ <script lang="ts" setup>
+-import { computed, markRaw } from 'vue';
++import { computed } from 'vue';
+ import * as Misskey from 'misskey-js';
+ import MkUserInfo from '@/components/MkUserInfo.vue';
+ import MkPagination from '@/components/MkPagination.vue';
+-import { Paginator } from '@/utility/paginator.js';
+ 
+ const props = defineProps<{
+ 	user: Misskey.entities.User;
+ 	type: 'following' | 'followers';
+ }>();
+ 
+-const followingPaginator = markRaw(new Paginator('users/following', {
++const followingPagination = {
++	endpoint: 'users/following' as const,
+ 	limit: 20,
+-	computedParams: computed(() => ({
++	params: computed(() => ({
+ 		userId: props.user.id,
+ 	})),
+-}));
++};
+ 
+-const followersPaginator = markRaw(new Paginator('users/followers', {
++const followersPagination = {
++	endpoint: 'users/followers' as const,
+ 	limit: 20,
+-	computedParams: computed(() => ({
++	params: computed(() => ({
+ 		userId: props.user.id,
+ 	})),
+-}));
++};
+ </script>
+ 
+ <style lang="scss" module>

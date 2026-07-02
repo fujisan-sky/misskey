@@ -1,0 +1,45 @@
+--- packages/frontend/src/pages/auth.form.vue	2026-07-02 10:19:31.599760373 +0900
++++ packages/frontend/src/pages/auth.form.vue	2026-07-02 09:56:55.002926625 +0900
+@@ -5,10 +5,10 @@
+ 
+ <template>
+ <section>
+-	<div v-if="permissions.length > 0">
++	<div v-if="app.permission.length > 0">
+ 		<p>{{ i18n.tsx._auth.permission({ name }) }}</p>
+ 		<ul>
+-			<li v-for="p in permissions" :key="p">{{ i18n.ts._permissions[p] ?? p }}</li>
++			<li v-for="p in app.permission" :key="p">{{ i18n.ts._permissions[p] }}</li>
+ 		</ul>
+ 	</div>
+ 	<div>{{ i18n.tsx._auth.shareAccess({ name: `${name} (${app.id})` }) }}</div>
+@@ -37,10 +37,6 @@
+ 
+ const app = computed(() => props.session.app);
+ 
+-const permissions = computed(() => {
+-	return props.session.app.permission.filter((p): p is typeof Misskey.permissions[number] => typeof p === 'string');
+-});
+-
+ const name = computed(() => {
+ 	const el = window.document.createElement('div');
+ 	el.textContent = app.value.name;
+@@ -48,13 +44,11 @@
+ });
+ 
+ function cancel() {
+-	//misskeyApi('auth/deny', {
+-	//	token: props.session.token,
+-	//}).then(() => {
+-	//	emit('denied');
+-	//});
+-
+-	emit('denied');
++	misskeyApi('auth/deny', {
++		token: props.session.token,
++	}).then(() => {
++		emit('denied');
++	});
+ }
+ 
+ function accept() {

@@ -1,0 +1,20 @@
+--- packages/frontend/src/components/global/MkAd.vue	2026-07-02 10:19:31.593760394 +0900
++++ packages/frontend/src/components/global/MkAd.vue	2026-07-02 09:56:54.993926643 +0900
+@@ -52,7 +52,7 @@
+ type Ad = (typeof instance)['ads'][number];
+ 
+ const props = defineProps<{
+-	preferForms?: string[];
++	preferForms: string[];
+ 	specify?: Ad;
+ }>();
+ 
+@@ -71,7 +71,7 @@
+ 		ratio: 0,
+ 	} : ad);
+ 
+-	let ads = props.preferForms ? allAds.filter(ad => props.preferForms!.includes(ad.place)) : allAds;
++	let ads = allAds.filter(ad => props.preferForms.includes(ad.place));
+ 
+ 	if (ads.length === 0) {
+ 		ads = allAds.filter(ad => ad.place === 'square');
