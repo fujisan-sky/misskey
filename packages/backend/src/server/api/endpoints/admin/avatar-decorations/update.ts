@@ -13,7 +13,7 @@ export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	requireRolePolicy: 'canManageAvatarDecorations',
+	requiredRolePolicy: 'canManageAvatarDecorations',
 	kind: 'write:admin:avatar-decorations',
 
 	errors: {
@@ -30,6 +30,7 @@ export const paramDef = {
 		roleIdsThatCanBeUsedThisDecoration: { type: 'array', items: {
 			type: 'string',
 		} },
+		category: { type: 'string', nullable: true },
 	},
 	required: ['id'],
 } as const;
@@ -39,7 +40,6 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 	constructor(
 		private avatarDecorationService: AvatarDecorationService,
 	) {
-
 		super(meta, paramDef, async (ps, me) => {
 
 			const decoration = await  this.avatarDecorationService.getAvatarDecorationById(ps.id);
@@ -68,8 +68,10 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					description: new_description,
 					url: ps.url,
 					roleIdsThatCanBeUsedThisDecoration: ps.roleIdsThatCanBeUsedThisDecoration,
+					category: ps.category,
 				}, me);
 			}
+
 		});
 	}
 }

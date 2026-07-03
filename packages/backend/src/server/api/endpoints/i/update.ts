@@ -7,7 +7,7 @@ import RE2 from 're2';
 import * as mfm from 'mfm-js';
 import { Inject, Injectable } from '@nestjs/common';
 import ms from 'ms';
-import { JSDOM } from 'jsdom';
+import * as htmlParser from 'node-html-parser';
 import { extractCustomEmojisFromMfm } from '@/misc/extract-custom-emojis-from-mfm.js';
 import { extractHashtags } from '@/misc/extract-hashtags.js';
 import * as Acct from '@/misc/acct.js';
@@ -144,6 +144,7 @@ export const paramDef = {
 		followedMessage: { ...followedMessageSchema, nullable: true },
 		location: { ...locationSchema, nullable: true },
 		birthday: { ...birthdaySchema, nullable: true },
+		safemode: { type: 'boolean' },
 		lang: { type: 'string', enum: [null, ...Object.keys(langmap)] as string[], nullable: true },
 		avatarId: { type: 'string', format: 'misskey:id', nullable: true },
 		avatarDecorations: { type: 'array', maxItems: 16, items: {
@@ -190,6 +191,7 @@ export const paramDef = {
 		autoSensitive: { type: 'boolean' },
 		followingVisibility: { type: 'string', enum: ['public', 'followers', 'private'] },
 		followersVisibility: { type: 'string', enum: ['public', 'followers', 'private'] },
+		chatScope: { type: 'string', enum: ['everyone', 'followers', 'following', 'mutual', 'none'] },
 		pinnedPageId: { type: 'string', format: 'misskey:id', nullable: true },
 		mutedWords: muteWords,
 		hardMutedWords: muteWords,
@@ -208,9 +210,12 @@ export const paramDef = {
 				quote: notificationRecieveConfig,
 				reaction: notificationRecieveConfig,
 				pollEnded: notificationRecieveConfig,
+				scheduledNotePosted: notificationRecieveConfig,
+				scheduledNotePostFailed: notificationRecieveConfig,
 				receiveFollowRequest: notificationRecieveConfig,
 				followRequestAccepted: notificationRecieveConfig,
 				roleAssigned: notificationRecieveConfig,
+				chatRoomInvitationReceived: notificationRecieveConfig,
 				achievementEarned: notificationRecieveConfig,
 				app: notificationRecieveConfig,
 				test: notificationRecieveConfig,
@@ -286,12 +291,26 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 			if (ps.lang !== undefined) profileUpdates.lang = ps.lang;
 			if (ps.location !== undefined) profileUpdates.location = ps.location;
 			if (ps.birthday !== undefined) profileUpdates.birthday = ps.birthday;
+			if (typeof ps.safemode === 'boolean') updates.safemode = ps.safemode;
 			if (ps.followingVisibility !== undefined) profileUpdates.followingVisibility = ps.followingVisibility;
 			if (ps.followersVisibility !== undefined) profileUpdates.followersVisibility = ps.followersVisibility;
+			if (ps.chatScope !== undefined) updates.chatScope = ps.chatScope;
 
 			function checkMuteWordCount(mutedWords: (string[] | string)[], limit: number) {
-				// TODO: ちゃんと数える
-				const length = JSON.stringify(mutedWords).length;
+				const count = (arr: (string[] | string)[]) => {
+					let length = 0;
+					for (const item of arr) {
+						if (typeof item === 'string') {
+							length += item.length;
+						} else if (Array.isArray(item)) {
+							for (const subItem of item) {
+								length += subItem.length;
+							}
+						}
+					}
+					return length;
+				};
+				const length = count(mutedWords);
 				if (length > limit) {
 					throw new ApiError(meta.errors.tooManyMutedWords);
 				}
@@ -306,7 +325,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 
 					try {
 						new RE2(regexp[1], regexp[2]);
-					} catch (err) {
+					} catch (_) {
 						throw new ApiError(meta.errors.invalidRegexp);
 					}
 				}
@@ -393,7 +412,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				const myRoles = await this.roleService.getUserRoles(user.id);
 				const allRoles = await this.roleService.getRoles();
 				const decorationIds = decorations
-					.filter(d => d.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(r => r.id === roleId)).length === 0 || myRoles.some(r => d.roleIdsThatCanBeUsedThisDecoration.includes(r.id)))
+					.filter(d => d.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(r => r.id === roleId)).length === 0 ||
+					       	myRoles.some(r => d.roleIdsThatCanBeUsedThisDecoration.includes(r.id)) || 
+						( policies.canCreateOwnDeco && (d.description.indexOf(user.id) == 0) ) )
 					.map(d => d.id);
 
 				if (ps.avatarDecorations.length > policies.avatarDecorationLimit) throw new ApiError(meta.errors.restrictedByRole);
@@ -552,16 +573,15 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		try {
 			const html = await this.httpRequestService.getHtml(url);
 
-			const { window } = new JSDOM(html);
-			const doc: Document = window.document;
+			const doc = htmlParser.parse(html);
 
 			const myLink = `${this.config.url}/@${user.username}`;
 
 			const aEls = Array.from(doc.getElementsByTagName('a'));
 			const linkEls = Array.from(doc.getElementsByTagName('link'));
 
-			const includesMyLink = aEls.some(a => a.href === myLink);
-			const includesRelMeLinks = [...aEls, ...linkEls].some(link => link.rel === 'me' && link.href === myLink);
+			const includesMyLink = aEls.some(a => a.attributes.href === myLink);
+			const includesRelMeLinks = [...aEls, ...linkEls].some(link => link.attributes.rel?.split(/\s+/).includes('me') && link.attributes.href === myLink);
 
 			if (includesMyLink || includesRelMeLinks) {
 				await this.userProfilesRepository.createQueryBuilder('profile').update()
@@ -571,9 +591,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 					})
 					.execute();
 			}
-
-			window.close();
-		} catch (err) {
+		} catch (_) {
 			// なにもしない
 		}
 	}

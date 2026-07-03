@@ -6,6 +6,7 @@
 process.env.NODE_ENV = 'test';
 
 import * as assert from 'assert';
+import { describe, beforeAll, beforeEach, afterEach, test } from 'vitest';
 import { DEFAULT_POLICIES } from '@/core/RoleService.js';
 import { api, ApiRequest, failedApiCall, hiddenNote, post, signup, successfulApiCall } from '../utils.js';
 import type * as Misskey from 'misskey-js';
@@ -176,7 +177,9 @@ describe('クリップ', () => {
 		{ label: 'descriptionがnull', parameters: { description: null } },
 		{ label: 'descriptionが最大長', parameters: { description: 'a'.repeat(2048) } },
 	];
-	test.each(createClipAllowedPattern)('の作成は$labelでもできる', async ({ parameters }) => await create(parameters));
+	test.each(createClipAllowedPattern)('の作成は$labelでもできる', async ({ parameters }) => {
+		await create(parameters);
+	});
 
 	const createClipDenyPattern = [
 		{ label: 'nameがnull', parameters: { name: null } },
@@ -233,11 +236,13 @@ describe('クリップ', () => {
 		assert.strictEqual(res.isFavorited, false);
 	});
 
-	test.each(createClipAllowedPattern)('の更新は$labelでもできる', async ({ parameters }) => await update({
-		clipId: (await create()).id,
-		name: 'updated',
-		...parameters,
-	}));
+	test.each(createClipAllowedPattern)('の更新は$labelでもできる', async ({ parameters }) => {
+		await update({
+			clipId: (await create()).id,
+			name: 'updated',
+			...parameters,
+		});
+	});
 
 	test.each([
 		{ label: 'clipIdがnull', parameters: { clipId: null } },
@@ -363,14 +368,11 @@ describe('クリップ', () => {
 		const clipLimit = DEFAULT_POLICIES.clipLimit;
 		const clips = await createMany({}, clipLimit);
 		const res = await list({
-			parameters: { limit: 1 }, // FIXME: 無視されて11全部返ってくる
+			parameters: { limit: clips.length },
 		});
 
-		// 返ってくる配列には順序保障がないのでidでソートして厳密比較
-		assert.deepStrictEqual(
-			res.sort(compareBy(s => s.id)),
-			clips.sort(compareBy(s => s.id)),
-		);
+		// 作成responseの配列には順序保障がないのでidでソートして厳密比較
+		assert.deepStrictEqual(res.toReversed(), clips.sort(compareBy(s => s.id)));
 	});
 
 	test('の一覧が取得できる(空)', async () => {
@@ -909,7 +911,7 @@ describe('クリップ', () => {
 			assert.deepStrictEqual(res.map(x => x.id), [aliceNote.id]);
 		});
 
-		test('はPublicなクリップなら認証なしでも取得できる。(非公開ノートはhideされて返ってくる)', async () => {
+		test('はPublicなクリップなら認証なしでも取得できる。(非公開ノートは含まれない)', async () => {
 			const publicClip = await create({ isPublic: true });
 			await addNote({ clipId: publicClip.id, noteId: aliceNote.id });
 			await addNote({ clipId: publicClip.id, noteId: aliceHomeNote.id });
@@ -919,8 +921,6 @@ describe('クリップ', () => {
 			const res = await notes({ clipId: publicClip.id }, { user: undefined });
 			const expects = [
 				aliceNote, aliceHomeNote,
-				// 認証なしだと非公開ノートは結果には含むけどhideされる。
-				hiddenNote(aliceFollowersNote), hiddenNote(aliceSpecifiedNote),
 			];
 			assert.deepStrictEqual(
 				res.sort(compareBy(s => s.id)).map(x => x.id),

@@ -7,8 +7,9 @@ import { setTimeout } from 'node:timers/promises';
 import * as Redis from 'ioredis';
 import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { In } from 'typeorm';
+import { ReplyError } from 'ioredis';
 import { DI } from '@/di-symbols.js';
-import type { UsersRepository } from '@/models/_.js';
+import type { MiUserProfile, UsersRepository } from '@/models/_.js';
 import type { MiUser } from '@/models/User.js';
 import type { MiNotification } from '@/models/Notification.js';
 import { bindThis } from '@/decorators.js';
@@ -20,7 +21,7 @@ import { CacheService } from '@/core/CacheService.js';
 import type { Config } from '@/config.js';
 import { EmailService } from '@/core/EmailService.js';
 import { UserListService } from '@/core/UserListService.js';
-import type { FilterUnionByProperty } from '@/types.js';
+import { FilterUnionByProperty, groupedNotificationTypes, obsoleteNotificationTypes } from '@/types.js';
 import { trackPromise } from '@/misc/promise-tracker.js';
 
 @Injectable()
@@ -147,21 +148,36 @@ export class NotificationService implements OnApplicationShutdown {
 			}
 		}
 
-		const notification = {
-			id: this.idService.gen(),
-			createdAt: new Date(),
-			type: type,
-			...(notifierId ? {
-				notifierId,
-			} : {}),
-			...data,
-		} as any as FilterUnionByProperty<MiNotification, 'type', T>;
+		const createdAt = new Date();
+		let notification: FilterUnionByProperty<MiNotification, 'type', T>;
+		let redisId: string;
 
-		const redisIdPromise = this.redisClient.xadd(
-			`notificationTimeline:${notifieeId}`,
-			'MAXLEN', '~', this.config.perUserNotificationsMaxCount.toString(),
-			'*',
-			'data', JSON.stringify(notification));
+		do {
+			notification = {
+				id: this.idService.gen(),
+				createdAt,
+				type: type,
+				...(notifierId ? {
+					notifierId,
+				} : {}),
+				...data,
+			} as unknown as FilterUnionByProperty<MiNotification, 'type', T>;
+
+			try {
+				redisId = (await this.redisClient.xadd(
+					`notificationTimeline:${notifieeId}`,
+					'MAXLEN', '~', this.config.perUserNotificationsMaxCount.toString(),
+					this.toXListId(notification.id),
+					'data', JSON.stringify(notification)))!;
+			} catch (e) {
+				// The ID specified in XADD is equal or smaller than the target stream top item で失敗することがあるのでリトライ
+				if (e instanceof ReplyError) continue;
+				throw e;
+			}
+
+			break;
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		} while (true);
 
 		const packed = await this.notificationEntityService.pack(notification, notifieeId, {});
 
@@ -175,105 +191,161 @@ export class NotificationService implements OnApplicationShutdown {
 		const interval = notification.type === 'test' ? 0 : 2000;
 		setTimeout(interval, 'unread notification', { signal: this.#shutdownController.signal }).then(async () => {
 			const latestReadNotificationId = await this.redisClient.get(`latestReadNotification:${notifieeId}`);
-			if (latestReadNotificationId && (latestReadNotificationId >= (await redisIdPromise)!)) return;
+			if (latestReadNotificationId && (latestReadNotificationId >= redisId)) return;
 
 			this.globalEventService.publishMainStream(notifieeId, 'unreadNotification', packed);
 			this.pushNotificationService.pushNotification(notifieeId, 'notification', packed);
 
 		}, () => { /* aborted, ignore it */ });
-                if( profile.email ){
-                        const follower = await this.usersRepository.findOneByOrFail({ id: notifierId! });
-                        switch(type){
-                                case 'mention':
-                                        this.emailNotificationMention(profile, follower);
-                                break;
-                                case 'reply':
-                                        this.emailNotificationReply(profile, follower);
-                                break;
-                                case 'quote' :
-                                case 'renote':
-                                        this.emailNotificationQuote(profile, follower);
-                                break;
-                                case 'follow':
-                                        this.emailNotificationFollow(profile, follower);
-                                break;
-                                case 'receiveFollowRequest':
-                                        this.emailNotificationReceiveFollowRequest(profile, follower);
-                                break;
-                        }
-                }
+
+		void this.sendEmailNotification(profile, type, notifierId).catch((err) => {
+			console.error(
+       			`メール通知の送信に失敗しました: type=${type}, notifieeId=${notifieeId}`,
+       			err,
+			);
+		});
 
 		return notification;
 	}
 
 	// TODO
-	//const locales = await import('../../../../locales/index.js');
+	//const locales = await import('i18n');
 
 	// TODO: locale ファイルをクライアント用とサーバー用で分けたい
 
+
 	@bindThis
-       	private async emailNotificationMention(profile: UserProfile, follower: MiUser) {
-               console.log('-------emailNotificationMention-------');
-               if ( !profile.emailNotificationTypes.includes('mention')) return;
-               this.emailNotificationEtc( profile.email , follower,
-                       'メンション/ダイレクトメッセージが来ています',
-                       'からメンション/ダイレクトメッセージが来ています');
-       	}
+	private async sendEmailNotification(
+    		profile: MiUserProfile,
+    		type: MiNotification['type'],
+    		notifierId?: MiUser['id'] | null,
+	): Promise<void> {
+    		if (!profile.email || !profile.emailVerified || !notifierId) {
+        		return;
+    		}
 
-       	@bindThis
-       	private async emailNotificationReply(profile: UserProfile, follower: MiUser) {
-               console.log('-------emailNotificationRelpy-------');
-               if ( !profile.emailNotificationTypes.includes('reply')) return;
-               this.emailNotificationEtc( profile.email , follower,
-                       'リプライされました',
-                       'にリプライされました');
-       	}
+    		let settingType: string;
+    		let title: string;
+    		let message: string;
 
-       	@bindThis
-       	private async emailNotificationQuote(profile: UserProfile, follower: MiUser) {
-               console.log('-------emailNotificationMention-------');
-               if (!profile.emailNotificationTypes.includes('quote')) return;
-               this.emailNotificationEtc( profile.email , follower,
-                       '引用、リノートされました',
-                       'に引用、又は、リノートされました');
-        }
+    		switch (type) {
+        		case 'mention':
+            			settingType = 'mention';
+            			title = 'メンション／ダイレクトメッセージが来ています';
+            			message = 'さんからメンション／ダイレクトメッセージが来ています';
+            		break;
 
-       	@bindThis
-	private async emailNotificationFollow(profile: UserProfile, follower: MiUser) {
-               console.log('-------emailNotificationFollow-------');
-               if ( !profile.emailNotificationTypes.includes('follow')) return;
-               this.emailNotificationEtc( profile.email , follower,
-                       'フォローされました',
-                       'にフォローされました');
-       }
+        		case 'reply':
+            			settingType = 'reply';
+            			title = 'リプライされました';
+            			message = 'さんからリプライが来ています';
+            		break;
 
-       @bindThis
-       private async emailNotificationReceiveFollowRequest(profile: UserProfile, follower: MiUser) {
-               console.log('-------emailNotificationReceiveFollowRequest-------');
-               if ( !profile.emailNotificationTypes.includes('receiveFollowRequest')) return;
-               this.emailNotificationEtc( profile.email , follower,
-                       'フォローリクエストが届いています',
-                       'からフォローリクエストが届いています');
-       }
+        		case 'quote':
+            			settingType = 'quote';
+            			title = '引用されました';
+            			message = 'さんに引用されました';
+            		break;
 
-       @bindThis
-       private async emailNotificationEtc(mailAddr: string , follower: MiUser, title:String, message:String) {
-               let messageText = title;
-               let htmlText    = title;
-               if ( follower ){
-                       let nameText = follower.name;
-                       if ( !nameText ) nameText = follower.username;
-                       let hostName = follower.host;
-                       if ( !hostName ) hostName = this.config.host;
-                       let addressText = `<i>@${follower.username}@${hostName}</i>`;
-                       messageText = `<font size=+3>${nameText} さん</font><br>${addressText}<br><p align="right">${message}</p>`;
-                       htmlText  = messageText;
-                       if( follower.avatarUrl ){
-                               htmlText = `<img src="${follower.avatarUrl}"  width="48" height="48">${messageText}`;
-                       }
-               }
-               this.emailService.sendEmail(mailAddr, title , htmlText,messageText);
-        }
+        		case 'renote':
+            			settingType = 'renote';
+            			title = 'リノートされました';
+            			message = 'さんにリノートされました';
+            		break;
+
+        		case 'follow':
+            			settingType = 'follow';
+            			title = 'フォローされました';
+            			message = 'さんにフォローされました';
+            		break;
+
+        		case 'receiveFollowRequest':
+            			settingType = 'receiveFollowRequest';
+            			title = 'フォローリクエストが届いています';
+            			message = 'さんからフォローリクエストが届いています';
+            		break;
+
+        		default:
+            			return;
+    		}
+
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    		const emailNotificationTypes =
+        		profile.emailNotificationTypes ?? [];
+		
+    		if (!emailNotificationTypes.includes(settingType)) {
+        		return;
+    		}
+
+    		// 設定を確認してからDB検索する
+    		const notifier = await this.usersRepository.findOneBy({
+        		id: notifierId,
+    		});
+
+    		// 通知作成からメール処理までの間に削除された場合など
+    		if (!notifier) {
+        		return;
+    		}
+
+    		await this.emailNotificationEtc(
+        		profile.email,
+        		notifier,
+        		title,
+        		message,
+    		);
+	}
+
+	@bindThis
+	private async emailNotificationEtc(
+    		mailAddr: string,
+    		notifier: MiUser,
+    		title: string,
+    		message: string,
+	): Promise<void> {
+    		const nameText = notifier.name || notifier.username;
+    		const hostName = notifier.host ?? this.config.host;
+    		const accountText =
+        		`@${notifier.username}@${hostName}`;
+
+    		const escapedName = this.escapeHtml(nameText);
+    		const escapedAccount = this.escapeHtml(accountText);
+    		const escapedMessage = this.escapeHtml(message);
+
+    		const plainText =
+        		`${nameText} さん\n` +
+        		`${accountText}\n\n` +
+        		`${nameText}${message}`;
+
+    		const htmlText = `
+<div>
+	<strong style="font-size: 1.3em;">
+       		${escapedName} さん
+       	</strong>
+       	<br>
+       	<i>${escapedAccount}</i>
+       	<p>${escapedName}${escapedMessage}</p>
+</div>
+`;
+
+    		await this.emailService.sendEmail(
+        		mailAddr,
+        		title,
+        		htmlText,
+        		plainText,
+    		);
+	}
+
+	private escapeHtml(value: string): string {
+    		const chars: Record<string, string> = {
+        		'&': '&amp;',
+        		'<': '&lt;',
+        		'>': '&gt;',
+        		'"': '&quot;',
+        		"'": '&#39;',
+    		};
+
+    		return value.replace(/[&<>"']/g, char => chars[char]);
+	}
 
 	@bindThis
 	public async flushAllNotifications(userId: MiUser['id']) {
@@ -287,6 +359,80 @@ export class NotificationService implements OnApplicationShutdown {
 	@bindThis
 	public dispose(): void {
 		this.#shutdownController.abort();
+	}
+
+	private toXListId(id: string): string {
+		const { date, additional } = this.idService.parseFull(id);
+		// Redis Stream sequenceはunit64制約があるため、収まらない場合は下位64bitを取る
+		return date.toString() + '-' + BigInt.asUintN(64, additional).toString();
+	}
+
+	@bindThis
+	public async getNotifications(
+		userId: MiUser['id'],
+		{
+			sinceId,
+			untilId,
+			limit = 20,
+			includeTypes,
+			excludeTypes,
+		}: {
+			sinceId?: string,
+			untilId?: string,
+			limit?: number,
+			// any extra types are allowed, those are no-op
+			includeTypes?: (MiNotification['type'] | string)[],
+			excludeTypes?: (MiNotification['type'] | string)[],
+		},
+	): Promise<MiNotification[]> {
+		let sinceTime = sinceId ? this.toXListId(sinceId) : null;
+		let untilTime = untilId ? this.toXListId(untilId) : null;
+
+		let notifications: MiNotification[];
+		for (; ;) {
+			let notificationsRes: [id: string, fields: string[]][];
+
+			// sinceidのみの場合は古い順、そうでない場合は新しい順。 QueryService.makePaginationQueryも参照
+			if (sinceTime && !untilTime) {
+				notificationsRes = await this.redisClient.xrange(
+					`notificationTimeline:${userId}`,
+					'(' + sinceTime,
+					'+',
+					'COUNT', limit);
+			} else {
+				notificationsRes = await this.redisClient.xrevrange(
+					`notificationTimeline:${userId}`,
+					untilTime ? '(' + untilTime : '+',
+					sinceTime ? '(' + sinceTime : '-',
+					'COUNT', limit);
+			}
+
+			if (notificationsRes.length === 0) {
+				return [];
+			}
+
+			notifications = notificationsRes.map(x => JSON.parse(x[1][1])) as MiNotification[];
+
+			if (includeTypes && includeTypes.length > 0) {
+				notifications = notifications.filter(notification => includeTypes.includes(notification.type));
+			} else if (excludeTypes && excludeTypes.length > 0) {
+				notifications = notifications.filter(notification => !excludeTypes.includes(notification.type));
+			}
+
+			if (notifications.length !== 0) {
+				// 通知が１件以上ある場合は返す
+				break;
+			}
+
+			// フィルタしたことで通知が0件になった場合、次のページを取得する
+			if (sinceId && !untilId) {
+				sinceTime = notificationsRes[notificationsRes.length - 1][0];
+			} else {
+				untilTime = notificationsRes[notificationsRes.length - 1][0];
+			}
+		}
+
+		return notifications;
 	}
 
 	@bindThis

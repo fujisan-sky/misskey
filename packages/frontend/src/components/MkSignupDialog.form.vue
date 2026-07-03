@@ -8,9 +8,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div :class="$style.banner">
 		<i class="ti ti-user-edit"></i>
 	</div>
-	<MkSpacer :marginMin="20" :marginMax="32">
+	<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 32px;">
 		<form class="_gaps_m" autocomplete="new-password" @submit.prevent="onSubmit">
-			<MkInput v-if="instance.disableRegistration" v-model="invitationCode" type="text" :spellcheck="false" required>
+			<MkInput v-if="instance.disableRegistration" v-model="invitationCode" type="text" :spellcheck="false" required data-cy-signup-invitation-code>
 				<template #label>{{ i18n.ts.invitationCode }}</template>
 				<template #prefix><i class="ti ti-key"></i></template>
 			</MkInput>
@@ -66,7 +66,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 			<MkCaptcha v-if="instance.enableMcaptcha" ref="mcaptcha" v-model="mCaptchaResponse" :class="$style.captcha" provider="mcaptcha" :sitekey="instance.mcaptchaSiteKey" :instanceUrl="instance.mcaptchaInstanceUrl"/>
 			<MkCaptcha v-if="instance.enableRecaptcha" ref="recaptcha" v-model="reCaptchaResponse" :class="$style.captcha" provider="recaptcha" :sitekey="instance.recaptchaSiteKey"/>
 			<MkCaptcha v-if="instance.enableTurnstile" ref="turnstile" v-model="turnstileResponse" :class="$style.captcha" provider="turnstile" :sitekey="instance.turnstileSiteKey"/>
-			<MkCaptcha v-if="instance.enableTestcaptcha" ref="testcaptcha" v-model="testcaptchaResponse" :class="$style.captcha" provider="testcaptcha"/>
+			<MkCaptcha v-if="instance.enableTestcaptcha" ref="testcaptcha" v-model="testcaptchaResponse" :class="$style.captcha" provider="testcaptcha" :sitekey="null"/>
 			<MkButton type="submit" :disabled="shouldDisableSubmitting" large gradate rounded data-cy-signup-submit style="margin: 0 auto;">
 				<template v-if="submitting">
 					<MkLoading :em="true" :colored="false"/>
@@ -74,7 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<template v-else>{{ i18n.ts.start }}</template>
 			</MkButton>
 		</form>
-	</MkSpacer>
+	</div>
 </div>
 </template>
 
@@ -85,13 +85,13 @@ import * as Misskey from 'misskey-js';
 import * as config from '@@/js/config.js';
 import MkButton from './MkButton.vue';
 import MkInput from './MkInput.vue';
-import MkCaptcha from '@/components/MkCaptcha.vue';
 import type { Captcha } from '@/components/MkCaptcha.vue';
+import MkCaptcha from '@/components/MkCaptcha.vue';
 import * as os from '@/os.js';
-import { misskeyApi } from '@/scripts/misskey-api.js';
-import { login } from '@/account.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
 import { instance } from '@/instance.js';
 import { i18n } from '@/i18n.js';
+import { login } from '@/accounts.js';
 
 const props = withDefaults(defineProps<{
 	autoSet?: boolean;
@@ -138,13 +138,16 @@ const shouldDisableSubmitting = computed((): boolean => {
 		instance.enableTurnstile && !turnstileResponse.value ||
 		instance.enableTestcaptcha && !testcaptchaResponse.value ||
 		instance.emailRequiredForSignup && emailState.value !== 'ok' ||
+		instance.disableRegistration && invitationCode.value === '' ||
 		usernameState.value !== 'ok' ||
+		passwordStrength.value == 'low' ||
 		passwordRetypeState.value !== 'match';
 });
 
 function getPasswordStrength(source: string): number {
 	let strength = 0;
 	let power = 0.018;
+	let popular_words: Array<string> = ['fuji','misskey','neko','cat','sky','ocha','nasu','unko','pass','user','pasu','word','FUJI','Fuji','CLOUD','cloud','MISSKEY','Misskey','abcd','efgh','ABCD','EFGH','1234','0123','4567','123123','abab','0101','1212','xyz','2025','taka'];
 
 	// 英数字
 	if (/[a-zA-Z]/.test(source) && /[0-9]/.test(source)) {
@@ -161,7 +164,28 @@ function getPasswordStrength(source: string): number {
 		power += 0.02;
 	}
 
-	strength = power * source.length;
+	let  valid_length = 0.0;
+	let last_char = '';
+	for ( let cur_char of source ){
+		if( cur_char != last_char ){
+			valid_length += 1.34;
+		}else{
+			valid_length += 0.2;
+		}
+		last_char = cur_char;
+	}
+
+	if ( source.includes(username.value) ){
+		valid_length = valid_length - username.value.length + 1;
+	}
+
+	for ( let cur_word of popular_words ){
+		if ( source.includes(cur_word) ){
+			valid_length = valid_length - cur_word.length + 1;
+		}
+	}
+
+	strength = power * valid_length;
 
 	return Math.max(0, Math.min(1, strength));
 }
@@ -175,7 +199,7 @@ function onChangeUsername(): void {
 	{
 		const err =
 			!username.value.match(/^[a-zA-Z0-9_]+$/) ? 'invalid-format' :
-			username.value.length < 1 ? 'min-range' :
+			username.value.length < 4 ? 'min-range' :
 			username.value.length > 20 ? 'max-range' :
 			null;
 
@@ -267,7 +291,7 @@ async function onSubmit(): Promise<void> {
 		'testcaptcha-response': testcaptchaResponse.value,
 	};
 
-	const res = await fetch(`${config.apiUrl}/signup`, {
+	const res = await window.fetch(`${config.apiUrl}/signup`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',

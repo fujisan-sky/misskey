@@ -58,7 +58,7 @@ import { toUnicode } from 'punycode.js';
 
 import { query, extractDomain } from '@@/js/url.js';
 import { host as configHost } from '@@/js/config.js';
-import type { OpenOnRemoteOptions } from '@/scripts/please-login.js';
+import type { OpenOnRemoteOptions } from '@/utility/please-login.js';
 import { i18n } from '@/i18n.js';
 import * as os from '@/os.js';
 
@@ -69,19 +69,21 @@ import MkInfo from '@/components/MkInfo.vue';
 const props = withDefaults(defineProps<{
 	message?: string,
 	openOnRemote?: OpenOnRemoteOptions,
+	initialUsername?: string;
 }>(), {
 	message: '',
 	openOnRemote: undefined,
+	initialUsername: undefined,
 });
 
 const emit = defineEmits<{
 	(ev: 'usernameSubmitted', v: string): void;
-	(ev: 'passkeyClick', v: MouseEvent): void;
+	(ev: 'passkeyClick', v: PointerEvent): void;
 }>();
 
 const host = toUnicode(configHost);
 
-const username = ref('');
+const username = ref(props.initialUsername ?? '');
 
 //#region Open on remote
 function openRemote(options: OpenOnRemoteOptions, targetHost?: string): void {
