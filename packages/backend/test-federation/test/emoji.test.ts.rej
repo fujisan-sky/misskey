@@ -1,7 +1,0 @@
---- packages/backend/test-federation/test/emoji.test.ts	2026-07-02 10:19:31.563760500 +0900
-+++ packages/backend/test-federation/test/emoji.test.ts	2026-07-02 09:56:54.933926762 +0900
-@@ -1,4 +1,3 @@
--import { describe, test, beforeAll } from 'vitest';
- import assert, { deepStrictEqual, strictEqual } from 'assert';
- import * as Misskey from 'misskey-js';
- import { addCustomEmoji, createAccount, type LoginUser, resolveRemoteUser, sleep } from './utils.js';

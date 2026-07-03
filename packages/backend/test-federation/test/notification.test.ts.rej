@@ -1,7 +1,0 @@
---- packages/backend/test-federation/test/notification.test.ts	2026-07-02 10:19:31.563760500 +0900
-+++ packages/backend/test-federation/test/notification.test.ts	2026-07-02 09:56:54.933926762 +0900
-@@ -1,4 +1,3 @@
--import { describe, test, beforeAll, afterAll } from 'vitest';
- import * as Misskey from 'misskey-js';
- import { assertNotificationReceived, createAccount, type LoginUser, resolveRemoteNote, resolveRemoteUser, sleep } from './utils.js';
- 
