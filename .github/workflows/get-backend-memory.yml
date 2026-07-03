@@ -1,5 +1,5 @@
-# this name is used in report-api-diff.yml so be careful when change name
-name: Get api.json from Misskey
+# this name is used in report-backend-memory.yml so be careful when change name
+name: Get backend memory usage
 
 on:
   pull_request:
@@ -8,21 +8,36 @@ on:
       - develop
     paths:
       - packages/backend/**
-      - .github/workflows/get-api-diff.yml
+      - packages/misskey-js/**
+      - .github/workflows/get-backend-memory.yml
+
 jobs:
-  get-from-misskey:
+  get-memory-usage:
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     strategy:
       matrix:
-        api-json-name: [api-base.json, api-head.json]
+        memory-json-name: [memory-base.json, memory-head.json]
         include:
-          - api-json-name: api-base.json
+          - memory-json-name: memory-base.json
             ref: ${{ github.base_ref }}
-          - api-json-name: api-head.json
+          - memory-json-name: memory-head.json
             ref: refs/pull/${{ github.event.number }}/merge
+
+    services:
+      postgres:
+        image: postgres:18
+        ports:
+          - 54312:5432
+        env:
+          POSTGRES_DB: test-misskey
+          POSTGRES_HOST_AUTH_METHOD: trust
+      redis:
+        image: redis:8
+        ports:
+          - 56312:6379
 
     steps:
     - uses: actions/checkout@v6.0.2
@@ -40,21 +55,26 @@ jobs:
     - name: Check pnpm-lock.yaml
       run: git diff --exit-code pnpm-lock.yaml
     - name: Copy Configure
-      run: cp .config/example.yml .config/default.yml
+      run: cp .github/misskey/test.yml .config/default.yml
+    - name: Compile Configure
+      run: pnpm compile-config
     - name: Build
       run: pnpm build
-    - name: Generate API JSON
-      run: pnpm --filter backend generate-api-json
-    - name: Copy API.json
-      run: cp packages/backend/built/api.json ${{ matrix.api-json-name }}
+    - name: Run migrations
+      run: pnpm --filter backend migrate
+    - name: Measure memory usage
+      run: |
+        # Start the server and measure memory usage
+        node packages/backend/scripts/measure-memory.mjs > ${{ matrix.memory-json-name }}
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
       with:
-        name: api-artifact-${{ matrix.api-json-name }}
-        path: ${{ matrix.api-json-name }}
+        name: memory-artifact-${{ matrix.memory-json-name }}
+        path: ${{ matrix.memory-json-name }}
 
   save-pr-number:
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Save PR number
         env:
@@ -63,5 +83,5 @@ jobs:
           echo "$PR_NUMBER" > ./pr_number
       - uses: actions/upload-artifact@v7
         with:
-          name: api-artifact-pr-number
+          name: memory-artifact-pr-number
           path: pr_number
