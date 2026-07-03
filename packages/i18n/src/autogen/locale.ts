@@ -313,7 +313,7 @@ export interface Locale extends ILocale {
      */
     "mentions": string;
     /**
-     * 指名
+     * ダイレクト投稿
      */
     "directNotes": string;
     /**
@@ -2053,7 +2053,7 @@ export interface Locale extends ILocale {
      */
     "tooLong": string;
     /**
-     * 弱いパスワード
+     * 簡単すぎるパスワードです(英字と数字を混ぜるなどにより,もっと複雑で長い物にしてください)
      */
     "weakPassword": string;
     /**
@@ -8234,6 +8234,26 @@ export interface Locale extends ILocale {
              */
             "avatarDecorationLimit": string;
             /**
+             * パブリック投稿の最低時間間隔
+             */
+            "publicMinimumInterval": string;
+            /**
+             * メンションの最低時間間隔
+             */
+            "mentionMinimumInterval": string;
+            /**
+             * カスタム絵文字の作成権限（作成のみ）
+             */
+            "canCreateEmoji": string;
+            /**
+             * メッセージをフィルターする
+             */
+            "messageFilter": string;
+            /**
+             * 自分専用のアバターデコレーション作成権限
+             */
+            "canCreateOwnDeco": string;
+            /**
              * アンテナのインポートを許可
              */
             "canImportAntennas": string;
@@ -8303,6 +8323,10 @@ export interface Locale extends ILocale {
              * botユーザー
              */
             "isBot": string;
+            /**
+             * あんぜんモードユーザー
+             */
+            "isSafe": string;
             /**
              * サスペンド済みユーザー
              */
@@ -8401,7 +8425,7 @@ export interface Locale extends ILocale {
          */
         "format": string;
         /**
-         * 恒久的に使用可能なアドレスではありません
+         * 恒久的に使用可能なアドレスではありません/捨てアドの利用は禁止しています
          */
         "disposable": string;
         /**
@@ -10221,7 +10245,7 @@ export interface Locale extends ILocale {
          */
         "followersDescription": string;
         /**
-         * 指名
+         * ダイレクト
          */
         "specified": string;
         /**
@@ -11214,7 +11238,7 @@ export interface Locale extends ILocale {
              */
             "mentions": string;
             /**
-             * 指名
+             * ダイレクト
              */
             "direct": string;
             /**
