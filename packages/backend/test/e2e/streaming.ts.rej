@@ -1,0 +1,19 @@
+--- packages/backend/test/e2e/streaming.ts	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test/e2e/streaming.ts	2026-07-02 09:56:54.935926759 +0900
+@@ -6,7 +6,6 @@
+ process.env.NODE_ENV = 'test';
+ 
+ import * as assert from 'assert';
+-import { describe, beforeAll, test } from 'vitest';
+ import { WebSocket } from 'ws';
+ import { MiFollowing } from '@/models/Following.js';
+ import { api, createAppToken, initTestDb, port, post, signup, waitFire } from '../utils.js';
+@@ -173,7 +172,7 @@
+ 				const fired = await waitFire(
+ 					ayano, 'homeTimeline',		// ayano:home
+ 					() => api('notes/create', { text: 'bar', visibility: 'followers', replyId: note.id }, kyoko),	// kyoko posts
+-					msg => msg.type === 'note' && msg.body.userId === kyoko.id && msg.body.replyId === note.id,
++					msg => msg.type === 'note' && msg.body.userId === kyoko.id && msg.body.reply.text === 'foo',
+ 				);
+ 
+ 				assert.strictEqual(fired, true);

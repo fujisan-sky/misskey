@@ -1,0 +1,44 @@
+--- packages/frontend/.storybook/fakes.ts	2026-07-02 10:19:31.572760468 +0900
++++ packages/frontend/.storybook/fakes.ts	2026-07-02 09:56:54.946926737 +0900
+@@ -33,7 +33,6 @@
+ 		description: null,
+ 		userId: null,
+ 		bannerUrl,
+-		bannerId: null,
+ 		pinnedNoteIds: [],
+ 		color: '#000',
+ 		isArchived: false,
+@@ -128,7 +127,7 @@
+ 	}
+ }
+ 
+-export function file(isSensitive = false): entities.DriveFile {
++export function file(isSensitive = false) {
+ 	return {
+ 		id: 'somefileid',
+ 		createdAt: '2016-12-28T22:49:51.000Z',
+@@ -208,7 +207,6 @@
+ 		isSuspended: false,
+ 		suspensionState: 'none',
+ 		isBlocked: false,
+-		isMediaSilenced: false,
+ 		softwareName: 'misskey',
+ 		softwareVersion: '2024.5.0',
+ 		openRegistrations: false,
+@@ -313,8 +311,6 @@
+ 		alsoKnownAs: null,
+ 		notify: 'none',
+ 		memo: null,
+-		canChat: true,
+-		chatScope: 'everyone',
+ 	};
+ }
+ 
+@@ -382,7 +378,6 @@
+ 		asBadge: params.asBadge ?? true,
+ 		canEditMembersByModerator: params.canEditMembersByModerator ?? false,
+ 		usersCount: params.usersCount ?? 10,
+-		preserveAssignmentOnMoveAccount: false,
+ 		condFormula: {
+ 			id: '',
+ 			type: 'or',

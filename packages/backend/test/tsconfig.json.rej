@@ -1,0 +1,30 @@
+--- packages/backend/test/tsconfig.json	2026-07-02 10:19:31.566760490 +0900
++++ packages/backend/test/tsconfig.json	2026-07-02 09:56:54.938926753 +0900
+@@ -3,7 +3,7 @@
+ 		"allowJs": true,
+ 		"noEmitOnError": false,
+ 		"noImplicitAny": true,
+-		"noImplicitReturns": false,
++		"noImplicitReturns": true,
+ 		"noUnusedParameters": false,
+ 		"noUnusedLocals": false,
+ 		"noFallthroughCasesInSwitch": true,
+@@ -23,8 +23,7 @@
+ 		"emitDecoratorMetadata": true,
+ 		"resolveJsonModule": true,
+ 		"isolatedModules": true,
+-		"jsx": "react-jsx",
+-		"jsxImportSource": "@kitajs/html",
++		"baseUrl": "./",
+ 		"paths": {
+ 			"@/*": ["../src/*"]
+ 		},
+@@ -35,7 +34,7 @@
+ 		"lib": [
+ 			"esnext"
+ 		],
+-		"types": ["node"]
++		"types": ["jest", "node"]
+ 	},
+ 	"compileOnSave": false,
+ 	"include": [

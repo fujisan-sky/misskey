@@ -1,0 +1,11 @@
+--- packages/frontend-embed/src/components/EmMention.vue	2026-07-02 10:19:31.569760479 +0900
++++ packages/frontend-embed/src/components/EmMention.vue	2026-07-02 09:56:54.942926744 +0900
+@@ -27,7 +27,7 @@
+ 
+ const url = `/${canonical}`;
+ 
+-const bg = tinycolor(getComputedStyle(window.document.documentElement).getPropertyValue('--MI_THEME-mention'));
++const bg = tinycolor(getComputedStyle(document.documentElement).getPropertyValue('--MI_THEME-mention'));
+ bg.setAlpha(0.1);
+ const bgCss = bg.toRgbString();
+ </script>

@@ -1,0 +1,19 @@
+--- packages/misskey-reversi/tsconfig.json	2026-07-02 10:19:31.618760306 +0900
++++ packages/misskey-reversi/tsconfig.json	2026-07-02 09:56:55.029926572 +0900
+@@ -7,7 +7,7 @@
+ 		"declaration": true,
+ 		"declarationMap": true,
+ 		"sourceMap": false,
+-		"outDir": "./built",
++		"outDir": "./built/",
+ 		"removeComments": true,
+ 		"strict": true,
+ 		"strictFunctionTypes": true,
+@@ -15,7 +15,6 @@
+ 		"experimentalDecorators": true,
+ 		"noImplicitReturns": true,
+ 		"esModuleInterop": true,
+-		"rootDir": "./src",
+ 		"typeRoots": [
+ 			"./node_modules/@types"
+ 		],

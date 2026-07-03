@@ -1,0 +1,9 @@
+--- packages/misskey-js/test/streaming.ts	2026-07-02 10:19:31.618760306 +0900
++++ packages/misskey-js/test/streaming.ts	2026-07-02 09:56:55.029926572 +0900
+@@ -1,5 +1,4 @@
+-import { describe, test, expect } from 'vitest';
+-import WS from 'vitest-websocket-mock';
++import WS from 'jest-websocket-mock';
+ import Stream from '../src/streaming.js';
+ 
+ describe('Streaming', () => {

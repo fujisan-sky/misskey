@@ -1,0 +1,11 @@
+--- packages/frontend/.storybook/preload-locale.ts	2026-07-02 10:19:31.573760465 +0900
++++ packages/frontend/.storybook/preload-locale.ts	2026-07-02 09:56:54.946926737 +0900
+@@ -4,7 +4,7 @@
+  */
+ 
+ import { writeFile } from 'node:fs/promises';
+-import locales from 'i18n';
++import locales from '../../../locales/index.js';
+ 
+ await writeFile(
+ 	new URL('locale.ts', import.meta.url),

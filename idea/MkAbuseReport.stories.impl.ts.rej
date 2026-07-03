@@ -1,0 +1,13 @@
+--- idea/MkAbuseReport.stories.impl.ts	2026-07-02 10:19:31.500760723 +0900
++++ idea/MkAbuseReport.stories.impl.ts	2026-07-02 09:56:54.731927164 +0900
+@@ -4,8 +4,8 @@
+  */
+ 
+ /* eslint-disable @typescript-eslint/explicit-function-return-type */
+-import { action } from 'storybook/actions';
+-import type { StoryObj } from '@storybook/vue3';
++import { action } from '@storybook/addon-actions';
++import { StoryObj } from '@storybook/vue3';
+ import { HttpResponse, http } from 'msw';
+ import { abuseUserReport } from '../packages/frontend/.storybook/fakes.js';
+ import { commonHandlers } from '../packages/frontend/.storybook/mocks.js';

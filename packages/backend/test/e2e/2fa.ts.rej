@@ -1,0 +1,69 @@
+--- packages/backend/test/e2e/2fa.ts	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test/e2e/2fa.ts	2026-07-02 09:56:54.934926761 +0900
+@@ -10,7 +10,7 @@
+ import cbor from 'cbor';
+ import * as OTPAuth from 'otpauth';
+ import { loadConfig } from '@/config.js';
+-import { api, signup, sendEnvUpdateRequest } from '../utils.js';
++import { api, signup } from '../utils.js';
+ import type {
+ 	AuthenticationResponseJSON,
+ 	AuthenticatorAssertionResponseJSON,
+@@ -18,9 +18,8 @@
+ 	PublicKeyCredentialCreationOptionsJSON,
+ 	PublicKeyCredentialRequestOptionsJSON,
+ 	RegistrationResponseJSON,
+-} from '@simplewebauthn/server';
++} from '@simplewebauthn/types';
+ import type * as misskey from 'misskey-js';
+-import { describe, beforeAll, beforeEach, test } from 'vitest';
+ 
+ describe('2要素認証', () => {
+ 	let alice: misskey.entities.SignupResponse;
+@@ -181,10 +180,6 @@
+ 		alice = await signup({ username, password });
+ 	}, 1000 * 60 * 2);
+ 
+-	beforeEach(async () => {
+-		await sendEnvUpdateRequest({ key: 'MISSKEY_TEST_CHECK_DUPLICATED_TOTP', value: '' });
+-	});
+-
+ 	test('が設定でき、OTPでログインできる。', async () => {
+ 		const registerResponse = await api('i/2fa/register', {
+ 			password,
+@@ -487,35 +482,6 @@
+ 
+ 		// 後片付け
+ 		await api('i/2fa/unregister', {
+-			password,
+-			token: otpToken(registerResponse.body.secret),
+-		}, alice);
+-	});
+-
+-	test('のTOTPトークンは一度使うと同じトークンは再利用できない。', async () => {
+-		await sendEnvUpdateRequest({ key: 'MISSKEY_TEST_CHECK_DUPLICATED_TOTP', value: '1' });
+-
+-		const registerResponse = await api('i/2fa/register', {
+-			password,
+-		}, alice);
+-		assert.strictEqual(registerResponse.status, 200);
+-
+-		const sharedOtpToken = otpToken(registerResponse.body.secret);
+-		const doneResponse = await api('i/2fa/done', {
+-			token: sharedOtpToken,
+-		}, alice);
+-		assert.strictEqual(doneResponse.status, 200);
+-
+-		const signinResponse = await api('signin-flow', {
+-			...signinParam(),
+-			token: sharedOtpToken,
+-		});
+-		assert.strictEqual(signinResponse.status, 403);
+-
+-		await sendEnvUpdateRequest({ key: 'MISSKEY_TEST_CHECK_DUPLICATED_TOTP', value: '' });
+-
+-		// 後片付け
+-		await api('i/2fa/unregister', {
+ 			password,
+ 			token: otpToken(registerResponse.body.secret),
+ 		}, alice);

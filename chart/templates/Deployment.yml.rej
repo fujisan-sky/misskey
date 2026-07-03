@@ -1,0 +1,11 @@
+--- chart/templates/Deployment.yml	2026-07-02 10:19:31.500760723 +0900
++++ chart/templates/Deployment.yml	2026-07-02 09:56:54.730927166 +0900
+@@ -27,7 +27,7 @@
+           ports:
+             - containerPort: 3000
+         - name: postgres
+-          image: postgres:18-alpine
++          image: postgres:15-alpine
+           env:
+             - name: POSTGRES_USER
+               value: "example-misskey-user"

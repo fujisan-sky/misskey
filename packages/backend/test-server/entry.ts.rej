@@ -1,0 +1,33 @@
+--- packages/backend/test-server/entry.ts	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test-server/entry.ts	2026-07-02 09:56:54.934926761 +0900
+@@ -19,7 +19,7 @@
+ /**
+  * テスト用のサーバインスタンスを起動する
+  */
+-export async function setup() {
++async function launch() {
+ 	await killTestServer();
+ 
+ 	console.log('starting application...');
+@@ -39,15 +39,6 @@
+ }
+ 
+ /**
+- * テスト用のサーバインスタンスを停止する
+- */
+-export async function teardown() {
+-	await serverService.dispose();
+-	await app.close();
+-	await killTestServer();
+-}
+-
+-/**
+  * 既に重複したポートで待ち受けしているサーバがある場合はkillする
+  */
+ async function killTestServer() {
+@@ -103,3 +94,5 @@
+ 
+ 	await fastify.listen({ port: port, host: 'localhost' });
+ }
++
++export default launch;

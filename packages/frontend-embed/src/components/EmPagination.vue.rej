@@ -1,0 +1,48 @@
+--- packages/frontend-embed/src/components/EmPagination.vue	2026-07-02 10:19:31.570760475 +0900
++++ packages/frontend-embed/src/components/EmPagination.vue	2026-07-02 09:56:54.942926744 +0900
+@@ -134,7 +134,7 @@
+ const empty = computed(() => items.value.size === 0);
+ const error = ref(false);
+ 
+-const scrollableElement = computed(() => rootEl.value ? getScrollContainer(rootEl.value) : window.document.body);
++const scrollableElement = computed(() => rootEl.value ? getScrollContainer(rootEl.value) : document.body);
+ 
+ const visibility = useDocumentVisibility();
+ 
+@@ -353,7 +353,7 @@
+ 		BACKGROUND_PAUSE_WAIT_SEC * 1000);
+ 	} else { // 'visible'
+ 		if (timerForSetPause) {
+-			window.clearTimeout(timerForSetPause);
++			clearTimeout(timerForSetPause);
+ 			timerForSetPause = null;
+ 		} else {
+ 			isPausingUpdate = false;
+@@ -447,11 +447,11 @@
+ 	init().then(() => {
+ 		if (props.pagination.reversed) {
+ 			nextTick(() => {
+-				window.setTimeout(toBottom, 800);
++				setTimeout(toBottom, 800);
+ 
+ 				// scrollToBottomでmoreFetchingボタンが画面外まで出るまで
+ 				// more = trueを遅らせる
+-				window.setTimeout(() => {
++				setTimeout(() => {
+ 					moreFetching.value = false;
+ 				}, 2000);
+ 			});
+@@ -461,11 +461,11 @@
+ 
+ onBeforeUnmount(() => {
+ 	if (timerForSetPause) {
+-		window.clearTimeout(timerForSetPause);
++		clearTimeout(timerForSetPause);
+ 		timerForSetPause = null;
+ 	}
+ 	if (preventAppearFetchMoreTimer.value) {
+-		window.clearTimeout(preventAppearFetchMoreTimer.value);
++		clearTimeout(preventAppearFetchMoreTimer.value);
+ 		preventAppearFetchMoreTimer.value = null;
+ 	}
+ 	scrollObserver.value?.disconnect();

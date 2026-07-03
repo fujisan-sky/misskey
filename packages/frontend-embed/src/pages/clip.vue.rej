@@ -1,0 +1,11 @@
+--- packages/frontend-embed/src/pages/clip.vue	2026-07-02 10:19:31.570760475 +0900
++++ packages/frontend-embed/src/pages/clip.vue	2026-07-02 09:56:54.943926743 +0900
+@@ -84,7 +84,7 @@
+ 
+ const notesEl = useTemplateRef('notesEl');
+ 
+-function top(ev: PointerEvent) {
++function top(ev: MouseEvent) {
+ 	const target = ev.target as HTMLElement | null;
+ 	if (target && isLink(target)) return;
+ 

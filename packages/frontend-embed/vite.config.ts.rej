@@ -1,0 +1,116 @@
+--- packages/frontend-embed/vite.config.ts	2026-07-02 10:19:31.571760472 +0900
++++ packages/frontend-embed/vite.config.ts	2026-07-02 09:56:54.944926741 +0900
+@@ -1,17 +1,15 @@
+ import path from 'path';
+ import pluginVue from '@vitejs/plugin-vue';
+-import { defineConfig, type UserConfig } from 'vite';
++import { type UserConfig, defineConfig } from 'vite';
+ import * as yaml from 'js-yaml';
+ import { promises as fsp } from 'fs';
+ 
+-import locales from 'i18n';
++import locales from '../../locales/index.js';
+ import meta from '../../package.json';
+ import packageInfo from './package.json' with { type: 'json' };
+-import pluginJson5 from './lib/vite-plugin-json5.js';
+-import { pluginRemoveUnrefI18n } from '../frontend-builder/rollup-plugin-remove-unref-i18n';
+-import { Features } from 'lightningcss';
++import pluginJson5 from './vite.json5.js';
+ 
+-const url = process.env.NODE_ENV === 'development' ? (yaml.load(await fsp.readFile('../../.config/default.yml', 'utf-8')) as any).url : null;
++const url = process.env.NODE_ENV === 'development' ? yaml.load(await fsp.readFile('../../.config/default.yml', 'utf-8')).url : null;
+ const host = url ? (new URL(url)).hostname : undefined;
+ 
+ const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.json5', '.svg', '.sass', '.scss', '.css', '.vue'];
+@@ -65,8 +63,6 @@
+ }
+ 
+ export function getConfig(): UserConfig {
+-	const localesHash = toBase62(hash(JSON.stringify(locales)));
+-
+ 	return {
+ 		base: '/embed_vite/',
+ 
+@@ -89,7 +85,6 @@
+ 
+ 		plugins: [
+ 			pluginVue(),
+-			pluginRemoveUnrefI18n(),
+ 			pluginJson5(),
+ 		],
+ 
+@@ -99,15 +94,11 @@
+ 				'@/': __dirname + '/src/',
+ 				'@@/': __dirname + '/../frontend-shared/',
+ 				'/client-assets/': __dirname + '/assets/',
+-				'/static-assets/': __dirname + '/../backend/assets/',
+-				'/fluent-emoji/': '@misskey-dev/emoji-assets/fluent-emoji/',
++				'/static-assets/': __dirname + '/../backend/assets/'
+ 			},
+ 		},
+ 
+ 		css: {
+-			lightningcss: {
+-				exclude: Features.LightDark,
+-			},
+ 			modules: {
+ 				generateScopedName(name, filename, _css): string {
+ 					const id = (path.relative(__dirname, filename.split('?')[0]) + '-' + name).replace(/[\\\/\.\?&=]/g, '-').replace(/(src-|vue-)/g, '');
+@@ -118,6 +109,11 @@
+ 					}
+ 				},
+ 			},
++			preprocessorOptions: {
++				scss: {
++					api: 'modern-compiler',
++				},
++			},
+ 		},
+ 
+ 		define: {
+@@ -132,36 +128,22 @@
+ 
+ 		build: {
+ 			target: [
+-				'chrome130',
+-				'firefox132',
+-				'safari18.2',
++				'chrome116',
++				'firefox116',
++				'safari16',
+ 			],
+ 			manifest: 'manifest.json',
+-			rolldownOptions: {
+-				experimental: {
+-					nativeMagicString: true,
+-				},
++			rollupOptions: {
+ 				input: {
+-					i18n: './src/i18n.ts',
+-					entry: './src/boot.ts',
++					app: './src/boot.ts',
+ 				},
+ 				external: externalPackages.map(p => p.match),
+-				preserveEntrySignatures: 'allow-extension',
+ 				output: {
+-					codeSplitting: {
+-						groups: [{
+-							name: 'vue',
+-							test: /node_modules[\\/]vue/,
+-						}, {
+-							// split i18n related module to distinct module
+-							name: 'i18n',
+-							includeDependenciesRecursively: false,
+-							test: /i18n\.ts|locale\.ts/,
+-						}],
++					manualChunks: {
++						vue: ['vue'],
+ 					},
+-					entryFileNames: `scripts/${localesHash}-[hash:8].js`,
+-					chunkFileNames: `scripts/${localesHash}-[hash:8].js`,
+-					assetFileNames: `assets/${localesHash}-[hash:8][extname]`,
++					chunkFileNames: process.env.NODE_ENV === 'production' ? '[hash:8].js' : '[name]-[hash:8].js',
++					assetFileNames: process.env.NODE_ENV === 'production' ? '[hash:8][extname]' : '[name]-[hash:8][extname]',
+ 					paths(id) {
+ 						for (const p of externalPackages) {
+ 							if (p.match.test(id)) {

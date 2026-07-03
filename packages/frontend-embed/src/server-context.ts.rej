@@ -1,0 +1,11 @@
+--- packages/frontend-embed/src/server-context.ts	2026-07-02 10:19:31.570760475 +0900
++++ packages/frontend-embed/src/server-context.ts	2026-07-02 09:56:54.943926743 +0900
+@@ -4,7 +4,7 @@
+  */
+ import * as Misskey from 'misskey-js';
+ 
+-const providedContextEl = window.document.getElementById('misskey_embedCtx');
++const providedContextEl = document.getElementById('misskey_embedCtx');
+ 
+ export type ServerContext = {
+ 	clip?: Misskey.entities.Clip;

@@ -1,0 +1,11 @@
+--- packages/backend/test/unit/CustomEmojiService.ts	2026-07-02 10:19:31.566760490 +0900
++++ packages/backend/test/unit/CustomEmojiService.ts	2026-07-02 09:56:54.939926751 +0900
+@@ -3,7 +3,7 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { afterEach, beforeAll, describe, test, expect } from 'vitest';
++import { afterEach, beforeAll, describe, test } from '@jest/globals';
+ import { Test, TestingModule } from '@nestjs/testing';
+ import { CustomEmojiService } from '@/core/CustomEmojiService.js';
+ import { EmojiEntityService } from '@/core/entities/EmojiEntityService.js';

@@ -1,0 +1,10 @@
+--- packages/backend/test/e2e/note.ts	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test/e2e/note.ts	2026-07-02 09:56:54.935926759 +0900
+@@ -8,7 +8,6 @@
+ process.env.NODE_ENV = 'test';
+ 
+ import * as assert from 'assert';
+-import { describe, beforeAll, afterAll, test } from 'vitest';
+ import { MiNote } from '@/models/Note.js';
+ import { MAX_NOTE_TEXT_LENGTH } from '@/const.js';
+ import { api, castAsError, initTestDb, post, role, signup, uploadFile, uploadUrl } from '../utils.js';

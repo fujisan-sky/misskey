@@ -1,0 +1,11 @@
+--- packages/frontend/test/note.test.ts	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/test/note.test.ts	2026-07-02 09:56:55.023926584 +0900
+@@ -29,7 +29,7 @@
+ 					comment: null,
+ 					properties: {},
+ 					...image,
+-				} as Misskey.entities.DriveFile,
++				} as DriveFile,
+ 			},
+ 			global: { directives, components },
+ 		});

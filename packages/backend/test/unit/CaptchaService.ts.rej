@@ -1,0 +1,59 @@
+--- packages/backend/test/unit/CaptchaService.ts	2026-07-02 10:19:31.566760490 +0900
++++ packages/backend/test/unit/CaptchaService.ts	2026-07-02 09:56:54.939926751 +0900
+@@ -3,8 +3,7 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from 'vitest';
+-import type { Mocked } from 'vitest';
++import { afterAll, beforeAll, beforeEach, describe, expect, jest } from '@jest/globals';
+ import { Test, TestingModule } from '@nestjs/testing';
+ import { Response } from 'node-fetch';
+ import {
+@@ -23,8 +22,8 @@
+ describe('CaptchaService', () => {
+ 	let app: TestingModule;
+ 	let service: CaptchaService;
+-	let httpRequestService: Mocked<HttpRequestService>;
+-	let metaService: Mocked<MetaService>;
++	let httpRequestService: jest.Mocked<HttpRequestService>;
++	let metaService: jest.Mocked<MetaService>;
+ 
+ 	beforeAll(async () => {
+ 		app = await Test.createTestingModule({
+@@ -35,12 +34,12 @@
+ 				CaptchaService,
+ 				LoggerService,
+ 				{
+-					provide: HttpRequestService, useFactory: () => ({ send: vi.fn() }),
++					provide: HttpRequestService, useFactory: () => ({ send: jest.fn() }),
+ 				},
+ 				{
+ 					provide: MetaService, useFactory: () => ({
+-						fetch: vi.fn(),
+-						update: vi.fn(),
++						fetch: jest.fn(),
++						update: jest.fn(),
+ 					}),
+ 				},
+ 			],
+@@ -49,8 +48,8 @@
+ 		app.enableShutdownHooks();
+ 
+ 		service = app.get(CaptchaService);
+-		httpRequestService = app.get(HttpRequestService) as Mocked<HttpRequestService>;
+-		metaService = app.get(MetaService) as Mocked<MetaService>;
++		httpRequestService = app.get(HttpRequestService) as jest.Mocked<HttpRequestService>;
++		metaService = app.get(MetaService) as jest.Mocked<MetaService>;
+ 	});
+ 
+ 	beforeEach(() => {
+@@ -447,7 +446,7 @@
+ 				if (!res.success) {
+ 					expect(res.error.code).toBe(code);
+ 				}
+-				expect(metaService.update).not.toHaveBeenCalled();
++				expect(metaService.update).not.toBeCalled();
+ 			}
+ 
+ 			describe('invalidParameters', () => {

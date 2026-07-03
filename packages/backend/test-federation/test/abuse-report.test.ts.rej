@@ -1,0 +1,7 @@
+--- packages/backend/test-federation/test/abuse-report.test.ts	2026-07-02 10:19:31.563760500 +0900
++++ packages/backend/test-federation/test/abuse-report.test.ts	2026-07-02 09:56:54.933926762 +0900
+@@ -1,4 +1,3 @@
+-import { describe, test, beforeAll } from 'vitest';
+ import { rejects, strictEqual } from 'node:assert';
+ import * as Misskey from 'misskey-js';
+ import { createAccount, createModerator, resolveRemoteUser, sleep, type LoginUser } from './utils.js';

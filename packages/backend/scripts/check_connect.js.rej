@@ -1,0 +1,48 @@
+--- packages/backend/scripts/check_connect.js	2026-07-02 10:19:31.528760624 +0900
++++ packages/backend/scripts/check_connect.js	2026-07-02 09:56:54.890926848 +0900
+@@ -16,22 +16,26 @@
+ }
+ 
+ async function connectToRedis(redisOptions) {
+-	let redis;
+-	try {
+-		redis = new Redis({
++	return await new Promise(async (resolve, reject) => {
++		const redis = new Redis({
+ 			...redisOptions,
+ 			lazyConnect: true,
+ 			reconnectOnError: false,
+ 			showFriendlyErrorStack: true,
+ 		});
++		redis.on('error', e => reject(e));
+ 
+-		await Promise.race([
+-			new Promise((_, reject) => redis.on('error', e => reject(e))),
+-			redis.connect(),
+-		]);
+-	} finally {
+-		redis.disconnect(false);
+-	}
++		try {
++			await redis.connect();
++			resolve();
++
++		} catch (e) {
++			reject(e);
++
++		} finally {
++			redis.disconnect(false);
++		}
++	});
+ }
+ 
+ // If not all of these are defined, the default one gets reused.
+@@ -46,7 +50,7 @@
+ 	]))
+ 	.map(connectToRedis)
+ 	.concat([
+-		connectToPostgres(),
++		connectToPostgres()
+ 	]);
+ 
+ await Promise.all(promises);

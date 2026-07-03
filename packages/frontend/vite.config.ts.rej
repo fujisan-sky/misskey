@@ -1,0 +1,199 @@
+--- packages/frontend/vite.config.ts	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/vite.config.ts	2026-07-02 09:56:55.023926584 +0900
+@@ -1,55 +1,24 @@
+ import path from 'path';
++import pluginReplace from '@rollup/plugin-replace';
+ import pluginVue from '@vitejs/plugin-vue';
+-import pluginGlsl from 'vite-plugin-glsl';
+-import { replacePlugin } from 'rolldown/plugins';
+-import { visualizer } from 'rollup-plugin-visualizer';
+-import type { PluginOption, UserConfig } from 'vite';
+ import { defineConfig } from 'vite';
++import type { UserConfig } from 'vite';
+ import * as yaml from 'js-yaml';
+ import { promises as fsp } from 'fs';
+ 
+-import locales from 'i18n';
++import locales from '../../locales/index.js';
+ import meta from '../../package.json';
+ import packageInfo from './package.json' with { type: 'json' };
+ import pluginUnwindCssModuleClassName from './lib/rollup-plugin-unwind-css-module-class-name.js';
+-import pluginJson5 from './lib/vite-plugin-json5.js';
+-import type { Options as SearchIndexOptions } from './lib/vite-plugin-create-search-index.js';
++import pluginJson5 from './vite.json5.js';
+ import pluginCreateSearchIndex from './lib/vite-plugin-create-search-index.js';
+-import pluginWatchLocales from './lib/vite-plugin-watch-locales.js';
+-import { pluginRemoveUnrefI18n } from '../frontend-builder/rollup-plugin-remove-unref-i18n.js';
+-import { Features } from 'lightningcss';
++import type { Options as SearchIndexOptions } from './lib/vite-plugin-create-search-index.js';
+ 
+-const url = process.env.NODE_ENV === 'development' ? (yaml.load(await fsp.readFile('../../.config/default.yml', 'utf-8')) as any).url : null;
++const url = process.env.NODE_ENV === 'development' ? yaml.load(await fsp.readFile('../../.config/default.yml', 'utf-8')).url : null;
+ const host = url ? (new URL(url)).hostname : undefined;
+ 
+ const extensions = ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.json', '.json5', '.svg', '.sass', '.scss', '.css', '.vue'];
+ 
+-function getBundleVisualizerPlugin(): PluginOption[] {
+-	if (process.env.FRONTEND_BUNDLE_VISUALIZER !== 'true') return [];
+-
+-	const template = process.env.FRONTEND_BUNDLE_VISUALIZER_TEMPLATE === 'markdown'
+-		? 'markdown'
+-		: process.env.FRONTEND_BUNDLE_VISUALIZER_TEMPLATE === 'raw-data'
+-			? 'raw-data'
+-			: 'treemap';
+-	const defaultFilename = template === 'markdown'
+-		? path.resolve(__dirname, '../../built/_frontend_bundle_visualizer_/report.md')
+-		: template === 'raw-data'
+-			? path.resolve(__dirname, '../../built/_frontend_bundle_visualizer_/stats.json')
+-			: path.resolve(__dirname, '../../built/_frontend_bundle_visualizer_/stats.html');
+-
+-	return [
+-		visualizer({
+-			filename: process.env.FRONTEND_BUNDLE_VISUALIZER_FILE ?? defaultFilename,
+-			title: 'Misskey frontend bundle visualizer',
+-			template,
+-			gzipSize: true,
+-			brotliSize: true,
+-			projectRoot: path.resolve(__dirname, '../..'),
+-		}) as PluginOption,
+-	];
+-}
+-
+ /**
+  * 検索インデックスの生成設定
+  */
+@@ -58,11 +27,6 @@
+ 	mainVirtualModule: 'search-index:settings',
+ 	modulesToHmrOnUpdate: ['src/pages/settings/index.vue'],
+ 	verbose: process.env.FRONTEND_SEARCH_INDEX_VERBOSE === 'true',
+-}, {
+-	targetFilePaths: ['src/pages/admin/*.vue'],
+-	mainVirtualModule: 'search-index:admin',
+-	modulesToHmrOnUpdate: ['src/pages/admin/index.vue'],
+-	verbose: process.env.FRONTEND_SEARCH_INDEX_VERBOSE === 'true',
+ }] satisfies SearchIndexOptions[];
+ 
+ /**
+@@ -114,8 +78,6 @@
+ }
+ 
+ export function getConfig(): UserConfig {
+-	const localesHash = toBase62(hash(JSON.stringify(locales)));
+-
+ 	return {
+ 		base: '/vite/',
+ 
+@@ -140,23 +102,20 @@
+ 		},
+ 
+ 		plugins: [
+-			pluginWatchLocales(),
+ 			...searchIndexes.map(options => pluginCreateSearchIndex(options)),
+ 			pluginVue(),
+-			pluginRemoveUnrefI18n(),
+ 			pluginUnwindCssModuleClassName(),
+ 			pluginJson5(),
+-			pluginGlsl({ minify: true }),
+ 			...process.env.NODE_ENV === 'production'
+ 				? [
+-					replacePlugin({
+-						'isChromatic()': JSON.stringify(false),
+-					}, {
++					pluginReplace({
+ 						preventAssignment: true,
++						values: {
++							'isChromatic()': JSON.stringify(false),
++						},
+ 					}),
+ 				]
+ 				: [],
+-			...getBundleVisualizerPlugin(),
+ 		],
+ 
+ 		resolve: {
+@@ -166,14 +125,12 @@
+ 				'@@/': __dirname + '/../frontend-shared/',
+ 				'/client-assets/': __dirname + '/assets/',
+ 				'/static-assets/': __dirname + '/../backend/assets/',
+-				'/fluent-emoji/': '@misskey-dev/emoji-assets/fluent-emoji/',
++				'/fluent-emojis/': __dirname + '/../../fluent-emojis/dist/',
++				'/fluent-emoji/': __dirname + '/../../fluent-emojis/dist/',
+ 			},
+ 		},
+ 
+ 		css: {
+-			lightningcss: {
+-				exclude: Features.LightDark,
+-			},
+ 			modules: {
+ 				generateScopedName(name, filename, _css): string {
+ 					const id = (path.relative(__dirname, filename.split('?')[0]) + '-' + name).replace(/[\\\/\.\?&=]/g, '-').replace(/(src-|vue-)/g, '');
+@@ -184,6 +141,11 @@
+ 					}
+ 				},
+ 			},
++			preprocessorOptions: {
++				scss: {
++					api: 'modern-compiler',
++				},
++			},
+ 		},
+ 
+ 		define: {
+@@ -192,45 +154,29 @@
+ 			_ENV_: JSON.stringify(process.env.NODE_ENV),
+ 			_DEV_: process.env.NODE_ENV !== 'production',
+ 			_PERF_PREFIX_: JSON.stringify('Misskey:'),
+-			__VUE_OPTIONS_API__: false,
++			__VUE_OPTIONS_API__: true,
+ 			__VUE_PROD_DEVTOOLS__: false,
+ 		},
+ 
+ 		build: {
+ 			target: [
+-				'chrome130',
+-				'firefox132',
+-				'safari18.2',
++				'chrome116',
++				'firefox116',
++				'safari16',
+ 			],
+ 			manifest: 'manifest.json',
+-			rolldownOptions: {
+-				experimental: {
+-					nativeMagicString: true,
+-				},
++			rollupOptions: {
+ 				input: {
+-					i18n: './src/i18n.ts',
+-					entry: './src/_boot_.ts',
++					app: './src/_boot_.ts',
+ 				},
+ 				external: externalPackages.map(p => p.match),
+-				preserveEntrySignatures: 'allow-extension',
+ 				output: {
+-					codeSplitting: {
+-						groups: [{
+-							name: 'vue',
+-							test: /node_modules[\\/]vue/,
+-						}, {
+-							name: 'photoswipe',
+-							test: /node_modules[\\/]photoswipe/,
+-						}, {
+-							// split i18n related module to distinct module
+-							name: 'i18n',
+-							includeDependenciesRecursively: false,
+-							test: /i18n\.ts|locale\.ts/,
+-						}],
++					manualChunks: {
++						vue: ['vue'],
++						photoswipe: ['photoswipe', 'photoswipe/lightbox', 'photoswipe/style.css'],
+ 					},
+-					entryFileNames: `scripts/${localesHash}-[hash:8].js`,
+-					chunkFileNames: `scripts/${localesHash}-[hash:8].js`,
+-					assetFileNames: `assets/${localesHash}-[hash:8][extname]`,
++					chunkFileNames: process.env.NODE_ENV === 'production' ? '[hash:8].js' : '[name]-[hash:8].js',
++					assetFileNames: process.env.NODE_ENV === 'production' ? '[hash:8][extname]' : '[name]-[hash:8][extname]',
+ 					paths(id) {
+ 						for (const p of externalPackages) {
+ 							if (p.match.test(id)) {

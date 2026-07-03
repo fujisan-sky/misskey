@@ -1,0 +1,19 @@
+--- cypress/e2e/basic.cy.ts	2026-07-02 10:19:31.500760723 +0900
++++ cypress/e2e/basic.cy.ts	2026-07-02 09:56:54.730927166 +0900
+@@ -35,6 +35,7 @@
+ 		cy.intercept('POST', '/api/admin/update-meta').as('update-meta');
+ 
+ 		cy.get('[data-cy-next]').click();
++		cy.get('[data-cy-next]').click();
+ 		cy.get('[data-cy-server-name] input').type('Testskey');
+ 		cy.get('[data-cy-server-setup-wizard-apply]').click();
+ 
+@@ -78,8 +79,6 @@
+ 		cy.get('[data-cy-signup-password] input').type('alice1234');
+ 		cy.get('[data-cy-signup-submit]').should('be.disabled');
+ 		cy.get('[data-cy-signup-password-retype] input').type('alice1234');
+-		cy.get('[data-cy-signup-submit]').should('be.disabled');
+-		cy.get('[data-cy-signup-invitation-code] input').type('test-invitation-code');
+ 		cy.get('[data-cy-signup-submit]').should('not.be.disabled');
+ 		cy.get('[data-cy-signup-submit]').click();
+ 

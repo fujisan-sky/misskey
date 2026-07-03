@@ -1,0 +1,23 @@
+--- packages/frontend/test/tsconfig.json	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/test/tsconfig.json	2026-07-02 09:56:55.023926584 +0900
+@@ -22,9 +22,9 @@
+ 		"emitDecoratorMetadata": true,
+ 		"resolveJsonModule": true,
+ 		"isolatedModules": true,
++		"baseUrl": "./",
+ 		"paths": {
+-			"@/*": ["../src/*"],
+-			"@@/*": ["../../frontend-shared/*"]
++			"@/*": ["../src/*"]
+ 		},
+ 		"typeRoots": [
+ 			"../node_modules/@types"
+@@ -38,7 +38,6 @@
+ 	"compileOnSave": false,
+ 	"include": [
+ 		"./**/*.ts",
+-		"../src/**/*.vue",
+-		"../@types/**/*.d.ts"
++		"../src/**/*.vue"
+ 	]
+ }

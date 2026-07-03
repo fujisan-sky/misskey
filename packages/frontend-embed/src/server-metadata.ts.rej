@@ -1,0 +1,11 @@
+--- packages/frontend-embed/src/server-metadata.ts	2026-07-02 10:19:31.570760475 +0900
++++ packages/frontend-embed/src/server-metadata.ts	2026-07-02 09:56:54.943926743 +0900
+@@ -6,7 +6,7 @@
+ import * as Misskey from 'misskey-js';
+ import { misskeyApi } from '@/misskey-api.js';
+ 
+-const providedMetaEl = window.document.getElementById('misskey_meta');
++const providedMetaEl = document.getElementById('misskey_meta');
+ 
+ const _serverMetadata: Misskey.entities.MetaDetailed | null = (providedMetaEl && providedMetaEl.textContent) ? JSON.parse(providedMetaEl.textContent) : null;
+ 

@@ -1,0 +1,11 @@
+--- packages/frontend/test/home.test.ts	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/test/home.test.ts	2026-07-02 09:56:55.022926586 +0900
+@@ -15,7 +15,7 @@
+ describe('XHome', () => {
+ 	const renderHome = (user: Partial<Misskey.entities.UserDetailed>): RenderResult => {
+ 		return render(XHome, {
+-			props: { user: user as Misskey.entities.UserDetailed, disableNotes: true },
++			props: { user, disableNotes: true },
+ 			global: { directives, components },
+ 		});
+ 	};

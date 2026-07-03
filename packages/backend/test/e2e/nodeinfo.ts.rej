@@ -1,0 +1,10 @@
+--- packages/backend/test/e2e/nodeinfo.ts	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test/e2e/nodeinfo.ts	2026-07-02 09:56:54.935926759 +0900
+@@ -6,7 +6,6 @@
+ process.env.NODE_ENV = 'test';
+ 
+ import * as assert from 'assert';
+-import { describe, test } from 'vitest';
+ import { relativeFetch } from '../utils.js';
+ 
+ describe('nodeinfo', () => {

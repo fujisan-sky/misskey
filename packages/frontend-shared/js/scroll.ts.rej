@@ -1,0 +1,32 @@
+--- packages/frontend-shared/js/scroll.ts	2026-07-02 10:19:31.571760472 +0900
++++ packages/frontend-shared/js/scroll.ts	2026-07-02 09:56:54.945926739 +0900
+@@ -51,7 +51,7 @@
+ 	// - toleranceの範囲内に収まる程度の微量なスクロールが発生した
+ 	let prevTopVisible = firstTopVisible;
+ 	const onScroll = () => {
+-		if (!window.document.body.contains(el)) return;
++		if (!document.body.contains(el)) return;
+ 
+ 		const topVisible = isHeadVisible(el, tolerance);
+ 		if (topVisible !== prevTopVisible) {
+@@ -78,7 +78,7 @@
+ 
+ 	const containerOrWindow = container ?? window;
+ 	const onScroll = () => {
+-		if (!window.document.body.contains(el)) return;
++		if (!document.body.contains(el)) return;
+ 		if (isTailVisible(el, 1, container)) {
+ 			cb();
+ 			if (once) removeListener();
+@@ -145,8 +145,8 @@
+ // https://ja.javascript.info/size-and-scroll-window#ref-932
+ export function getBodyScrollHeight() {
+ 	return Math.max(
+-		window.document.body.scrollHeight, window.document.documentElement.scrollHeight,
+-		window.document.body.offsetHeight, window.document.documentElement.offsetHeight,
+-		window.document.body.clientHeight, window.document.documentElement.clientHeight,
++		document.body.scrollHeight, document.documentElement.scrollHeight,
++		document.body.offsetHeight, document.documentElement.offsetHeight,
++		document.body.clientHeight, document.documentElement.clientHeight,
+ 	);
+ }

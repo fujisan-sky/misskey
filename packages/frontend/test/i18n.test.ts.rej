@@ -1,0 +1,11 @@
+--- packages/frontend/test/i18n.test.ts	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/test/i18n.test.ts	2026-07-02 09:56:55.023926584 +0900
+@@ -5,7 +5,7 @@
+ 
+ import { describe, expect, it } from 'vitest';
+ import { I18n } from '../../frontend-shared/js/i18n.js'; // @@で参照できなかったので
+-import type { ParameterizedString } from 'i18n';
++import type { ParameterizedString } from '../../../locales/index.js';
+ 
+ // TODO: このテストはfrontend-sharedに移動する
+ 

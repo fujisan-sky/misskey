@@ -1,0 +1,13 @@
+--- packages/backend/test-server/tsconfig.json	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test-server/tsconfig.json	2026-07-02 09:56:54.934926761 +0900
+@@ -23,8 +23,8 @@
+ 		"emitDecoratorMetadata": true,
+ 		"resolveJsonModule": true,
+ 		"isolatedModules": true,
+-		"jsx": "react-jsx",
+-		"jsxImportSource": "@kitajs/html",
++		"rootDir": "../src",
++		"baseUrl": "./",
+ 		"paths": {
+ 			"@/*": ["../src/*"]
+ 		},

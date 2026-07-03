@@ -1,0 +1,10 @@
+--- packages/backend/test/e2e/api-visibility.ts	2026-07-02 10:19:31.564760497 +0900
++++ packages/backend/test/e2e/api-visibility.ts	2026-07-02 09:56:54.934926761 +0900
+@@ -6,7 +6,6 @@
+ process.env.NODE_ENV = 'test';
+ 
+ import * as assert from 'assert';
+-import { describe, beforeAll, beforeEach, test } from 'vitest';
+ import { UserToken, api, post, signup } from '../utils.js';
+ import type * as misskey from 'misskey-js';
+ 

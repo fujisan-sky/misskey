@@ -1,0 +1,10 @@
+--- packages/backend/test/unit/misc/correct-filename.ts	2026-07-02 10:19:31.567760486 +0900
++++ packages/backend/test/unit/misc/correct-filename.ts	2026-07-02 09:56:54.940926749 +0900
+@@ -3,7 +3,6 @@
+  * SPDX-License-Identifier: AGPL-3.0-only
+  */
+ 
+-import { describe, expect, it, test } from 'vitest';
+ import { correctFilename } from '@/misc/correct-filename.js';
+ 
+ describe(correctFilename, () => {

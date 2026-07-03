@@ -1,0 +1,53 @@
+--- packages/frontend/tsconfig.json	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/tsconfig.json	2026-07-02 09:56:55.023926584 +0900
+@@ -2,7 +2,7 @@
+ 	"compilerOptions": {
+ 		"allowJs": true,
+ 		"noEmitOnError": false,
+-		"noImplicitAny": true,
++		"noImplicitAny": false,
+ 		"noImplicitReturns": true,
+ 		"noUnusedParameters": false,
+ 		"noUnusedLocals": false,
+@@ -10,7 +10,7 @@
+ 		"declaration": false,
+ 		"sourceMap": false,
+ 		"target": "ES2022",
+-		"module": "esnext",
++		"module": "ES2022",
+ 		"moduleResolution": "Bundler",
+ 		"removeComments": false,
+ 		"noLib": false,
+@@ -22,7 +22,7 @@
+ 		"isolatedModules": true,
+ 		"useDefineForClassFields": true,
+ 		"verbatimModuleSyntax": true,
+-		"skipLibCheck": true,
++		"baseUrl": ".",
+ 		"paths": {
+ 			"@/*": ["./src/*"],
+ 			"@@/*": ["../frontend-shared/*"]
+@@ -35,7 +35,6 @@
+ 		],
+ 		"types": [
+ 			"vite/client",
+-			"vite-plugin-glsl/ext",
+ 			"vitest/importMeta",
+ 		],
+ 		"lib": [
+@@ -47,6 +46,7 @@
+ 	},
+ 	"compileOnSave": false,
+ 	"include": [
++		"./lib/**/*.ts",
+ 		"./src/**/*.ts",
+ 		"./src/**/*.vue",
+ 		"./test/**/*.ts",
+@@ -54,6 +54,6 @@
+ 		"./@types/**/*.ts"
+ 	],
+ 	"exclude": [
+-		"./src/**/*.stories.ts"
++		".storybook/**/*"
+ 	]
+ }

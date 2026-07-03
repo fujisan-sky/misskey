@@ -1,0 +1,34 @@
+--- packages/backend/test/unit/ApMfmService.ts	2026-07-02 10:19:31.566760490 +0900
++++ packages/backend/test/unit/ApMfmService.ts	2026-07-02 09:56:54.939926751 +0900
+@@ -4,12 +4,12 @@
+  */
+ 
+ import * as assert from 'assert';
+-import { describe, test, beforeAll } from 'vitest';
+ import { Test } from '@nestjs/testing';
+ 
+ import { CoreModule } from '@/core/CoreModule.js';
+ import { ApMfmService } from '@/core/activitypub/ApMfmService.js';
+ import { GlobalModule } from '@/GlobalModule.js';
++import { MiNote } from '@/models/Note.js';
+ 
+ describe('ApMfmService', () => {
+ 	let apMfmService: ApMfmService;
+@@ -31,7 +31,7 @@
+ 			const { content, noMisskeyContent } = apMfmService.getNoteHtml(note);
+ 
+ 			assert.equal(noMisskeyContent, true, 'noMisskeyContent');
+-			assert.equal(content, 'テキスト <a href="http://misskey.local/tags/%E3%82%BF%E3%82%B0" rel="tag">#タグ</a> <a href="http://misskey.local/@mention" class="u-url mention">@mention</a> 🍊 ​:emoji:​ <a href="https://example.com/">https://example.com</a>', 'content');
++			assert.equal(content, '<p>テキスト <a href="http://misskey.local/tags/タグ" rel="tag">#タグ</a> <a href="http://misskey.local/@mention" class="u-url mention">@mention</a> 🍊 ​:emoji:​ <a href="https://example.com">https://example.com</a></p>', 'content');
+ 		});
+ 
+ 		test('Provide _misskey_content for MFM', () => {
+@@ -43,7 +43,7 @@
+ 			const { content, noMisskeyContent } = apMfmService.getNoteHtml(note);
+ 
+ 			assert.equal(noMisskeyContent, false, 'noMisskeyContent');
+-			assert.equal(content, '<i>foo</i>', 'content');
++			assert.equal(content, '<p><i>foo</i></p>', 'content');
+ 		});
+ 	});
+ });

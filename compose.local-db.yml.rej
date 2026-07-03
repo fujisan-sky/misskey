@@ -1,0 +1,18 @@
+--- compose.local-db.yml	2026-07-02 10:19:31.500760723 +0900
++++ compose.local-db.yml	2026-07-02 09:56:54.730927166 +0900
+@@ -15,13 +15,13 @@
+ 
+   db:
+     restart: always
+-    image: postgres:18-alpine
++    image: postgres:15-alpine
+     ports:
+       - "5432:5432"
+     env_file:
+       - .config/docker.env
+     volumes:
+-      - ./db:/var/lib/postgresql
++      - ./db:/var/lib/postgresql/data
+     healthcheck:
+       test: "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"
+       interval: 5s

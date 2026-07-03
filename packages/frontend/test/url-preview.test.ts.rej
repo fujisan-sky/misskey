@@ -1,0 +1,26 @@
+--- packages/frontend/test/url-preview.test.ts	2026-07-02 10:19:31.614760320 +0900
++++ packages/frontend/test/url-preview.test.ts	2026-07-02 09:56:55.023926584 +0900
+@@ -6,11 +6,13 @@
+ import { describe, test, assert, afterEach } from 'vitest';
+ import { render, cleanup, type RenderResult } from '@testing-library/vue';
+ import './init';
+-import type { SummalyResult } from '@misskey-dev/summaly';
++import type { summaly } from '@misskey-dev/summaly';
+ import { components } from '@/components/index.js';
+ import { directives } from '@/directives/index.js';
+ import MkUrlPreview from '@/components/MkUrlPreview.vue';
+ 
++type SummalyResult = Awaited<ReturnType<typeof summaly>>;
++
+ describe('MkUrlPreview', () => {
+ 	const renderPreviewBy = async (summary: Partial<SummalyResult>): Promise<RenderResult> => {
+ 		if (!summary.player) {
+@@ -33,7 +35,7 @@
+ 		});
+ 
+ 		const result = render(MkUrlPreview, {
+-			props: { url: summary.url! },
++			props: { url: summary.url },
+ 			global: { directives, components },
+ 		});
+ 

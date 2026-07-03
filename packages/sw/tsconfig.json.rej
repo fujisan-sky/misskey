@@ -1,0 +1,18 @@
+--- packages/sw/tsconfig.json	2026-07-02 10:19:31.619760302 +0900
++++ packages/sw/tsconfig.json	2026-07-02 09:56:55.030926570 +0900
+@@ -19,6 +19,7 @@
+ 		"experimentalDecorators": true,
+ 		"resolveJsonModule": true,
+ 		"isolatedModules": true,
++		"baseUrl": ".",
+ 		"paths": {
+ 			"@/*": ["./src/*"],
+ 			"@@/*": ["../frontend-shared/*"]
+@@ -27,7 +28,6 @@
+ 			"./node_modules/@types",
+ 			"./src/@types"
+ 		],
+-		"libReplacement": true,
+ 		"lib": [
+ 			"esnext",
+ 			"webworker"

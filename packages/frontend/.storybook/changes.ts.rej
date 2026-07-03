@@ -1,0 +1,10 @@
+--- packages/frontend/.storybook/changes.ts	2026-07-02 10:19:31.572760468 +0900
++++ packages/frontend/.storybook/changes.ts	2026-07-02 09:56:54.946926737 +0900
+@@ -51,6 +51,7 @@
+ 	if (
+ 		micromatch(Array.from(modules), [
+ 			'../../assets/**',
++			'../../fluent-emojis/**',
+ 			'../../locales/ja-JP.yml',
+ 			'assets/**',
+ 			'public/**',

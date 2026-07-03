@@ -1,0 +1,10 @@
+--- packages/backend/test/eslint.config.js	2026-07-02 10:19:31.565760493 +0900
++++ packages/backend/test/eslint.config.js	2026-07-02 09:56:54.936926757 +0900
+@@ -9,6 +9,7 @@
+ 		languageOptions: {
+ 			globals: {
+ 				...globals.node,
++				...globals.jest,
+ 			},
+ 			parserOptions: {
+ 				parser: tsParser,

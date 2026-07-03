@@ -1,0 +1,7 @@
+--- packages/misskey-js/test-d/api.ts	2026-07-02 10:19:31.618760306 +0900
++++ packages/misskey-js/test-d/api.ts	2026-07-02 09:56:55.028926574 +0900
+@@ -1,4 +1,3 @@
+-import { describe, test } from 'vitest';
+ import { expectType } from 'tsd';
+ import * as Misskey from '../src/index.js';
+ 

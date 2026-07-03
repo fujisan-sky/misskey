@@ -1,0 +1,27 @@
+--- packages/misskey-reversi/build.js	2026-07-02 10:19:31.618760306 +0900
++++ packages/misskey-reversi/build.js	2026-07-02 09:56:55.029926572 +0900
+@@ -3,13 +3,14 @@
+ import { dirname } from 'node:path';
+ import * as esbuild from 'esbuild';
+ import { build } from 'esbuild';
++import { globSync } from 'glob';
+ import { execa } from 'execa';
+ 
+ const _filename = fileURLToPath(import.meta.url);
+ const _dirname = dirname(_filename);
+ const _package = JSON.parse(fs.readFileSync(_dirname + '/package.json', 'utf-8'));
+ 
+-const entryPoints = fs.globSync('./src/**/**.{ts,tsx}');
++const entryPoints = globSync('./src/**/**.{ts,tsx}');
+ 
+ /** @type {import('esbuild').BuildOptions} */
+ const options = {
+@@ -58,7 +59,7 @@
+ 
+ function buildDts() {
+ 	return execa(
+-		'tsgo',
++		'tsc',
+ 		[
+ 			'--project', 'tsconfig.json',
+ 			'--outDir', 'built',

@@ -1,0 +1,11 @@
+--- packages/frontend-shared/js/worker-multi-dispatch.ts	2026-07-02 10:19:31.571760472 +0900
++++ packages/frontend-shared/js/worker-multi-dispatch.ts	2026-07-02 09:56:54.945926739 +0900
+@@ -34,7 +34,7 @@
+ 	public postMessage(message: POST, options?: Transferable[] | StructuredSerializeOptions, useWorkerNumber: WorkerNumberGetter = this.getUseWorkerNumber) {
+ 		let workerNumber = useWorkerNumber(this.prevWorkerNumber, this.workers.length);
+ 		workerNumber = Math.abs(Math.round(workerNumber)) % this.workers.length;
+-		// if (_DEV_) console.log('WorkerMultiDispatch: Posting message to worker', workerNumber, useWorkerNumber);
++		if (_DEV_) console.log('WorkerMultiDispatch: Posting message to worker', workerNumber, useWorkerNumber);
+ 		this.prevWorkerNumber = workerNumber;
+ 
+ 		// 不毛だがunionをoverloadに突っ込めない

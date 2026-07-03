@@ -1,0 +1,19 @@
+--- packages/backend/test/unit/DriveService.ts	2026-07-02 10:19:31.566760490 +0900
++++ packages/backend/test/unit/DriveService.ts	2026-07-02 09:56:54.939926751 +0900
+@@ -5,7 +5,6 @@
+ 
+ process.env.NODE_ENV = 'test';
+ 
+-import { afterAll, beforeAll, beforeEach, describe, test, expect } from 'vitest';
+ import { Test } from '@nestjs/testing';
+ import {
+ 	DeleteObjectCommand,
+@@ -54,7 +53,7 @@
+ 			s3Mock.on(DeleteObjectCommand)
+ 				.rejects(new InvalidObjectState({ $metadata: {}, message: '' }));
+ 
+-			await expect(driveService.deleteObjectStorageFile('unexpected')).rejects.toThrow(Error);
++			await expect(driveService.deleteObjectStorageFile('unexpected')).rejects.toThrowError(Error);
+ 		});
+ 
+ 		test('delete a file with no valid key', async () => {
