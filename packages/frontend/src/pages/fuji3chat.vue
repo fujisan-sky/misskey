@@ -24,17 +24,19 @@ const destinations: Record<string, string> = {
 	'https://misskey.day': 'https://fuji3.top',
 };
 const destination = destinations[window.location.origin];
+const room = new URLSearchParams(window.location.search).get('room') ?? '';
+const validRoom = !room || /^[A-Za-z0-9]{10}$/.test(room);
 const failed = ref(false);
 const controller = new AbortController();
 onBeforeUnmount(() => controller.abort());
 
 function restart() {
-	if (destination) window.location.replace(destination + '/api/auth/fuji3chat/start');
+	if (destination && validRoom) window.location.replace(destination + '/api/auth/fuji3chat/start' + (room ? '?room=' + room : ''));
 	else failed.value = true;
 }
 
 onMounted(async () => {
-	if (!$i || !destination) { failed.value = true; return; }
+	if (!$i || !destination || !validRoom) { failed.value = true; return; }
 	const params = new URLSearchParams(window.location.search);
 	const state = params.get('state');
 	const codeChallenge = params.get('code_challenge');

@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <template>
 <component
-	:is="self ? 'MkA' : 'a'" ref="el" :class="$style.root" class="_link" :[attr]="maybeRelativeUrl" :rel="rel ?? 'nofollow noopener'" :target="target"
+	:is="self ? 'MkA' : 'a'" ref="el" :class="$style.root" class="_link" :[attr]="navigationUrl" :rel="rel ?? 'nofollow noopener'" :target="target"
 	:behavior="props.navigationBehavior"
 	@contextmenu.stop="() => {}"
 >
@@ -25,8 +25,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { defineAsyncComponent, ref } from 'vue';
+import { computed, defineAsyncComponent, ref } from 'vue';
 import { toUnicode as decodePunycode } from 'punycode.js';
+import { $i } from '@/i.js';
+import { fuji3chatRoomLink } from '@/utility/fuji3chat-link.js';
 import { url as local } from '@@/js/config.js';
 import { maybeMakeRelative } from '@@/js/url.js';
 import type { MkABehavior } from '@/components/global/MkA.vue';
@@ -51,6 +53,7 @@ const props = withDefaults(defineProps<{
 	showUrlPreview: true,
 });
 
+const navigationUrl = computed(() => fuji3chatRoomLink(props.url, local, $i != null) ?? maybeRelativeUrl);
 const maybeRelativeUrl = maybeMakeRelative(props.url, local);
 const self = maybeRelativeUrl !== props.url;
 const url = new URL(props.url);
