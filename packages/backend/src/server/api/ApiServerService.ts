@@ -6,13 +6,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import cors from '@fastify/cors';
 import multipart from '@fastify/multipart';
+import type { Redis } from 'ioredis';
 import { ModuleRef } from '@nestjs/core';
 import type { AuthenticationResponseJSON } from '@simplewebauthn/server';
 import type { Config } from '@/config.js';
-import type { InstancesRepository, AccessTokensRepository } from '@/models/_.js';
+import type { InstancesRepository, AccessTokensRepository, UsersRepository } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { bindThis } from '@/decorators.js';
+import { registerFuji3ChatApi } from './fuji3chat.js';
+import { AuthenticateService } from './AuthenticateService.js';
 import endpoints from './endpoints.js';
 import { ApiCallService } from './ApiCallService.js';
 import { SignupApiService } from './SignupApiService.js';
@@ -34,6 +37,13 @@ export class ApiServerService {
 		@Inject(DI.accessTokensRepository)
 		private accessTokensRepository: AccessTokensRepository,
 
+		@Inject(DI.redis)
+		private redis: Redis,
+
+		@Inject(DI.usersRepository)
+		private usersRepository: UsersRepository,
+
+		private authenticateService: AuthenticateService,
 		private userEntityService: UserEntityService,
 		private apiCallService: ApiCallService,
 		private signupApiService: SignupApiService,
@@ -60,6 +70,14 @@ export class ApiServerService {
 		fastify.addHook('onRequest', (request, reply, done) => {
 			reply.header('Cache-Control', 'private, max-age=0, must-revalidate');
 			done();
+		});
+
+		registerFuji3ChatApi(fastify, {
+			config: this.config,
+			redis: this.redis,
+			usersRepository: this.usersRepository,
+			authenticateService: this.authenticateService,
+			userEntityService: this.userEntityService,
 		});
 
 		for (const endpoint of endpoints) {

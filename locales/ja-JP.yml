@@ -3574,3 +3574,8 @@ _qr:
   scanFile: "端末の画像をスキャン"
   raw: "テキスト"
   mfm: "MFM"
+
+_fuji3chat:
+  title: "ふじさんチャット"
+  connecting: "ふじさんチャットに接続しています…"
+  failed: "接続できませんでした。もう一度お試しください。"

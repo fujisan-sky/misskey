@@ -26,6 +26,12 @@ export const navbarItemDef = reactive<{
 		action?: (ev: PointerEvent) => void;
 	};
 }>({
+	fuji3chat: {
+		title: i18n.ts._fuji3chat.title,
+		icon: 'ti ti-palette',
+		show: computed(() => $i != null && ['https://gp.miku2go.com', 'https://misskey.day'].includes(window.location.origin)),
+		to: '/fuji3chat',
+	},
 	notifications: {
 		title: i18n.ts.notifications,
 		icon: 'ti ti-bell',

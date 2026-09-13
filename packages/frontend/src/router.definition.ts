@@ -22,6 +22,10 @@ function chatPage(...args: Parameters<typeof page>) {
 }
 
 export const ROUTE_DEF = [{
+	path: '/fuji3chat',
+	component: page(() => import('@/pages/fuji3chat.vue')),
+	loginRequired: true,
+}, {
 	name: 'index',
 	path: '/',
 	component: $i ? PageTimeline : page(() => import('@/pages/welcome.vue')),

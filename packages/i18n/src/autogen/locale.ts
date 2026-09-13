@@ -13346,4 +13346,18 @@ export interface Locale extends ILocale {
          */
         "mfm": string;
     };
+    "_fuji3chat": {
+        /**
+         * ふじさんチャット
+         */
+        "title": string;
+        /**
+         * ふじさんチャットに接続しています…
+         */
+        "connecting": string;
+        /**
+         * 接続できませんでした。もう一度お試しください。
+         */
+        "failed": string;
+    };
 }
