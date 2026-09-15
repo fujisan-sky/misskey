@@ -1,43 +1,11 @@
 <div align="center">
-Misskeyの　ふじさんすきー版のコードです。<br>
-	一応、そのままmisskeyフォークとして使えるはず……<br>
-小規模サーバーで、かつ、鯖缶が適当（さぼってる）な場合に有効だと思います。<br>
-<br>
-インストール方法は、misskey公式と同じ。<br>
-<br>
-	<br>
-	<b>[機能]</b><br>
-	↓を見てください。<br>
-	<a href=https://misskey.day/documents/htmls/fork.html>ふじさんすきーの特徴</a><br>
-	<br>
-	<b>[移行]</b><br>
-	↓を見てください。<br>
-	<a href=https://misskey.day/documents/htmls/migration.html>ふじさんすきー版への移行</a><br>
-<br>
-<br>
-
-<<<<<<< HEAD
-[Learn more](https://misskey-hub.net/)
-=======
-<<<<<<< HEAD
-**🌎 **[Misskey](https://misskey-hub.net/)** is an open source, decentralized social media platform that's free forever! 🚀**
-=======
-ふじさんすきー版のコードです。<br>
-小規模サーバーで、かつ、鯖缶が適当（さぼってる）な場合に有効じゃないかと思います。<br>
-<br>
-インストール方法は、misskey公式と同じです。<br>
-<br>
-　あと、時間のある時に説明を作ってみますが、取り合えずソース公開という事で。<br>
- 姉妹サーバーを歓迎しますので（多少は）構築のお手伝いもさせて頂く（かもしれません）！<br>
-<br>
-<br>
-
+<a href="https://misskey-hub.net">
+	<img src="./assets/title_float.svg" alt="Misskey logo" style="border-radius:50%" width="300"/>
+</a>
 
 **🌎 **Misskey** is an open source, federated social media platform that's free forever! 🚀**
 
 [Learn more](https://misskey-hub.net/)
->>>>>>> 8c1b0a1a7 (Update README.md)
->>>>>>> master
 
 ---
 
@@ -55,6 +23,10 @@ Misskeyの　ふじさんすきー版のコードです。<br>
 
 <a href="https://www.patreon.com/syuilo">
 		<img src="https://custom-icon-badges.herokuapp.com/badge/become_a-patron-F96854?logoColor=F96854&style=for-the-badge&logo=patreon&labelColor=363B40" alt="become a patron"/></a>
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/misskey-dev/misskey)
+
+<a href="https://flatt.tech/oss/gmo/trampoline" target="_blank"><img src="https://flatt.tech/assets/images/badges/gmo-oss.svg" height="24px"/></a>
 
 </div>
 
@@ -79,3 +51,13 @@ Thanks to [Crowdin](https://crowdin.com/) for providing the localization platfor
 <a href="https://hub.docker.com/"><img src="https://user-images.githubusercontent.com/20679825/230148221-f8e73a32-a49b-47c3-9029-9a15c3824f92.png" height="30" alt="Docker" /></a>
 
 Thanks to [Docker](https://hub.docker.com/) for providing the container platform that helps us run Misskey in production.
+
+---
+
+<div align="center">
+	
+Support us with a ⭐ !
+
+[![Star History Chart](https://api.star-history.com/svg?repos=misskey-dev/misskey&type=Date)](https://star-history.com/#misskey-dev/misskey&Date)
+
+</div>

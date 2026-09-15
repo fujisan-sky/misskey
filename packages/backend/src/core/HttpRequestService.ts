@@ -6,6 +6,7 @@
 import * as http from 'node:http';
 import * as https from 'node:https';
 import * as net from 'node:net';
+import * as stream from 'node:stream';
 import ipaddr from 'ipaddr.js';
 import CacheableLookup from 'cacheable-lookup';
 import fetch from 'node-fetch';
@@ -16,7 +17,7 @@ import type { Config } from '@/config.js';
 import { StatusError } from '@/misc/status-error.js';
 import { bindThis } from '@/decorators.js';
 import { validateContentTypeSetAsActivityPub } from '@/core/activitypub/misc/validator.js';
-import { assertActivityMatchesUrls, FetchAllowSoftFailMask } from '@/core/activitypub/misc/check-against-url.js';
+import { assertActivityMatchesUrl, FetchAllowSoftFailMask } from '@/core/activitypub/misc/check-against-url.js';
 import type { IObject } from '@/core/activitypub/type.js';
 import type { Response } from 'node-fetch';
 import type { URL } from 'node:url';
@@ -25,12 +26,6 @@ export type HttpRequestSendOptions = {
 	throwErrorWhenResponseNotOk: boolean;
 	validators?: ((res: Response) => void)[];
 };
-
-declare module 'node:http' {
-	interface Agent {
-		createConnection(options: net.NetConnectOpts, callback?: (err: unknown, stream: net.Socket) => void): net.Socket;
-	}
-}
 
 class HttpRequestServiceAgent extends http.Agent {
 	constructor(
@@ -41,18 +36,24 @@ class HttpRequestServiceAgent extends http.Agent {
 	}
 
 	@bindThis
-	public createConnection(options: net.NetConnectOpts, callback?: (err: unknown, stream: net.Socket) => void): net.Socket {
-		const socket = super.createConnection(options, callback)
-			.on('connect', () => {
+	public createConnection(options: http.ClientRequestArgs, callback?: (err: Error | null, stream: stream.Duplex) => void): stream.Duplex {
+		const socket = super.createConnection(options, callback);
+
+		if (socket == null) {
+			throw new Error('Failed to create socket');
+		}
+
+		socket.on('connect', () => {
+			if (socket instanceof net.Socket && process.env.NODE_ENV === 'production') {
 				const address = socket.remoteAddress;
-				if (process.env.NODE_ENV === 'production') {
-					if (address && ipaddr.isValid(address)) {
-						if (this.isPrivateIp(address)) {
-							socket.destroy(new Error(`Blocked address: ${address}`));
-						}
+				if (address && ipaddr.isValid(address)) {
+					if (this.isPrivateIp(address)) {
+						socket.destroy(new Error(`Blocked address: ${address}`));
 					}
 				}
-			});
+			}
+		});
+
 		return socket;
 	}
 
@@ -80,18 +81,24 @@ class HttpsRequestServiceAgent extends https.Agent {
 	}
 
 	@bindThis
-	public createConnection(options: net.NetConnectOpts, callback?: (err: unknown, stream: net.Socket) => void): net.Socket {
-		const socket = super.createConnection(options, callback)
-			.on('connect', () => {
+	public createConnection(options: http.ClientRequestArgs, callback?: (err: Error | null, stream: stream.Duplex) => void): stream.Duplex {
+		const socket = super.createConnection(options, callback);
+
+		if (socket == null) {
+			throw new Error('Failed to create socket');
+		}
+
+		socket.on('connect', () => {
+			if (socket instanceof net.Socket && process.env.NODE_ENV === 'production') {
 				const address = socket.remoteAddress;
-				if (process.env.NODE_ENV === 'production') {
-					if (address && ipaddr.isValid(address)) {
-						if (this.isPrivateIp(address)) {
-							socket.destroy(new Error(`Blocked address: ${address}`));
-						}
+				if (address && ipaddr.isValid(address)) {
+					if (this.isPrivateIp(address)) {
+						socket.destroy(new Error(`Blocked address: ${address}`));
 					}
 				}
-			});
+			}
+		});
+
 		return socket;
 	}
 
@@ -265,7 +272,7 @@ export class HttpRequestService {
 		const finalUrl = res.url; // redirects may have been involved
 		const activity = await res.json() as IObject;
 
-		assertActivityMatchesUrls(url, activity, [finalUrl], allowSoftfail);
+		assertActivityMatchesUrl(url, activity, finalUrl, allowSoftfail);
 
 		return activity;
 	}

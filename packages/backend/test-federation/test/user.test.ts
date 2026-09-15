@@ -1,3 +1,4 @@
+import { describe, test, beforeAll } from 'vitest';
 import assert, { rejects, strictEqual } from 'node:assert';
 import * as Misskey from 'misskey-js';
 import { createAccount, deepStrictEqualWithExcludedFields, fetchAdmin, type LoginUser, resolveRemoteNote, resolveRemoteUser, sleep } from './utils.js';
@@ -380,8 +381,7 @@ describe('User', () => {
 				strictEqual(followers.length, 1); // followed by Bob
 
 				await alice.client.request('i/delete-account', { password: alice.password });
-				// NOTE: user deletion query is slow
-				await sleep(4000);
+				await sleep();
 
 				const following = await bob.client.request('users/following', { userId: bob.id });
 				strictEqual(following.length, 0); // no following relation
@@ -479,8 +479,7 @@ describe('User', () => {
 				strictEqual(followers.length, 1); // followed by Bob
 
 				await aAdmin.client.request('admin/suspend-user', { userId: alice.id });
-				// NOTE: user deletion query is slow
-				await sleep(4000);
+				await sleep();
 
 				const following = await bob.client.request('users/following', { userId: bob.id });
 				strictEqual(following.length, 0); // no following relation
