@@ -16,9 +16,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { signinRequired } from '@/account.js';
+import { ensureSignin } from '@/i.js';
 
-const $i = signinRequired();
+const $i = ensureSignin();
 
 const props = defineProps<{
 	active?: boolean;
@@ -38,7 +38,29 @@ const emit = defineEmits<{
 	(ev: 'click'): void;
 }>();
 
-const locked = computed(() => props.decoration.roleIdsThatCanBeUsedThisDecoration.length > 0 && !$i.roles.some(r => props.decoration.roleIdsThatCanBeUsedThisDecoration.includes(r.id)));
+const locked = computed(() => {
+        if ( props.decoration.roleIdsThatCanBeUsedThisDecoration.length <= 0 ){
+                return false;
+        }
+        if ( $i.roles.some(r => props.decoration.roleIdsThatCanBeUsedThisDecoration.includes(r.id)) ){
+                return false;
+        }
+        if ( !($i.policies.canCreateOwnDeco) ){
+                return true;
+        }
+        let  byName = 'noName';
+        if ( $i.name ){
+                byName = $i.name;
+        }else{
+                byName = $i.username;
+        }
+        const byNamePlus = "/" + byName + "さん";
+        if ( props.decoration.name.includes(byNamePlus) ){
+                return false;
+        }
+        return true;
+        });
+
 </script>
 
 <style lang="scss" module>

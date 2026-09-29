@@ -50,6 +50,10 @@ export const meta = {
 						format: 'id',
 					},
 				},
+				category: {
+					type: 'string',
+					optional: true, nullable: true,
+				},
 			},
 		},
 	},
@@ -116,6 +120,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				description: decoration.description,
 				url: decoration.url,
 				roleIdsThatCanBeUsedThisDecoration: decoration.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(role => role.id === roleId)),
+				category: decoration.category,
 			}));
 		});
 	}

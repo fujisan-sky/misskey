@@ -17,6 +17,7 @@ import type {
 } from '@/models/_.js';
 import { MemoryKVCache, MemorySingleCache } from '@/misc/cache.js';
 import type { MiUser } from '@/models/User.js';
+import type { Config } from '@/config.js';
 import { DI } from '@/di-symbols.js';
 import { bindThis } from '@/decorators.js';
 import { CacheService } from '@/core/CacheService.js';
@@ -31,6 +32,7 @@ import { FanoutTimelineService } from '@/core/FanoutTimelineService.js';
 import { NotificationService } from '@/core/NotificationService.js';
 import type { OnApplicationShutdown, OnModuleInit } from '@nestjs/common';
 
+// misskey-js の rolePolicies と同期すべし
 export type RolePolicies = {
 	gtlAvailable: boolean;
 	ltlAvailable: boolean;
@@ -43,9 +45,12 @@ export type RolePolicies = {
 	canManageCustomEmojis: boolean;
 	canManageAvatarDecorations: boolean;
 	canSearchNotes: boolean;
+	canSearchUsers: boolean;
 	canUseTranslator: boolean;
 	canHideAds: boolean;
+	canCreateChannel: boolean;
 	driveCapacityMb: number;
+	maxFileSizeMb: number;
 	alwaysMarkNsfw: boolean;
 	canUpdateBioMedia: boolean;
 	pinLimit: number;
@@ -61,11 +66,18 @@ export type RolePolicies = {
 	publicMinimumInterval: number;
 	memtionMinimumInterval: number;
 	canCreateEmoji: boolean;
+	messageFilter: boolean;
+	canCreateOwnDeco: boolean;
 	canImportAntennas: boolean;
 	canImportBlocking: boolean;
 	canImportFollowing: boolean;
 	canImportMuting: boolean;
 	canImportUserLists: boolean;
+	chatAvailability: 'available' | 'readonly' | 'unavailable';
+	uploadableFileTypes: string[];
+	noteDraftLimit: number;
+	scheduledNoteLimit: number;
+	watermarkAvailable: boolean;
 };
 
 export const DEFAULT_POLICIES: RolePolicies = {
@@ -80,9 +92,12 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	canManageCustomEmojis: false,
 	canManageAvatarDecorations: false,
 	canSearchNotes: false,
+	canSearchUsers: true,
 	canUseTranslator: true,
 	canHideAds: false,
+	canCreateChannel: false,
 	driveCapacityMb: 100,
+	maxFileSizeMb: 30,
 	alwaysMarkNsfw: false,
 	canUpdateBioMedia: true,
 	pinLimit: 5,
@@ -98,11 +113,24 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	publicMinimumInterval: 0,
 	mentionMinimumInterval: 0,
 	canCreateEmoji: false,
-	canImportAntennas: true,
-	canImportBlocking: true,
-	canImportFollowing: true,
-	canImportMuting: true,
-	canImportUserLists: true,
+	messageFilter: false,
+	canCreateOwnDoce: false,
+	canImportAntennas: false,
+	canImportBlocking: false,
+	canImportFollowing: false,
+	canImportMuting: false,
+	canImportUserLists: false,
+	chatAvailability: 'available',
+	uploadableFileTypes: [
+		'text/*',
+		'application/json',
+		'image/*',
+		'video/*',
+		'audio/*',
+	],
+	noteDraftLimit: 10,
+	scheduledNoteLimit: 1,
+	watermarkAvailable: true,
 };
 
 @Injectable()
@@ -116,6 +144,9 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 
 	constructor(
 		private moduleRef: ModuleRef,
+
+		@Inject(DI.config)
+		private config: Config,
 
 		@Inject(DI.meta)
 		private meta: MiMeta,
@@ -260,6 +291,10 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				case 'isCat': {
 					return user.isCat;
 				}
+				// 
+				case 'isSafe': {
+					return user.safemode;
+				}
 				// 「ユーザを見つけやすくする」が有効なアカウント
 				case 'isExplorable': {
 					return user.isExplorable;
@@ -299,7 +334,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 				default:
 					return false;
 			}
-		} catch (err) {
+		} catch (_) {
 			// TODO: log error
 			return false;
 		}
@@ -361,7 +396,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 		const roles = await this.getUserRoles(userId);
 
 		function calc<T extends keyof RolePolicies>(name: T, aggregate: (values: RolePolicies[T][]) => RolePolicies[T]) {
-			if (roles.length === 0) return basePolicies[name];
+			if (roles.length === 0) return aggregate([basePolicies[name]]);
 
 			const policies = roles.map(role => role.policies[name] ?? { priority: 0, useDefault: true });
 
@@ -373,6 +408,14 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 
 			return aggregate(policies.map(policy => policy.useDefault ? basePolicies[name] : policy.value));
 		}
+
+		function aggregateChatAvailability(vs: RolePolicies['chatAvailability'][]) {
+			if (vs.some(v => v === 'available')) return 'available';
+			if (vs.some(v => v === 'readonly')) return 'readonly';
+			return 'unavailable';
+		}
+
+		const serverMaxFileSizeMb = Math.floor(this.config.maxFileSize / (1024 * 1024));
 
 		return {
 			gtlAvailable: calc('gtlAvailable', vs => vs.some(v => v === true)),
@@ -386,9 +429,12 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			canManageCustomEmojis: calc('canManageCustomEmojis', vs => vs.some(v => v === true)),
 			canManageAvatarDecorations: calc('canManageAvatarDecorations', vs => vs.some(v => v === true)),
 			canSearchNotes: calc('canSearchNotes', vs => vs.some(v => v === true)),
+			canSearchUsers: calc('canSearchUsers', vs => vs.some(v => v === true)),
 			canUseTranslator: calc('canUseTranslator', vs => vs.some(v => v === true)),
 			canHideAds: calc('canHideAds', vs => vs.some(v => v === true)),
+			canCreateChannel: calc('canCreateChannel', vs => vs.some(v => v === true)),
 			driveCapacityMb: calc('driveCapacityMb', vs => Math.max(...vs)),
+			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.min(serverMaxFileSizeMb, Math.max(...vs))),
 			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.some(v => v === true)),
 			canUpdateBioMedia: calc('canUpdateBioMedia', vs => vs.some(v => v === true)),
 			pinLimit: calc('pinLimit', vs => Math.max(...vs)),
@@ -404,11 +450,27 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
                        	publicMinimumInterval: calc('publicMinimumInterval', vs => Math.max(...vs)),
                        	mentionMinimumInterval: calc('mentionMinimumInterval', vs => Math.max(...vs)),
                        	canCreateEmoji: calc('canCreateEmoji', vs => vs.some(v => v === true)),
+                       	messageFilter: calc('messageFilter', vs => vs.some(v => v === true)),
+                       	canCreateOwnDeco: calc('canCreateOwnDeco', vs => vs.some(v => v === true)),
 			canImportAntennas: calc('canImportAntennas', vs => vs.some(v => v === true)),
 			canImportBlocking: calc('canImportBlocking', vs => vs.some(v => v === true)),
 			canImportFollowing: calc('canImportFollowing', vs => vs.some(v => v === true)),
 			canImportMuting: calc('canImportMuting', vs => vs.some(v => v === true)),
 			canImportUserLists: calc('canImportUserLists', vs => vs.some(v => v === true)),
+			chatAvailability: calc('chatAvailability', aggregateChatAvailability),
+			uploadableFileTypes: calc('uploadableFileTypes', vs => {
+				const set = new Set<string>();
+				for (const v of vs) {
+					for (const type of v) {
+						if (type.trim() === '') continue;
+						set.add(type.trim());
+					}
+				}
+				return [...set];
+			}),
+			noteDraftLimit: calc('noteDraftLimit', vs => Math.max(...vs)),
+			scheduledNoteLimit: calc('scheduledNoteLimit', vs => Math.max(...vs)),
+			watermarkAvailable: calc('watermarkAvailable', vs => vs.some(v => v === true)),
 		};
 	}
 
@@ -499,7 +561,8 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			roleId: In(administratorRoles.map(r => r.id)),
 		}) : [];
 		// TODO: isRootなアカウントも含める
-		return assigns.map(a => a.userId);
+		// Setを経由して重複を除去（ユーザIDは重複する可能性があるので）
+		return [...new Set(assigns.map(a => a.userId))].sort((x, y) => x.localeCompare(y));
 	}
 
 	@bindThis
@@ -636,6 +699,7 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			isModerator: values.isModerator,
 			isExplorable: values.isExplorable,
 			asBadge: values.asBadge,
+			preserveAssignmentOnMoveAccount: values.preserveAssignmentOnMoveAccount,
 			canEditMembersByModerator: values.canEditMembersByModerator,
 			displayOrder: values.displayOrder,
 			policies: values.policies,

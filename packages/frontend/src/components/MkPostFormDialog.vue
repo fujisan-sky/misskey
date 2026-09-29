@@ -7,28 +7,29 @@ SPDX-License-Identifier: AGPL-3.0-only
 <MkModal
 	ref="modal"
 	:preferType="'dialog'"
-	@click="modal?.close()"
+	@click="onBgClick()"
 	@closed="onModalClosed()"
-	@esc="modal?.close()"
+	@esc="onEsc"
 >
 	<MkPostForm
 		ref="form"
 		:class="$style.form"
+		class="_popup"
 		v-bind="props"
 		autofocus
 		freezeAfterPosted
 		@posted="onPosted"
-		@cancel="modal?.close()"
-		@esc="modal?.close()"
+		@cancel="_close()"
+		@esc="_close()"
 	/>
 </MkModal>
 </template>
 
 <script lang="ts" setup>
-import { shallowRef } from 'vue';
+import { useTemplateRef } from 'vue';
+import type { PostFormProps } from '@/types/post-form.js';
 import MkModal from '@/components/MkModal.vue';
 import MkPostForm from '@/components/MkPostForm.vue';
-import type { PostFormProps } from '@/types/post-form.js';
 
 const props = withDefaults(defineProps<PostFormProps & {
 	instant?: boolean;
@@ -42,13 +43,28 @@ const emit = defineEmits<{
 	(ev: 'closed'): void;
 }>();
 
-const modal = shallowRef<InstanceType<typeof MkModal>>();
-const form = shallowRef<InstanceType<typeof MkPostForm>>();
+const modal = useTemplateRef('modal');
+const form = useTemplateRef('form');
 
 function onPosted() {
 	modal.value?.close({
 		useSendAnimation: true,
 	});
+}
+
+async function _close() {
+	const canClose = await form.value?.canClose();
+	if (!canClose) return;
+	form.value?.abortUploader();
+	modal.value?.close();
+}
+
+function onEsc() {
+	_close();
+}
+
+function onBgClick() {
+	_close();
 }
 
 function onModalClosed() {
@@ -58,7 +74,8 @@ function onModalClosed() {
 
 <style lang="scss" module>
 .form {
-	max-height: 100%;
+	width: 100%;
+	max-width: 520px;
 	margin: 0 auto auto auto;
 }
 </style>

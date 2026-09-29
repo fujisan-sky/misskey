@@ -16,7 +16,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<template v-else #header>New decoration</template>
 
 	<div style="display: flex; flex-direction: column; min-height: 100%;">
-		<MkSpacer :marginMin="20" :marginMax="28" style="flex-grow: 1;">
+		<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px; flex-grow: 1;">
 			<div class="_gaps_m">
 				<div :class="$style.preview">
 					<div :class="[$style.previewItem, $style.light]">
@@ -28,14 +28,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 				<div v-if="aid == ''" >
 					<MkInput v-model="name">
-						<template #label>{{ i18n.ts.name }}</template>
+					<template #label>{{ i18n.ts.name }}</template>
 					</MkInput>
 				</div>
-				<MkButton rounded style="margin: 0 auto;" @click="changeImage($event,avatarDecoration)">{{ i18n.ts.selectFile }}</MkButton>
+				<MkButton rounded style="margin: 0 auto;" @click="changeImage">{{ i18n.ts.selectFile }}</MkButton>
+				<MkInput v-if="$i && ($i.isModerator )" v-model="category" :datalist="props.categories || []">
+					<template #label>{{ i18n.ts.category }}</template>
+				</MkInput>
 				<MkTextarea v-model="description">
 					<template #label>{{ i18n.ts.description }}</template>
 				</MkTextarea>
-				<MkFolder v-if="$i && ($i.isModerator)">
+				<MkSwitch  v-if="$i && ($i.isModerator || $i.policies.canCreateOwnDeco)" v-model="isOwnDeco" @update:modelValue="toggleIsOwn" >自分専用（他の人は使えません）
+				</MkSwitch>
+				<MkFolder v-if="$i && ($i.isModerator )">
 					<template #label>{{ i18n.ts.availableRoles }}</template>
 					<template #suffix>{{ rolesThatCanBeUsedThisDecoration.length === 0 ? i18n.ts.all : rolesThatCanBeUsedThisDecoration.length }}</template>
 
@@ -51,7 +56,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkFolder>
 				<MkButton v-if="avatarDecoration" danger @click="del()"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
 			</div>
-		</MkSpacer>
+		</div>
 		<div :class="$style.footer">
 			<MkButton primary rounded style="margin: 0 auto;" @click="done"><i class="ti ti-check"></i> {{ props.avatarDecoration ? i18n.ts.update : i18n.ts.create }}</MkButton>
 		</div>
@@ -60,26 +65,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 </template>
 
 <script lang="ts" setup>
-import { computed, watch, ref } from 'vue';
+import { computed, watch, ref, useTemplateRef } from 'vue';
 import * as Misskey from 'misskey-js';
 import MkWindow from '@/components/MkWindow.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkFolder from '@/components/MkFolder.vue';
-import { selectFile } from '@/scripts/select-file.js';
+import { selectFile } from '@/utility/drive.js';
 import * as os from '@/os.js';
-import { misskeyApi } from '@/scripts/misskey-api.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkRolePreview from '@/components/MkRolePreview.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
-import { signinRequired } from '@/account.js';
+import { ensureSignin } from '@/i.js';
 
-const $i = signinRequired();
+const $i = ensureSignin();
 
 const props = defineProps<{
-	avatarDecoration?: any,
+	avatarDecoration?: Misskey.entities.AdminAvatarDecorationsListResponse[number],
+	categories?: string[],
 }>();
 
 const emit = defineEmits<{
@@ -87,41 +93,85 @@ const emit = defineEmits<{
 	(ev: 'closed'): void
 }>();
 
-const windowEl = ref<InstanceType<typeof MkWindow> | null>(null);
+const windowEl = useTemplateRef('windowEl');
 const aid = ref<string>(props.avatarDecoration ? props.avatarDecoration.id : '');
 let url = ref<string>(props.avatarDecoration ? props.avatarDecoration.url : '');
 let name = ref<string>(props.avatarDecoration ? props.avatarDecoration.name : '');
+const category = ref<string>(props.avatarDecoration?.category ? props.avatarDecoration.category : '');
 const description = ref<string>(props.avatarDecoration ? props.avatarDecoration.description : '');
 const roleIdsThatCanBeUsedThisDecoration = ref(props.avatarDecoration ? props.avatarDecoration.roleIdsThatCanBeUsedThisDecoration : []);
 const rolesThatCanBeUsedThisDecoration = ref<Misskey.entities.Role[]>([]);
 let file     = ref<Misskey.entities.DriveFile>();
 let file_old = ref<Misskey.entities.DriveFile>();
+const isOwnDeco = ref( props.avatarDecoration ? (props.avatarDecoration.roleIdsThatCanBeUsedThisDecoration.length > 0) : false);
 
 watch(roleIdsThatCanBeUsedThisDecoration, async () => {
-	rolesThatCanBeUsedThisDecoration.value = (await Promise.all(roleIdsThatCanBeUsedThisDecoration.value.map((id) => misskeyApi('admin/roles/show', { roleId: id }).catch(() => null)))).filter(x => x != null);
+       rolesThatCanBeUsedThisDecoration.value = (await Promise.all(roleIdsThatCanBeUsedThisDecoration.value.map((id) => misskeyApi('roles/show', { roleId: id }).catch(() => null)))).filter(x => x != null);
 }, { immediate: true });
 
 async function addRole() {
-	const roles = await misskeyApi('admin/roles/list');
+	const roles = await misskeyApi('roles/list');
 	const currentRoleIds = rolesThatCanBeUsedThisDecoration.value.map(x => x.id);
 
-	const { canceled, result: role } = await os.select({
-		items: roles.filter(r => r.isPublic).filter(r => !currentRoleIds.includes(r.id)).map(r => ({ text: r.name, value: r })),
+	const { canceled, result: roleId } = await os.select({
+		items: roles.filter(r => r.isPublic).filter(r => !currentRoleIds.includes(r.id)).map(r => ({ label: r.name, value: r.id })),
 	});
-	if (canceled || role == null) return;
+	if (canceled || roleId == null) return;
 
-	rolesThatCanBeUsedThisDecoration.value.push(role);
+	rolesThatCanBeUsedThisDecoration.value.push(roles.find(r => r.id === roleId)!);
 }
 
-async function removeRole(role, ev) {
+async function toggleIsOwn(): Promise<void> {
+       if ( isOwnDeco.value ){
+               const roles = await misskeyApi('roles/list');
+               let nobody_role = null;
+               for (const i of roles){
+               // nobody role . must be open and easy search
+                       if ( i.name == "nobody" ){
+                               nobody_role = i;
+                       }
+               }
+               if ( nobody_role == null ){
+                       console.error(" no nobody role. please define this role. ERROR ")
+		       isOwnDeco.value = false;
+               }else{
+                       rolesThatCanBeUsedThisDecoration.value = [];
+                       rolesThatCanBeUsedThisDecoration.value.push(nobody_role);
+               }
+       }else{
+               rolesThatCanBeUsedThisDecoration.value = [];
+       }
+}
+
+async function removeRole(role: Misskey.entities.Role, ev: PointerEvent) {
 	rolesThatCanBeUsedThisDecoration.value = rolesThatCanBeUsedThisDecoration.value.filter(x => x.id !== role.id);
 }
 
 async function done() {
+
+	if (url.value.trim() === '') {
+		await os.alert({
+			type: 'error',
+			title: i18n.ts.error,
+			text: 'デコレーション画像を選択してください。',
+		});
+		return;
+	}
+
+	if (name.value.trim() === '') {
+		await os.alert({
+			type: 'error',
+			title: i18n.ts.error,
+			text: 'デコレーション名を入力してください。',
+		});
+		return;
+	}
+
 	const params = {
 		url: url.value,
 		name: name.value,
 		description: description.value,
+		category: category.value,
 		roleIdsThatCanBeUsedThisDecoration: rolesThatCanBeUsedThisDecoration.value.map(x => x.id),
 	};
 
@@ -151,6 +201,8 @@ async function done() {
 }
 
 async function del() {
+	if (props.avatarDecoration == null) return;
+
 	const { canceled } = await os.confirm({
 		type: 'warning',
 		text: i18n.tsx.removeAreYouSure({ x: name.value }),
@@ -167,24 +219,29 @@ async function del() {
 	});
 }
 
-async function changeImage(ev,avatarDecoration) {
-       file_old.value = file.value;
-       file.value = await selectFile(ev.currentTarget ?? ev.target, "decoration");
-       console.log("file = " + file.value.id + " " + file.value.name + " " + file.value.url);
-       if( file.value != null && file.value.id != null ){
-               if ( file_old.value != null  && file_old.value.id != null ){
-//                       await os.apiWithDialog('drive/files/delete', {
-//                               fileId: file_old.value.id,
-//                       });
-               }
-               url.value = file.value.url;
-               const candidate = file.value.name.replace(/\.(.+)$/, '');
-               if (candidate.match(/^[a-z0-9_]+$/)) {
-                       if ( name.value == '' ){
-                               name.value = candidate;
-                       }
-               }
-       }
+async function changeImage(ev: MouseEvent): Promise<void> {
+	const selectedFile = await selectFile({
+		anchorElement: ev.currentTarget,
+		multiple: false,
+	});
+
+	if (!selectedFile.type.startsWith('image/')) {
+		await os.alert({
+			type: 'error',
+			title: i18n.ts.error,
+			text: '画像ファイルを選択してください。',
+		});
+		return;
+	}
+
+	file.value = selectedFile;
+	url.value = selectedFile.url;
+
+	const candidate = selectedFile.name.replace(/\.[^.]+$/, '');
+
+	if (name.value.trim() === '' && candidate.trim() !== '') {
+		name.value = candidate;
+	}
 }
 
 </script>
@@ -238,7 +295,7 @@ async function changeImage(ev,avatarDecoration) {
 	left: 0;
 	padding: 12px;
 	border-top: solid 0.5px var(--MI_THEME-divider);
-	background: var(--MI_THEME-acrylicBg);
+	background: color(from var(--MI_THEME-bg) srgb r g b / 0.5);
 	-webkit-backdrop-filter: var(--MI-blur, blur(15px));
 	backdrop-filter: var(--MI-blur, blur(15px));
 }
