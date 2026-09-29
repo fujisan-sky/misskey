@@ -313,7 +313,7 @@ export interface Locale extends ILocale {
      */
     "mentions": string;
     /**
-     * ダイレクト投稿
+     * 指名
      */
     "directNotes": string;
     /**
@@ -2053,7 +2053,7 @@ export interface Locale extends ILocale {
      */
     "tooLong": string;
     /**
-     * 簡単すぎるパスワードです(英字と数字を混ぜるなどにより,もっと複雑で長い物にしてください)
+     * 弱いパスワード
      */
     "weakPassword": string;
     /**
@@ -2488,6 +2488,14 @@ export interface Locale extends ILocale {
      * リモートユーザー情報の更新
      */
     "updateRemoteUser": string;
+    /**
+     * 二要素認証を解除
+     */
+    "unsetMfa": string;
+    /**
+     * 二要素認証を解除しますか？
+     */
+    "unsetMfaConfirm": string;
     /**
      * アイコンを解除
      */
@@ -4165,6 +4173,10 @@ export interface Locale extends ILocale {
      */
     "cannotLoad": string;
     /**
+     * プレビューできません
+     */
+    "cannotPreview": string;
+    /**
      * プロフィール表示回数
      */
     "numberOfProfileView": string;
@@ -5457,14 +5469,6 @@ export interface Locale extends ILocale {
      */
     "directMessage_short": string;
     /**
-     * 旧設定情報を移行
-     */
-    "migrateOldSettings": string;
-    /**
-     * 通常これは自動で行われていますが、何らかの理由により上手く移行されなかった場合は手動で移行処理をトリガーできます。現在の設定情報は上書きされます。
-     */
-    "migrateOldSettings_description": string;
-    /**
      * 圧縮
      */
     "compress": string;
@@ -5484,10 +5488,6 @@ export interface Locale extends ILocale {
      * 埋め込み
      */
     "embed": string;
-    /**
-     * 設定を移行しています。しばらくお待ちください... (後ほど、設定→その他→旧設定情報を移行 で手動で移行することもできます)
-     */
-    "settingsMigrating": string;
     /**
      * 読み取り専用
      */
@@ -5695,6 +5695,18 @@ export interface Locale extends ILocale {
      * 先頭に追加
      */
     "prepend": string;
+    /**
+     * サムネイルの表示を制限するURL
+     */
+    "urlPreviewSensitiveList": string;
+    /**
+     * スペースで区切るとAND指定になり、改行で区切るとOR指定になります。スラッシュで囲むと正規表現になります。一致した場合、サムネイルが表示されなくなります。
+     */
+    "urlPreviewSensitiveListDescription": string;
+    /**
+     * ピクセルアート拡大モード
+     */
+    "pixelatedZoom": string;
     "_imageEditing": {
         "_vars": {
             /**
@@ -8234,26 +8246,6 @@ export interface Locale extends ILocale {
              */
             "avatarDecorationLimit": string;
             /**
-             * パブリック投稿の最低時間間隔
-             */
-            "publicMinimumInterval": string;
-            /**
-             * メンションの最低時間間隔
-             */
-            "mentionMinimumInterval": string;
-            /**
-             * カスタム絵文字の作成権限（作成のみ）
-             */
-            "canCreateEmoji": string;
-            /**
-             * メッセージをフィルターする
-             */
-            "messageFilter": string;
-            /**
-             * 自分専用のアバターデコレーション作成権限
-             */
-            "canCreateOwnDeco": string;
-            /**
              * アンテナのインポートを許可
              */
             "canImportAntennas": string;
@@ -8323,10 +8315,6 @@ export interface Locale extends ILocale {
              * botユーザー
              */
             "isBot": string;
-            /**
-             * あんぜんモードユーザー
-             */
-            "isSafe": string;
             /**
              * サスペンド済みユーザー
              */
@@ -8414,6 +8402,42 @@ export interface Locale extends ILocale {
          * 静止画に加えて動画も解析するようにします。サーバーの負荷が少し増えます。
          */
         "analyzeVideosDescription": string;
+        /**
+         * センシティブメディアの判定は外部サービス (sensitive-detector) に分離されました。この機能を利用するには、別途サイドカーサービスをセットアップし、下記の接続先を設定する必要があります。接続先が未設定の場合、判定は行われません (非センシティブ扱い)。
+         */
+        "externalServiceInfo": string;
+        /**
+         * 判定サービスの接続先URL
+         */
+        "apiUrl": string;
+        /**
+         * sensitive-detector サービスのベースURL (例: http://localhost:3009)。プライベートネットワーク上のサービスに接続する場合は、設定ファイルの allowedPrivateNetworks で接続先ネットワークを許可してください。プロキシを使用している場合は、proxyBypassHosts も設定してください。空欄の場合、センシティブ判定は行われません。
+         */
+        "apiUrlDescription": string;
+        /**
+         * APIキー
+         */
+        "apiKey": string;
+        /**
+         * 判定サービス側で認証 (Bearerトークン) を設定している場合に入力します。設定していない場合は空欄のままにしてください。
+         */
+        "apiKeyDescription": string;
+        /**
+         * タイムアウト (ミリ秒)
+         */
+        "timeout": string;
+        /**
+         * 判定リクエスト1回あたりのタイムアウト時間です。
+         */
+        "timeoutDescription": string;
+        /**
+         * 1リクエストあたりの最大画像数
+         */
+        "maxImagesPerRequest": string;
+        /**
+         * 動画など複数フレームを判定する際、1回のリクエストにまとめて送る画像の最大枚数です。これを超える分は分割して順次送信されます。sensitive-detector 側の maxParts 設定（デフォルト: 10）を超えないように設定してください。超えた場合、そのチャンクは全件非センシティブ扱いとなります。
+         */
+        "maxImagesPerRequestDescription": string;
     };
     "_emailUnavailable": {
         /**
@@ -8425,7 +8449,7 @@ export interface Locale extends ILocale {
          */
         "format": string;
         /**
-         * 恒久的に使用可能なアドレスではありません/捨てアドの利用は禁止しています
+         * 恒久的に使用可能なアドレスではありません
          */
         "disposable": string;
         /**
@@ -9603,6 +9627,10 @@ export interface Locale extends ILocale {
          */
         "write:admin:suspend-user": string;
         /**
+         * ユーザーの二要素認証を解除する
+         */
+        "write:admin:unset-mfa": string;
+        /**
          * ユーザーのアバターを削除する
          */
         "write:admin:unset-user-avatar": string;
@@ -10245,7 +10273,7 @@ export interface Locale extends ILocale {
          */
         "followersDescription": string;
         /**
-         * ダイレクト
+         * 指名
          */
         "specified": string;
         /**
@@ -11238,7 +11266,7 @@ export interface Locale extends ILocale {
              */
             "mentions": string;
             /**
-             * ダイレクト
+             * 指名
              */
             "direct": string;
             /**
@@ -11572,6 +11600,10 @@ export interface Locale extends ILocale {
          * アイコンデコレーションを削除
          */
         "deleteAvatarDecoration": string;
+        /**
+         * ユーザーの二要素認証を解除
+         */
+        "unsetMfa": string;
         /**
          * ユーザーのアイコンを解除
          */
@@ -13345,19 +13377,5 @@ export interface Locale extends ILocale {
          * MFM
          */
         "mfm": string;
-    };
-    "_fuji3chat": {
-        /**
-         * ふじさんチャット
-         */
-        "title": string;
-        /**
-         * ふじさんチャットに接続しています…
-         */
-        "connecting": string;
-        /**
-         * 接続できませんでした。もう一度お試しください。
-         */
-        "failed": string;
     };
 }

@@ -84,4 +84,12 @@ export const MFM_PARAMS: Record<typeof MFM_TAGS[number], string[]> = {
  * デフォルトの絵文字。UIの演出などでも使用されるため空にしてはいけない
  * （絵文字パレットのデフォルト絵文字を空にする等の場合は、preferenceのdefinition側の値を空にすること）
  */
-export const DEFAULT_EMOJIS = ['👍', '❤️', '😆', '🤔', '😮', '🎉', '💢', '😥', '😇', '🍮'];
+//export const DEFAULT_EMOJIS = ['👍', '❤️', '😆', '🤔', '😮', '🎉', '💢', '😥', '😇', '🍮'];
+export const DEFAULT_EMOJIS = ['👍', ' ', '🎉',
+                       ':fuji3:', ':ablobcatheadbangfastultra:', ':ablobcatattention:', ':ablobcatfloofpat:',
+                       ':ablobcry:', ':ablobcatdrool:', ':blobcatfearful:', ':blobcat_ofton:',
+                       ':Shiropuyo_hayai_Resonance:', ':Shiropuyo_ohayou:',
+                       ':Shiropuyo_oyasumi:', ':igyo:', ':ajiwai_bukai:', ':iihanashi:', ':google_hart:',
+                       ':ablobcat_uruuru:', ':meow_bongo_keyboard:', ':ablobcat_kyaa:',
+                       ':cat_thumbsup_84:', ':frog_happy_84:', ':dog_thinking_84:'
+                       ];

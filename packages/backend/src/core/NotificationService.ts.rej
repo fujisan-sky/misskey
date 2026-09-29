@@ -1,0 +1,368 @@
+--- packages/backend/src/core/NotificationService.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/core/NotificationService.ts	2026-09-29 11:46:15.242142241 +0900
+@@ -9,9 +9,10 @@
+ import { In } from 'typeorm';
+ import { ReplyError } from 'ioredis';
+ import { DI } from '@/di-symbols.js';
+-import type { UsersRepository } from '@/models/_.js';
++import type { MiUserProfile, UsersRepository, NotesRepository } from '@/models/_.js';
+ import type { MiUser } from '@/models/User.js';
+ import type { MiNotification } from '@/models/Notification.js';
++import type { MiNote } from '@/models/Note.js';
+ import { bindThis } from '@/decorators.js';
+ import { GlobalEventService } from '@/core/GlobalEventService.js';
+ import { PushNotificationService } from '@/core/PushNotificationService.js';
+@@ -19,10 +20,10 @@
+ import { IdService } from '@/core/IdService.js';
+ import { CacheService } from '@/core/CacheService.js';
+ import type { Config } from '@/config.js';
++import { EmailService } from '@/core/EmailService.js';
+ import { UserListService } from '@/core/UserListService.js';
+ import { FilterUnionByProperty, groupedNotificationTypes, obsoleteNotificationTypes } from '@/types.js';
+ import { trackPromise } from '@/misc/promise-tracker.js';
+-// import { escapeHtml } from '@/misc/escape-html.js';
+ 
+ @Injectable()
+ export class NotificationService implements OnApplicationShutdown {
+@@ -38,11 +39,15 @@
+ 		@Inject(DI.usersRepository)
+ 		private usersRepository: UsersRepository,
+ 
++		@Inject(DI.notesRepository)
++		private notesRepository: NotesRepository,
++
+ 		private notificationEntityService: NotificationEntityService,
+ 		private idService: IdService,
+ 		private globalEventService: GlobalEventService,
+ 		private pushNotificationService: PushNotificationService,
+ 		private cacheService: CacheService,
++		private emailService: EmailService,
+ 		private userListService: UserListService,
+ 	) {
+ 	}
+@@ -195,10 +200,22 @@
+ 			this.globalEventService.publishMainStream(notifieeId, 'unreadNotification', packed);
+ 			this.pushNotificationService.pushNotification(notifieeId, 'notification', packed);
+ 
+-			if (type === 'follow') this.emailNotificationFollow(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
+-			if (type === 'receiveFollowRequest') this.emailNotificationReceiveFollowRequest(notifieeId, await this.usersRepository.findOneByOrFail({ id: notifierId! }));
+ 		}, () => { /* aborted, ignore it */ });
+ 
++		void this.sendEmailNotification(
++				profile, 
++				type, 
++				notifierId,
++			       	type === 'mention' && 'noteId' in data
++					? data.noteId
++					: null,
++			).catch((err) => {
++			console.error(
++       			`メール通知の送信に失敗しました: type=${type}, notifieeId=${notifieeId}`,
++       			err,
++			);
++		});
++
+ 		return notification;
+ 	}
+ 
+@@ -208,31 +225,280 @@
+ 	// TODO: locale ファイルをクライアント用とサーバー用で分けたい
+ 
+ 	@bindThis
+-	private async emailNotificationFollow(userId: MiUser['id'], follower: MiUser) {
+-		/*
+-		const userProfile = await UserProfiles.findOneByOrFail({ userId: userId });
+-		if (!userProfile.email || !userProfile.emailNotificationTypes.includes('follow')) return;
+-		const locale = locales[userProfile.lang ?? 'ja-JP'];
+-		const i18n = new I18n(locale);
+-		// TODO: render user information html
+-		const body = `${follower.name} (@${Acct.toString(follower)})`;
+-		sendEmail(userProfile.email, i18n.t('_email._follow.title'), escapeHtml(body), body);
+-		*/
++	private async sendEmailNotification(
++		profile: MiUserProfile,
++		type: MiNotification['type'],
++		notifierId?: MiUser['id'] | null,
++		noteId?: MiNote['id'] | null,
++	): Promise<void> {
++		const mailAddr = profile.email;
++
++		if (!mailAddr || !profile.emailVerified || !notifierId) {
++			return;
++		}
++
++		let settingType: string;
++		let title: string;
++		let message: string;
++
++		switch (type) {
++			case 'mention':
++				settingType = 'mention';
++				title = 'メンション／ダイレクトメッセージが来ています';
++				message = 'さんからメンション／ダイレクトメッセージが来ています';
++				break;
++
++			case 'reply':
++				settingType = 'reply';
++				title = 'リプライされました';
++				message = 'さんからリプライが来ています';
++				break;
++
++			case 'quote':
++				settingType = 'quote';
++				title = '引用されました';
++				message = 'さんに引用されました';
++				break;
++
++			case 'renote':
++				settingType = 'renote';
++				title = 'リノートされました';
++				message = 'さんにリノートされました';
++				break;
++
++			case 'follow':
++				settingType = 'follow';
++				title = 'フォローされました';
++				message = 'さんにフォローされました';
++				break;
++
++			case 'receiveFollowRequest':
++				settingType = 'receiveFollowRequest';
++				title = 'フォローリクエストが届いています';
++				message = 'さんからフォローリクエストが届いています';
++				break;
++
++			default:
++				return;
++		}
++
++	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
++		const emailNotificationTypes =
++			profile.emailNotificationTypes ?? [];
++	
++		if (!emailNotificationTypes.includes(settingType)) {
++			return;
++		}
++
++	/*
++	 * mentionの場合だけノートを取得します。
++	 * notifierとnoteは同時に検索します。
++	 */
++		const [notifier, note] = await Promise.all([
++			this.usersRepository.findOneBy({
++				id: notifierId,
++			}),
++			type === 'mention' && noteId
++				? this.notesRepository.findOneBy({
++					id: noteId,
++				})
++				: Promise.resolve(null),
++		]);
++
++		// 通知作成からメール処理までの間に削除された場合など
++		if (!notifier) {
++			return;
++		}
++
++		const mentionText =
++			type === 'mention' && note
++				? this.createMentionText(note.cw, note.text)
++				: null;
++
++		await this.emailNotificationEtc(
++			mailAddr,
++			notifier,
++			title,
++			message,
++			mentionText,
++		);
+ 	}
+ 
+ 	@bindThis
+-	private async emailNotificationReceiveFollowRequest(userId: MiUser['id'], follower: MiUser) {
+-		/*
+-		const userProfile = await UserProfiles.findOneByOrFail({ userId: userId });
+-		if (!userProfile.email || !userProfile.emailNotificationTypes.includes('receiveFollowRequest')) return;
+-		const locale = locales[userProfile.lang ?? 'ja-JP'];
+-		const i18n = new I18n(locale);
+-		// TODO: render user information html
+-		const body = `${follower.name} (@${Acct.toString(follower)})`;
+-		sendEmail(userProfile.email, i18n.t('_email._receiveFollowRequest.title'), escapeHtml(body), body);
+-		*/
++	private async emailNotificationEtc(
++		mailAddr: string,
++		notifier: MiUser,
++		title: string,
++		message: string,
++		mentionText: string | null,
++	): Promise<void> {
++		const nameText = notifier.name || notifier.username;
++		const hostName = notifier.host ?? this.config.host;
++		const accountText =
++			`@${notifier.username}@${hostName}`;
++
++		const escapedName = this.escapeHtml(nameText);
++		const escapedAccount = this.escapeHtml(accountText);
++		const escapedMessage = this.escapeHtml(message);
++
++	/*
++	 * avatarUrlはHTML属性に入るため、
++	 * URLを検査した後にHTMLエスケープします。
++	 */
++		const avatarUrl = this.getSafeImageUrl(notifier.avatarUrl);
++
++		const avatarHtml = avatarUrl
++		? `
++			<td style="padding-right: 12px; vertical-align: top;">
++				<img
++					src="${this.escapeHtml(avatarUrl)}"
++					width="48"
++					height="48"
++					alt=""
++					style="
++						display: block;
++						width: 48px;
++						height: 48px;
++						border-radius: 50%;
++						object-fit: cover;
++					"
++				>
++			</td>
++		`
++		: '';
++
++		const mentionPlainText = mentionText
++		? `\n\n--- メッセージ内容 ---\n${mentionText}`
++		: '';
++
++		const escapedMentionText = mentionText
++		? this.escapeHtml(mentionText)
++			.replace(/\r\n|\r|\n/g, '<br>')
++		: null;
++
++		const mentionHtml = escapedMentionText
++		? `
++			<div
++				style="
++					margin-top: 16px;
++					padding: 12px;
++					border: 1px solid #dddddd;
++					border-radius: 6px;
++					background-color: #f7f7f7;
++				"
++			>
++				<div
++					style="
++						margin-bottom: 8px;
++						font-weight: bold;
++					"
++				>
++					メッセージ内容
++				</div>
++				<div>${escapedMentionText}</div>
++			</div>
++		`
++		: '';
++
++		const plainText =
++			`${nameText} さん\n` +
++			`${accountText}\n\n` +
++			`${nameText}${message}` +
++			mentionPlainText;
++
++		const htmlText = `
++<div>
++	<table
++		role="presentation"
++		cellpadding="0"
++		cellspacing="0"
++		border="0"
++	>
++		<tr>
++			${avatarHtml}
++			<td style="vertical-align: top;">
++				<strong style="font-size: 1.3em;">
++					${escapedName} さん
++				</strong>
++				<br>
++				<i>${escapedAccount}</i>
++				<p>${escapedName}${escapedMessage}</p>
++			</td>
++		</tr>
++	</table>
++
++	${mentionHtml}
++</div>
++`;
++
++		await this.emailService.sendEmail(
++			mailAddr,
++			title,
++			htmlText,
++			plainText,
++		);
++	}
++
++	private createMentionText(
++		cw: string | null,
++		text: string | null,
++	): string {
++		const parts: string[] = [];
++
++		if (cw) {
++			parts.push(`CW: ${cw}`);
++		}
++
++		if (text) {
++			parts.push(text);
++		}
++
++		if (parts.length === 0) {
++			return '本文はありません（画像またはファイルのみでしょう）。';
++		}
++
++		return parts.join('\n\n');
+ 	}
+ 
++	private getSafeImageUrl(
++		value: string | null,
++	): string | null {
++		if (!value) {
++			return null;
++		}
++
++		try {
++			const url = new URL(value);
++	
++			if (
++				url.protocol !== 'https:' &&
++				url.protocol !== 'http:'
++			) {
++				return null;
++			}
++
++			return url.toString();
++		} catch {
++			return null;
++		}
++	}
++
++	private escapeHtml(value: string): string {
++		const chars: Record<string, string> = {
++			'&': '&amp;',
++			'<': '&lt;',
++			'>': '&gt;',
++			'"': '&quot;',
++			"'": '&#39;',
++		};
++
++		return value.replace(
++			/[&<>"']/g,
++			char => chars[char],
++		);
++	}
++
++
+ 	@bindThis
+ 	public async flushAllNotifications(userId: MiUser['id']) {
+ 		await Promise.all([

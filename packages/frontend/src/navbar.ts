@@ -28,7 +28,7 @@ export const navbarItemDef = reactive<{
 }>({
 	fuji3chat: {
 		title: i18n.ts._fuji3chat.title,
-		icon: 'ti ti-palette',
+		icon: '_fuji3chatIcon',
 		show: computed(() => $i != null && ['https://gp.miku2go.com', 'https://misskey.day'].includes(window.location.origin)),
 		to: '/fuji3chat',
 	},

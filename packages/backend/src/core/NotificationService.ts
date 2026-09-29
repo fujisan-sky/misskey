@@ -9,9 +9,10 @@ import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { In } from 'typeorm';
 import { ReplyError } from 'ioredis';
 import { DI } from '@/di-symbols.js';
-import type { MiUserProfile, UsersRepository } from '@/models/_.js';
+import type { MiUserProfile, UsersRepository, NotesRepository } from '@/models/_.js';
 import type { MiUser } from '@/models/User.js';
 import type { MiNotification } from '@/models/Notification.js';
+import type { MiNote } from '@/models/Note.js';
 import { bindThis } from '@/decorators.js';
 import { GlobalEventService } from '@/core/GlobalEventService.js';
 import { PushNotificationService } from '@/core/PushNotificationService.js';
@@ -37,6 +38,9 @@ export class NotificationService implements OnApplicationShutdown {
 
 		@Inject(DI.usersRepository)
 		private usersRepository: UsersRepository,
+
+		@Inject(DI.notesRepository)
+		private notesRepository: NotesRepository,
 
 		private notificationEntityService: NotificationEntityService,
 		private idService: IdService,
@@ -198,7 +202,14 @@ export class NotificationService implements OnApplicationShutdown {
 
 		}, () => { /* aborted, ignore it */ });
 
-		void this.sendEmailNotification(profile, type, notifierId).catch((err) => {
+		void this.sendEmailNotification(
+				profile, 
+				type, 
+				notifierId,
+			       	type === 'mention' && 'noteId' in data
+					? data.noteId
+					: null,
+			).catch((err) => {
 			console.error(
        			`メール通知の送信に失敗しました: type=${type}, notifieeId=${notifieeId}`,
        			err,
@@ -213,139 +224,280 @@ export class NotificationService implements OnApplicationShutdown {
 
 	// TODO: locale ファイルをクライアント用とサーバー用で分けたい
 
-
 	@bindThis
 	private async sendEmailNotification(
-    		profile: MiUserProfile,
-    		type: MiNotification['type'],
-    		notifierId?: MiUser['id'] | null,
+		profile: MiUserProfile,
+		type: MiNotification['type'],
+		notifierId?: MiUser['id'] | null,
+		noteId?: MiNote['id'] | null,
 	): Promise<void> {
-    		if (!profile.email || !profile.emailVerified || !notifierId) {
-        		return;
-    		}
+		const mailAddr = profile.email;
 
-    		let settingType: string;
-    		let title: string;
-    		let message: string;
+		if (!mailAddr || !profile.emailVerified || !notifierId) {
+			return;
+		}
 
-    		switch (type) {
-        		case 'mention':
-            			settingType = 'mention';
-            			title = 'メンション／ダイレクトメッセージが来ています';
-            			message = 'さんからメンション／ダイレクトメッセージが来ています';
-            		break;
+		let settingType: string;
+		let title: string;
+		let message: string;
 
-        		case 'reply':
-            			settingType = 'reply';
-            			title = 'リプライされました';
-            			message = 'さんからリプライが来ています';
-            		break;
+		switch (type) {
+			case 'mention':
+				settingType = 'mention';
+				title = 'メンション／ダイレクトメッセージが来ています';
+				message = 'さんからメンション／ダイレクトメッセージが来ています';
+				break;
 
-        		case 'quote':
-            			settingType = 'quote';
-            			title = '引用されました';
-            			message = 'さんに引用されました';
-            		break;
+			case 'reply':
+				settingType = 'reply';
+				title = 'リプライされました';
+				message = 'さんからリプライが来ています';
+				break;
 
-        		case 'renote':
-            			settingType = 'renote';
-            			title = 'リノートされました';
-            			message = 'さんにリノートされました';
-            		break;
+			case 'quote':
+				settingType = 'quote';
+				title = '引用されました';
+				message = 'さんに引用されました';
+				break;
 
-        		case 'follow':
-            			settingType = 'follow';
-            			title = 'フォローされました';
-            			message = 'さんにフォローされました';
-            		break;
+			case 'renote':
+				settingType = 'renote';
+				title = 'リノートされました';
+				message = 'さんにリノートされました';
+				break;
 
-        		case 'receiveFollowRequest':
-            			settingType = 'receiveFollowRequest';
-            			title = 'フォローリクエストが届いています';
-            			message = 'さんからフォローリクエストが届いています';
-            		break;
+			case 'follow':
+				settingType = 'follow';
+				title = 'フォローされました';
+				message = 'さんにフォローされました';
+				break;
 
-        		default:
-            			return;
-    		}
+			case 'receiveFollowRequest':
+				settingType = 'receiveFollowRequest';
+				title = 'フォローリクエストが届いています';
+				message = 'さんからフォローリクエストが届いています';
+				break;
 
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    		const emailNotificationTypes =
-        		profile.emailNotificationTypes ?? [];
-		
-    		if (!emailNotificationTypes.includes(settingType)) {
-        		return;
-    		}
+			default:
+				return;
+		}
 
-    		// 設定を確認してからDB検索する
-    		const notifier = await this.usersRepository.findOneBy({
-        		id: notifierId,
-    		});
+	// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+		const emailNotificationTypes =
+			profile.emailNotificationTypes ?? [];
+	
+		if (!emailNotificationTypes.includes(settingType)) {
+			return;
+		}
 
-    		// 通知作成からメール処理までの間に削除された場合など
-    		if (!notifier) {
-        		return;
-    		}
+	/*
+	 * mentionの場合だけノートを取得します。
+	 * notifierとnoteは同時に検索します。
+	 */
+		const [notifier, note] = await Promise.all([
+			this.usersRepository.findOneBy({
+				id: notifierId,
+			}),
+			type === 'mention' && noteId
+				? this.notesRepository.findOneBy({
+					id: noteId,
+				})
+				: Promise.resolve(null),
+		]);
 
-    		await this.emailNotificationEtc(
-        		profile.email,
-        		notifier,
-        		title,
-        		message,
-    		);
+		// 通知作成からメール処理までの間に削除された場合など
+		if (!notifier) {
+			return;
+		}
+
+		const mentionText =
+			type === 'mention' && note
+				? this.createMentionText(note.cw, note.text)
+				: null;
+
+		await this.emailNotificationEtc(
+			mailAddr,
+			notifier,
+			title,
+			message,
+			mentionText,
+		);
 	}
 
 	@bindThis
 	private async emailNotificationEtc(
-    		mailAddr: string,
-    		notifier: MiUser,
-    		title: string,
-    		message: string,
+		mailAddr: string,
+		notifier: MiUser,
+		title: string,
+		message: string,
+		mentionText: string | null,
 	): Promise<void> {
-    		const nameText = notifier.name || notifier.username;
-    		const hostName = notifier.host ?? this.config.host;
-    		const accountText =
-        		`@${notifier.username}@${hostName}`;
+		const nameText = notifier.name || notifier.username;
+		const hostName = notifier.host ?? this.config.host;
+		const accountText =
+			`@${notifier.username}@${hostName}`;
 
-    		const escapedName = this.escapeHtml(nameText);
-    		const escapedAccount = this.escapeHtml(accountText);
-    		const escapedMessage = this.escapeHtml(message);
+		const escapedName = this.escapeHtml(nameText);
+		const escapedAccount = this.escapeHtml(accountText);
+		const escapedMessage = this.escapeHtml(message);
 
-    		const plainText =
-        		`${nameText} さん\n` +
-        		`${accountText}\n\n` +
-        		`${nameText}${message}`;
+	/*
+	 * avatarUrlはHTML属性に入るため、
+	 * URLを検査した後にHTMLエスケープします。
+	 */
+		const avatarUrl = this.getSafeImageUrl(notifier.avatarUrl);
 
-    		const htmlText = `
+		const avatarHtml = avatarUrl
+		? `
+			<td style="padding-right: 12px; vertical-align: top;">
+				<img
+					src="${this.escapeHtml(avatarUrl)}"
+					width="48"
+					height="48"
+					alt=""
+					style="
+						display: block;
+						width: 48px;
+						height: 48px;
+						border-radius: 50%;
+						object-fit: cover;
+					"
+				>
+			</td>
+		`
+		: '';
+
+		const mentionPlainText = mentionText
+		? `\n\n--- メッセージ内容 ---\n${mentionText}`
+		: '';
+
+		const escapedMentionText = mentionText
+		? this.escapeHtml(mentionText)
+			.replace(/\r\n|\r|\n/g, '<br>')
+		: null;
+
+		const mentionHtml = escapedMentionText
+		? `
+			<div
+				style="
+					margin-top: 16px;
+					padding: 12px;
+					border: 1px solid #dddddd;
+					border-radius: 6px;
+					background-color: #f7f7f7;
+				"
+			>
+				<div
+					style="
+						margin-bottom: 8px;
+						font-weight: bold;
+					"
+				>
+					メッセージ内容
+				</div>
+				<div>${escapedMentionText}</div>
+			</div>
+		`
+		: '';
+
+		const plainText =
+			`${nameText} さん\n` +
+			`${accountText}\n\n` +
+			`${nameText}${message}` +
+			mentionPlainText;
+
+		const htmlText = `
 <div>
-	<strong style="font-size: 1.3em;">
-       		${escapedName} さん
-       	</strong>
-       	<br>
-       	<i>${escapedAccount}</i>
-       	<p>${escapedName}${escapedMessage}</p>
+	<table
+		role="presentation"
+		cellpadding="0"
+		cellspacing="0"
+		border="0"
+	>
+		<tr>
+			${avatarHtml}
+			<td style="vertical-align: top;">
+				<strong style="font-size: 1.3em;">
+					${escapedName} さん
+				</strong>
+				<br>
+				<i>${escapedAccount}</i>
+				<p>${escapedName}${escapedMessage}</p>
+			</td>
+		</tr>
+	</table>
+
+	${mentionHtml}
 </div>
 `;
 
-    		await this.emailService.sendEmail(
-        		mailAddr,
-        		title,
-        		htmlText,
-        		plainText,
-    		);
+		await this.emailService.sendEmail(
+			mailAddr,
+			title,
+			htmlText,
+			plainText,
+		);
+	}
+
+	private createMentionText(
+		cw: string | null,
+		text: string | null,
+	): string {
+		const parts: string[] = [];
+
+		if (cw) {
+			parts.push(`CW: ${cw}`);
+		}
+
+		if (text) {
+			parts.push(text);
+		}
+
+		if (parts.length === 0) {
+			return '本文はありません（画像またはファイルのみでしょう）。';
+		}
+
+		return parts.join('\n\n');
+	}
+
+	private getSafeImageUrl(
+		value: string | null,
+	): string | null {
+		if (!value) {
+			return null;
+		}
+
+		try {
+			const url = new URL(value);
+	
+			if (
+				url.protocol !== 'https:' &&
+				url.protocol !== 'http:'
+			) {
+				return null;
+			}
+
+			return url.toString();
+		} catch {
+			return null;
+		}
 	}
 
 	private escapeHtml(value: string): string {
-    		const chars: Record<string, string> = {
-        		'&': '&amp;',
-        		'<': '&lt;',
-        		'>': '&gt;',
-        		'"': '&quot;',
-        		"'": '&#39;',
-    		};
+		const chars: Record<string, string> = {
+			'&': '&amp;',
+			'<': '&lt;',
+			'>': '&gt;',
+			'"': '&quot;',
+			"'": '&#39;',
+		};
 
-    		return value.replace(/[&<>"']/g, char => chars[char]);
+		return value.replace(
+			/[&<>"']/g,
+			char => chars[char],
+		);
 	}
+
 
 	@bindThis
 	public async flushAllNotifications(userId: MiUser['id']) {

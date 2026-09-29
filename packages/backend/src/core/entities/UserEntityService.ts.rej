@@ -1,0 +1,10 @@
+--- packages/backend/src/core/entities/UserEntityService.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/core/entities/UserEntityService.ts	2026-09-29 11:46:15.242142241 +0900
+@@ -490,6 +490,7 @@
+ 			host: user.host,
+ 			avatarUrl: (user.avatarId == null ? null : user.avatarUrl) ?? this.getIdenticonUrl(user),
+ 			avatarBlurhash: (user.avatarId == null ? null : user.avatarBlurhash),
++			safemode: user.safemode,
+ 			avatarDecorations: user.avatarDecorations.length > 0 ? this.avatarDecorationService.getAll().then(decorations => user.avatarDecorations.filter(ud => decorations.some(d => d.id === ud.id)).map(ud => ({
+ 				id: ud.id,
+ 				angle: ud.angle || undefined,

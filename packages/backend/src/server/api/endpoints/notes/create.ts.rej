@@ -1,0 +1,37 @@
+--- packages/backend/src/server/api/endpoints/notes/create.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/server/api/endpoints/notes/create.ts	2026-09-29 11:46:15.246142262 +0900
+@@ -123,6 +123,21 @@
+ 			code: 'CONTAINS_TOO_MANY_MENTIONS',
+ 			id: '4de0363a-3046-481b-9b0f-feff3e211025',
+ 		},
++		tooManyPublicNote: {
++			message: 'Interval is too short. Please note after few minutes.',
++			code: 'TOO_MANY_PUBLIC_NOTE',
++			id: 'a817376a-4bcc-11ee-8fd9-15e99585d2ed',
++		},
++		tooManyDestinations: {
++			message: 'Too many destinations for this mention.',
++			code: 'TOO_MANY_DESTINATIONS',
++			id: '4653904a-2567-5f3a-2cad-d061dc38e676',
++		},
++		tooManyMentions: {
++			message: 'Interval is too short. Please mention after few minutes.',
++			code: 'TOO_MANY_MENTIONS',
++			id: 'd5f820ab-13d3-7e50-dad9-74225cd190d0',
++		},
+ 	},
+ } as const;
+ 
+@@ -283,6 +298,12 @@
+ 						throw new ApiError(meta.errors.cannotCreateAlreadyExpiredPoll);
+ 					} else if (err.id === 'bfa3905b-25f5-4894-b430-da331a490e4b') {
+ 						throw new ApiError(meta.errors.noSuchChannel);
++					} else if (err.id === 'a817376a-4bcc-11ee-8fd9-15e99585d2ed') {
++						throw new ApiError(meta.errors.tooManyPublicNote);
++					} else if (err.id === '4653904a-2567-5f3a-2cad-d061dc38e676') {
++						throw new ApiError(meta.errors.tooManyDestinations);
++					} else if (err.id === 'd5f820ab-13d3-7e50-dad9-74225cd190d0') {
++						throw new ApiError(meta.errors.tooManyMentions);
+ 					}
+ 				}
+ 				throw err;

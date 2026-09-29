@@ -320,6 +320,104 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</template>
 		</XFolder>
 
+		<XFolder v-if="matchQuery([i18n.ts._role._options.publicMinimumInterval, 'publicMinimumInterval'])" v-model:policyMeta="policyMetaModel.publicMinimumInterval" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.publicMinimumInterval }}</template>
+			<template #valueText>{{ valuesModel.publicMinimumInterval }}</template>
+			<template #default="{ disabled }">
+				<MkInput v-model="valuesModel.publicMinimumInterval" type="number" :disabled="disabled">
+				</MkInput>
+			</template>
+		</XFolder>
+
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.mentionMinimumInterval, 'mentionMinimumInterval'])" v-model:policyMeta="policyMetaModel.mentionMinimumInterval" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.mentionMinimumInterval }}</template>
+			<template #valueText>{{ valuesModel.mentionMinimumInterval }}</template>
+			<template #default="{ disabled }">
+				<MkInput v-model="valuesModel.mentionMinimumInterval" type="number" :disabled="disabled">
+				</MkInput>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.canCreateEmoji, 'canCreateEmoji'])" v-model:policyMeta="policyMetaModel.canCreateEmoji" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.canCreateEmoji }}</template>
+			<template #valueText>{{ valuesModel.canCreateEmoji ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.canCreateEmoji" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.messageFilter, 'messageFilter'])" v-model:policyMeta="policyMetaModel.messageFilter" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.messageFilter }}</template>
+			<template #valueText>{{ valuesModel.messageFilter ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.messageFilter" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.canCreateOwnDeco, 'canCreateOwnDeco'])" v-model:policyMeta="policyMetaModel.canCreateOwnDeco" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.canCreateOwnDeco }}</template>
+			<template #valueText>{{ valuesModel.canCreateOwnDeco ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.canCreateOwnDeco" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.publicMinimumInterval, 'publicMinimumInterval'])" v-model:policyMeta="policyMetaModel.publicMinimumInterval" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.publicMinimumInterval }}</template>
+			<template #valueText>{{ valuesModel.publicMinimumInterval }}</template>
+			<template #default="{ disabled }">
+				<MkInput v-model="valuesModel.publicMinimumInterval" type="number" :disabled="disabled">
+				</MkInput>
+			</template>
+		</XFolder>
+
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.mentionMinimumInterval, 'mentionMinimumInterval'])" v-model:policyMeta="policyMetaModel.mentionMinimumInterval" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.mentionMinimumInterval }}</template>
+			<template #valueText>{{ valuesModel.mentionMinimumInterval }}</template>
+			<template #default="{ disabled }">
+				<MkInput v-model="valuesModel.mentionMinimumInterval" type="number" :disabled="disabled">
+				</MkInput>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.canCreateEmoji, 'canCreateEmoji'])" v-model:policyMeta="policyMetaModel.canCreateEmoji" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.canCreateEmoji }}</template>
+			<template #valueText>{{ valuesModel.canCreateEmoji ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.canCreateEmoji" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.messageFilter, 'messageFilter'])" v-model:policyMeta="policyMetaModel.messageFilter" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.messageFilter }}</template>
+			<template #valueText>{{ valuesModel.messageFilter ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.messageFilter" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
+		<XFolder v-if="matchQuery([i18n.ts._role._options.canCreateOwnDeco, 'canCreateOwnDeco'])" v-model:policyMeta="policyMetaModel.canCreateOwnDeco" :isBaseRole="isBaseRole" :readonly="readonly">
+			<template #label>{{ i18n.ts._role._options.canCreateOwnDeco }}</template>
+			<template #valueText>{{ valuesModel.canCreateOwnDeco ? i18n.ts.yes : i18n.ts.no }}</template>
+			<template #default="{ disabled }">
+				<MkSwitch v-model="valuesModel.canCreateOwnDeco" :disabled="disabled">
+					<template #label>{{ i18n.ts.enable }}</template>
+				</MkSwitch>
+			</template>
+		</XFolder>
+
 		<XFolder v-if="matchQuery([i18n.ts._role._options.canImportAntennas, 'canImportAntennas'])" v-model:policyMeta="policyMetaModel.canImportAntennas" :isBaseRole="isBaseRole" :readonly="readonly">
 			<template #label>{{ i18n.ts._role._options.canImportAntennas }}</template>
 			<template #valueText>{{ valuesModel.canImportAntennas ? i18n.ts.yes : i18n.ts.no }}</template>

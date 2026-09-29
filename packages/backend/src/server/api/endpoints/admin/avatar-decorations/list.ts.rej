@@ -1,0 +1,57 @@
+--- packages/backend/src/server/api/endpoints/admin/avatar-decorations/list.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/server/api/endpoints/admin/avatar-decorations/list.ts	2026-09-29 11:46:15.245142257 +0900
+@@ -4,10 +4,12 @@
+  */
+ 
+ import { Inject, Injectable } from '@nestjs/common';
++import type { UsersRepository } from '@/models/_.js';
+ import { Endpoint } from '@/server/api/endpoint-base.js';
+ import { DI } from '@/di-symbols.js';
+ import { IdService } from '@/core/IdService.js';
+ import { AvatarDecorationService } from '@/core/AvatarDecorationService.js';
++import { RoleService } from '@/core/RoleService.js';
+ 
+ export const meta = {
+ 	tags: ['admin'],
+@@ -85,13 +87,40 @@
+ @Injectable()
+ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
+ 	constructor(
++		@Inject(DI.usersRepository)
++                private usersRepository: UsersRepository,
++
+ 		private avatarDecorationService: AvatarDecorationService,
+ 		private idService: IdService,
++		private roleService: RoleService,
+ 	) {
+ 		super(meta, paramDef, async (ps, me) => {
+ 			const avatarDecorations = await this.avatarDecorationService.getAll(true);
+ 
+-			return avatarDecorations.map(avatarDecoration => ({
++                        const _me = await this.usersRepository.findOneByOrFail({ id: me.id });
++			const isAdmin = await this.roleService.isAdministrator(_me);
++
++			let myAvatarDecorations = avatarDecorations.filter( (item) => {
++				return isAdmin || item.description.indexOf( me.id + '#' ) == 0;
++			});
++
++			if ( ! isAdmin ){
++				myAvatarDecorations.forEach( (item) => {
++					let new_description = item.description;
++                                	let sh_in = new_description.indexOf('# ')
++                                	if ( sh_in >=8 && sh_in < 16 ){
++                                        	new_description = new_description.substr( sh_in + 2 );
++                                	} else{
++                                        	sh_in = new_description.indexOf('#')
++                                        	if ( sh_in >=8 && sh_in < 16 ){
++                                                	new_description = new_description.substr( sh_in + 1 );
++                                        	}
++                                	}
++					item.description = new_description;
++				});
++			}
++
++			return myAvatarDecorations.map(avatarDecoration => ({
+ 				id: avatarDecoration.id,
+ 				createdAt: this.idService.parse(avatarDecoration.id).date.toISOString(),
+ 				updatedAt: avatarDecoration.updatedAt?.toISOString() ?? null,

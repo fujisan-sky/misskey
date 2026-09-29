@@ -1,0 +1,77 @@
+--- packages/backend/src/core/NoteCreateService.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/core/NoteCreateService.ts	2026-09-29 11:46:15.242142241 +0900
+@@ -5,7 +5,7 @@
+ 
+ import { setImmediate } from 'node:timers/promises';
+ import * as mfm from 'mfm-js';
+-import { In, DataSource, IsNull, LessThan } from 'typeorm';
++import { In, DataSource, IsNull, LessThan, MoreThan } from 'typeorm';
+ import * as Redis from 'ioredis';
+ import { Inject, Injectable, OnApplicationShutdown } from '@nestjs/common';
+ import { extractMentions } from '@/misc/extract-mentions.js';
+@@ -57,6 +57,7 @@
+ import { CollapsedQueue } from '@/misc/collapsed-queue.js';
+ import { CacheService } from '@/core/CacheService.js';
+ import { isQuote, isRenote } from '@/misc/is-renote.js';
++import { exec } from 'child_process';
+ 
+ type NotificationType = 'reply' | 'renote' | 'quote' | 'mention';
+ 
+@@ -419,6 +420,57 @@
+ 			}
+ 		}
+ 
++		if (data.visibility === 'public' && data.channelId == null) {
++                        console.log('-----------------too many public note-----------');
++                        const cycle = (await this.roleService.getUserPolicies(user.id)).publicMinimumInterval;
++                        console.log(cycle);
++                        if ( ( cycle > 0 ) && ( cycle < 10000) ){
++                                const last_date = new Date(Date.now() - (cycle * 1000 * 60));
++                                const last_id = this.idService.gen( last_date.getTime() );
++                                console.log(last_id);
++                                const count = await this.notesRepository.countBy({
++                                        id: MoreThan(last_id),
++                                        userId: user.id,
++                                        visibility: 'public',
++                                 });
++                                 console.log(count);
++                                 if ( count > 0 ){
++				      throw new IdentifiableError('a817376a-4bcc-11ee-8fd9-15e99585d2ed', 'Interval is too short. Please note after few minutes.');
++                                 }
++                        }
++                }
++
++		if (data.visibility === 'specified'){
++                               console.log('-----------------mention -----------');
++                               console.log(visibleUsers.length);
++                               if ( visibleUsers.length > 3 ){
++                                    //   throw new ApiError(meta.errors.tooManyDestinations);
++				     throw new IdentifiableError('4653904a-2567-5f3a-2cad-d061dc38e676', 'Too many destinations for this mention.');
++                               }
++                               const cycle = (await this.roleService.getUserPolicies(user.id)).mentionMinimumInterval;
++                               console.log(cycle);
++                               if ( ( cycle > 0 ) && ( cycle < 10000) ){
++                                       const last_date = new Date(Date.now() - (cycle * 1000 * 60));
++                                       const last_id = this.idService.gen( last_date.getTime() );
++                                       console.log(last_id);
++                                       const count = await this.notesRepository.countBy({
++                                           id: MoreThan(last_id),
++                                               userId: user.id,
++                                               visibility: 'specified',
++                                       });
++                                       console.log(count);
++                                       if ( count > 0 ){
++                                               console.log('--too meny mention error');
++                                               exec('echo "quicky mention:'+user.id+'"|mailx -r misskey@jay.misskey.day -s \"mentionError\" sabakan432108794321@misskey.day', (err, stdout, stderr) => {
++                                               if (err) { console.log(err); }
++                                                       console.log(stdout);
++                                               });
++                                               console.log('--end of mail');
++				      		throw new IdentifiableError('d5f820ab-13d3-7e50-dad9-74225cd190d0', 'Interval is too short. Please mention after few minutes.');
++                                       }
++                               }
++                }
++
+ 		return this.create(user, {
+ 			createdAt: data.createdAt,
+ 			files: files,

@@ -274,7 +274,8 @@ export const PREF_DEF = definePreferences({
 		default: 2,
 	},
 	emojiPickerWidth: {
-		default: 2,
+//		default: 2,
+		default: 4,
 	},
 	emojiPickerHeight: {
 		default: 3,
@@ -304,10 +305,12 @@ export const PREF_DEF = definePreferences({
 		default: false,
 	},
 	reactionsDisplaySize: {
-		default: 'medium' as 'small' | 'medium' | 'large',
+//		default: 'medium' as 'small' | 'medium' | 'large',
+		default: 'large' as 'small' | 'medium' | 'large',
 	},
 	limitWidthOfReaction: {
-		default: true,
+//		default: true,
+		default: false,
 	},
 	forceShowAds: {
 		default: false,
@@ -329,9 +332,6 @@ export const PREF_DEF = definePreferences({
 	},
 	notificationStackAxis: {
 		default: 'horizontal' as 'vertical' | 'horizontal',
-	},
-	enableCondensedLine: {
-		default: true,
 	},
 	keepScreenOn: {
 		default: false,
