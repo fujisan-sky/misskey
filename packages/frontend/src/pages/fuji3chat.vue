@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: mikop and fujisansky-project
+SPDX-FileCopyrightText: mikop and fujisky-project
 SPDX-License-Identifier: AGPL-3.0-only
 -->
 
@@ -18,24 +18,32 @@ import MkButton from '@/components/MkButton.vue';
 import { $i } from '@/i.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
+import { fuji3chatConfig, loadFuji3chatConfig } from '@/utility/fuji3chat-config.js';
 
-const destinations: Record<string, string> = {
-	'https://gp.miku2go.com': 'https://chat.misskey.pink',
-	'https://misskey.day': 'https://fuji3.top',
-};
-const destination = destinations[window.location.origin];
 const room = new URLSearchParams(window.location.search).get('room') ?? '';
 const validRoom = !room || /^[A-Za-z0-9]{10}$/.test(room);
 const failed = ref(false);
 const controller = new AbortController();
 onBeforeUnmount(() => controller.abort());
 
-function restart() {
-	if (destination && validRoom) window.location.replace(destination + '/api/auth/fuji3chat/start' + (room ? '?room=' + room : ''));
-	else failed.value = true;
+async function restart() {
+	try {
+		await loadFuji3chatConfig();
+		if (controller.signal.aborted) return;
+		if (!fuji3chatConfig.url || !validRoom) throw new Error();
+		const start = new URL('/api/auth/fuji3chat/start', fuji3chatConfig.url);
+		start.searchParams.set('host', window.location.hostname);
+		if (room) start.searchParams.set('room', room);
+		window.location.replace(start.href);
+	} catch {
+		failed.value = true;
+	}
 }
 
 onMounted(async () => {
+	try { await loadFuji3chatConfig(); } catch { failed.value = true; return; }
+	const destination = fuji3chatConfig.url;
+	if (controller.signal.aborted) return;
 	if (!$i || !destination || !validRoom) { failed.value = true; return; }
 	const params = new URLSearchParams(window.location.search);
 	const state = params.get('state');
@@ -69,5 +77,5 @@ onMounted(async () => {
 	}
 });
 
-definePage(() => ({ title: i18n.ts._fuji3chat.title, icon: 'ti ti-palette' }));
+definePage(() => ({ title: i18n.ts._fuji3chat.title, icon: '_fuji3chatIcon' }));
 </script>

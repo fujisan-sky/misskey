@@ -1,5 +1,5 @@
 /*
- * SPDX-FileCopyrightText: mikop and fujisansky-project
+ * SPDX-FileCopyrightText: mikop and fujisky-project
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
@@ -11,10 +11,17 @@ import type { UsersRepository } from '@/models/_.js';
 import type { UserEntityService } from '@/core/entities/UserEntityService.js';
 import type { AuthenticateService } from './AuthenticateService.js';
 
-const destinations: Record<string, string> = {
-	'https://gp.miku2go.com': 'https://chat.misskey.pink',
-	'https://misskey.day': 'https://fuji3.top',
-};
+function chatOrigin(value: string): string | null {
+	try {
+		const target = new URL(value);
+		if (target.protocol !== 'https:' || target.username || target.password
+			|| target.pathname !== '/' || target.search || target.hash) return null;
+		return target.origin;
+	} catch {
+		return null;
+	}
+}
+
 const randomPattern = '^[A-Za-z0-9_-]{43}$';
 const digest = (value: string) => createHash('sha256').update(value).digest('base64url');
 const prefix = 'fuji3chat:sso:';
@@ -38,11 +45,17 @@ type Dependencies = {
 
 export function registerFuji3ChatApi(fastify: FastifyInstance, deps: Dependencies) {
 	const issuer = deps.config.url.replace(/\/$/, '');
-	const audience = destinations[issuer];
+	const audience = chatOrigin(process.env.FUJI3CHAT_URL ?? '');
 	const secret = process.env.FUJI3CHAT_SSO_SECRET ?? '';
-	const configured = Boolean(audience && Buffer.byteLength(secret) >= 32);
+	const configured = Boolean(audience && /^[\x21-\x7e]{32,}$/.test(secret));
 	const noCache = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' };
 	const randomField = { type: 'string', pattern: randomPattern };
+
+	// Public settings contain the destination only, never the shared secret.
+	fastify.get('/fuji3chat/config', async (_request, reply) => {
+		reply.headers(noCache);
+		return { url: configured ? audience : null };
+	});
 
 	fastify.post<{ Body: { i: string; state: string; codeChallenge: string } }>('/fuji3chat/issue', {
 		bodyLimit: 4096,

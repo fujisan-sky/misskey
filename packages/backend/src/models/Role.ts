@@ -98,13 +98,6 @@ type CondFormulaValueIsSafe = {
 };
 
 /**
- * あんしんモードの場合のみ成立とする
- */
-type CondFormulaValueIsSafe = {
-	type: 'isSafe';
-};
-
-/**
  * ユーザが作成されてから指定期間経過した場合のみ成立とする
  */
 type CondFormulaValueCreatedLessThan = {

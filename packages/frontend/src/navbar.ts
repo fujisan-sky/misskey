@@ -8,6 +8,7 @@ import { ui } from '@@/js/config.js';
 import { clearCache } from './utility/clear-cache.js';
 import type { ComputedRef } from 'vue';
 import { $i } from '@/i.js';
+import { fuji3chatConfig } from '@/utility/fuji3chat-config.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
 import { lookup } from '@/utility/lookup.js';
@@ -29,7 +30,7 @@ export const navbarItemDef = reactive<{
 	fuji3chat: {
 		title: i18n.ts._fuji3chat.title,
 		icon: '_fuji3chatIcon',
-		show: computed(() => $i != null && ['https://gp.miku2go.com', 'https://misskey.day'].includes(window.location.origin)),
+		show: computed(() => $i != null && fuji3chatConfig.url != null),
 		to: '/fuji3chat',
 	},
 	notifications: {
