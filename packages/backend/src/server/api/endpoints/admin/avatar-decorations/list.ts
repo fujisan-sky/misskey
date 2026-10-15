@@ -15,7 +15,7 @@ export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	requireRolePolicy: 'canManageAvatarDecorations',
+	requiredRolePolicy: 'canManageAvatarDecorations',
 	kind: 'read:admin:avatar-decorations',
 
 	res: {
@@ -62,6 +62,10 @@ export const meta = {
 						format: 'id',
 					},
 				},
+				category: {
+					type: 'string',
+					optional: true, nullable: true,
+				},
 			},
 		},
 	},
@@ -73,6 +77,8 @@ export const paramDef = {
 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
 		sinceId: { type: 'string', format: 'misskey:id' },
 		untilId: { type: 'string', format: 'misskey:id' },
+		sinceDate: { type: 'integer' },
+		untilDate: { type: 'integer' },
 		userId: { type: 'string', format: 'misskey:id', nullable: true },
 	},
 	required: [],
@@ -122,6 +128,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				description: avatarDecoration.description,
 				url: avatarDecoration.url,
 				roleIdsThatCanBeUsedThisDecoration: avatarDecoration.roleIdsThatCanBeUsedThisDecoration,
+				category: avatarDecoration.category,
 			}));
 		});
 	}

@@ -30,6 +30,9 @@ import { trackPromise } from '@/misc/promise-tracker.js';
 import { isQuote, isRenote } from '@/misc/is-renote.js';
 import { ReactionsBufferingService } from '@/core/ReactionsBufferingService.js';
 import { PER_NOTE_REACTION_USER_PAIR_CACHE_MAX } from '@/const.js';
+import { readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 
 const FALLBACK = '\u2764';
 
@@ -66,6 +69,81 @@ type DecodedReaction = {
 
 const isCustomEmojiRegexp = /^:([\w+-]+)(?:@\.)?:$/;
 const decodeCustomEmojiRegexp = /^:([\w+-]+)(?:@([\w.-]+))?:$/;
+
+const REACTION_BANNED_FILE_PATH = join(
+	homedir(),
+	'misskey',
+	'plus',
+	'reaction_baned.txt',
+);
+
+/*
+ * 禁止リアクションファイルの再読み込み間隔
+ * 2時間 = 2 × 60 × 60 × 1000ミリ秒
+ */
+const REACTION_BANNED_RELOAD_INTERVAL = 2 * 60 * 60 * 1000;
+
+let bannedReactions: ReadonlySet<string> = new Set<string>();
+let bannedReactionsLoadedAt = 0;
+
+function loadBannedReactions(): ReadonlySet<string> {
+	const text = readFileSync(
+		REACTION_BANNED_FILE_PATH,
+		'utf8',
+	).replace(/^\uFEFF/, '');
+
+	const reactions = new Set(
+		text
+			.split(/\r?\n/)
+			.map(line => line.trim())
+			.filter(line =>
+				line.length > 0 &&
+				!line.startsWith('#')
+			),
+	);
+
+	console.log(
+		`banned reaction set loaded: ${[...reactions].join(', ')}`,
+	);
+
+	return reactions;
+}
+
+function getBannedReactions(): ReadonlySet<string> {
+	const now = Date.now();
+
+	if (
+		bannedReactionsLoadedAt === 0 ||
+		now - bannedReactionsLoadedAt >= REACTION_BANNED_RELOAD_INTERVAL
+	) {
+		try {
+			bannedReactions = loadBannedReactions();
+			bannedReactionsLoadedAt = now;
+		} catch (err) {
+			/*
+			 * 初回読み込みに失敗した場合は、禁止リアクションなし。
+			 * 再読み込みに失敗した場合は、以前の設定を維持します。
+			 */
+			console.log(err as Error);
+
+			/*
+			 * 読み込み失敗時にも時刻を更新します。
+			 * 更新しないと、リアクションのたびにファイルを
+			 * 読み込もうとしてしまいます。
+			 */
+			bannedReactionsLoadedAt = now;
+		}
+	}
+
+	return bannedReactions;
+}
+
+/*
+ * モジュール読み込み時に初回読み込みを行います。
+ */
+getBannedReactions();
+
+
 
 @Injectable()
 export class ReactionService {
@@ -164,6 +242,37 @@ export class ReactionService {
 			}
 		}
 
+		/*
+ 		* 禁止リアクション
+ 		*
+ 		* xxxx@domain.example   → xxxx
+ 		* :XXXX@domain.example: → :XXXX:
+ 		* xxxx                  → xxxx
+ 		* :XXXX:                → :XXXX:
+ 		*/
+		const atPosition = reaction.indexOf('@');
+
+		const reactionName = atPosition === -1
+			? reaction
+			: reaction.startsWith(':')
+				? `${reaction.slice(0, atPosition)}:`
+				: reaction.slice(0, atPosition);
+
+		console.log(`CHECK REACTION: ${reaction}  NAME: ${reactionName}`);
+
+		if (getBannedReactions().has(reactionName)) {
+			console.log(`BANNED REACTION: ${reaction}`);
+
+			if (user.host == null) {
+				throw new IdentifiableError(
+					'6f9f2d80-3e9b-4f8a-9c9a-36fcb903fd21',
+					'This reaction is not allowed.',
+				);
+			}
+
+			return;
+		}
+
 		const record: MiNoteReaction = {
 			id: this.idService.gen(),
 			noteId: note.id,
@@ -197,15 +306,15 @@ export class ReactionService {
 		if (this.meta.enableReactionsBuffering) {
 			await this.reactionsBufferingService.create(note.id, user.id, reaction, note.reactionAndUserPairCache);
 		} else {
-			const sql = `jsonb_set("reactions", '{${reaction}}', (COALESCE("reactions"->>'${reaction}', '0')::int + 1)::text::jsonb)`;
 			await this.notesRepository.createQueryBuilder().update()
 				.set({
-					reactions: () => sql,
+					reactions: () => `jsonb_set("reactions", ARRAY[:reaction], (COALESCE("reactions"->>:reaction, '0')::int + 1)::text::jsonb)`,
 					...(note.reactionAndUserPairCache.length < PER_NOTE_REACTION_USER_PAIR_CACHE_MAX ? {
-						reactionAndUserPairCache: () => `array_append("reactionAndUserPairCache", '${user.id}/${reaction}')`,
+						reactionAndUserPairCache: () => `array_append("reactionAndUserPairCache", :pair)`,
 					} : {}),
 				})
 				.where('id = :id', { id: note.id })
+				.setParameters({ reaction, pair: `${user.id}/${reaction}` })
 				.execute();
 		}
 
@@ -244,7 +353,7 @@ export class ReactionService {
 					},
 				});
 
-		this.globalEventService.publishNoteStream(note.id, 'reacted', {
+		this.globalEventService.publishNoteStream(note, 'reacted', {
 			reaction: decodedReaction.reaction,
 			emoji: customEmoji != null ? {
 				name: customEmoji.host ? `${customEmoji.name}@${customEmoji.host}` : `${customEmoji.name}@.`,
@@ -308,17 +417,17 @@ export class ReactionService {
 		if (this.meta.enableReactionsBuffering) {
 			await this.reactionsBufferingService.delete(note.id, user.id, exist.reaction);
 		} else {
-			const sql = `jsonb_set("reactions", '{${exist.reaction}}', (COALESCE("reactions"->>'${exist.reaction}', '0')::int - 1)::text::jsonb)`;
 			await this.notesRepository.createQueryBuilder().update()
 				.set({
-					reactions: () => sql,
-					reactionAndUserPairCache: () => `array_remove("reactionAndUserPairCache", '${user.id}/${exist.reaction}')`,
+					reactions: () => `jsonb_set("reactions", ARRAY[:reaction], (COALESCE("reactions"->>:reaction, '0')::int - 1)::text::jsonb)`,
+					reactionAndUserPairCache: () => `array_remove("reactionAndUserPairCache", :pair)`,
 				})
 				.where('id = :id', { id: note.id })
+				.setParameters({ reaction: exist.reaction, pair: `${user.id}/${exist.reaction}` })
 				.execute();
 		}
 
-		this.globalEventService.publishNoteStream(note.id, 'unreacted', {
+		this.globalEventService.publishNoteStream(note, 'unreacted', {
 			reaction: this.decodeReaction(exist.reaction).reaction,
 			userId: user.id,
 		});
