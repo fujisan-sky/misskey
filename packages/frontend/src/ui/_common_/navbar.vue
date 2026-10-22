@@ -118,8 +118,7 @@ import { getAccountMenu } from '@/accounts.js';
 import { $i } from '@/i.js';
 
 const router = useRouter();
-const navigationItems = computed(() => prefer.r.menu.value.includes('fuji3chat')
-	? prefer.r.menu.value : ['fuji3chat', ...prefer.r.menu.value]);
+const navigationItems = computed(() => [...(['fuji3chat'].filter(item => !prefer.r.menu.value.includes(item))), ...prefer.r.menu.value, ...(['fuji3qa'].filter(item => !prefer.r.menu.value.includes(item)))]);
 
 const props = defineProps<{
 	showWidgetButton?: boolean;

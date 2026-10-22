@@ -15,6 +15,7 @@ import { DI } from '@/di-symbols.js';
 import { UserEntityService } from '@/core/entities/UserEntityService.js';
 import { bindThis } from '@/decorators.js';
 import { registerFuji3ChatApi } from './fuji3chat.js';
+import { registerFuji3QaApi } from './fuji3qa.js';
 import { AuthenticateService } from './AuthenticateService.js';
 import endpoints from './endpoints.js';
 import { ApiCallService } from './ApiCallService.js';
@@ -78,6 +79,21 @@ export class ApiServerService {
 			usersRepository: this.usersRepository,
 			authenticateService: this.authenticateService,
 			userEntityService: this.userEntityService,
+		});
+
+		registerFuji3QaApi(fastify, {
+			config: this.config,
+			redis: this.redis,
+			usersRepository: this.usersRepository,
+			authenticateService: this.authenticateService,
+			userEntityService: this.userEntityService,
+			postNote: (user, text, visibility, request) => {
+				const endpoint = endpoints.find(item => item.name === 'notes/create')!;
+				return this.apiCallService.callQaNote({
+					name: endpoint.name, meta: endpoint.meta, params: endpoint.params,
+					exec: this.moduleRef.get('ep:notes/create', { strict: false }).exec,
+				}, user, text, visibility, request);
+			},
 		});
 
 		for (const endpoint of endpoints) {

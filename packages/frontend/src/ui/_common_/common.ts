@@ -29,7 +29,7 @@ function toolsMenuItems(): MenuItem[] {
 		icon: 'ti ti-cookie',
 	}];
 
-	if ($i && ($i.isAdmin || $i.policies.canManageCustomEmojis || $i.policies.canCreateEmoji)) {
+	if ($i && ($i.isAdmin || $i.policies.canManageCustomEmojis || $i.policies.canCreateEmoji || $i.policies.canManageUserEmoji)) {
 		items.push({
 			type: 'link',
 			to: '/custom-emojis-manager',

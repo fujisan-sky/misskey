@@ -6,7 +6,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { In } from 'typeorm';
 import { DI } from '@/di-symbols.js';
-import type { EmojisRepository, MiRole, RolesRepository } from '@/models/_.js';
+import type { EmojisRepository, MiRole, RolesRepository, UsersRepository } from '@/models/_.js';
 import type { Packed } from '@/misc/json-schema.js';
 import type { MiEmoji } from '@/models/Emoji.js';
 import { bindThis } from '@/decorators.js';
@@ -18,6 +18,8 @@ export class EmojiEntityService {
 		private emojisRepository: EmojisRepository,
 		@Inject(DI.rolesRepository)
 		private rolesRepository: RolesRepository,
+		@Inject(DI.usersRepository)
+		private usersRepository: UsersRepository,
 	) {
 	}
 
@@ -52,8 +54,12 @@ export class EmojiEntityService {
 	): Promise<Packed<'EmojiDetailed'>> {
 		const emoji = typeof src === 'object' ? src : await this.emojisRepository.findOneByOrFail({ id: src });
 
+		const owner = emoji.userId ? await this.usersRepository.findOneBy({ id: emoji.userId }) : null;
+
 		return {
 			id: emoji.id,
+			userId: emoji.userId ?? null,
+			username: owner?.username ?? null,
 			aliases: emoji.aliases,
 			name: emoji.name,
 			category: emoji.category,

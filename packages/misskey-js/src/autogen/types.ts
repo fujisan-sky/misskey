@@ -5197,6 +5197,9 @@ export type components = {
         EmojiDetailed: {
             /** Format: id */
             id: string;
+            /** Format: id */
+            userId?: string | null;
+            username?: string | null;
             aliases: string[];
             name: string;
             category: string | null;
@@ -5361,11 +5364,13 @@ export type components = {
             inviteLimitCycle: number;
             inviteExpirationTime: number;
             canManageCustomEmojis: boolean;
+            canManageUserEmoji: boolean;
             canManageAvatarDecorations: boolean;
             canSearchNotes: boolean;
             canSearchUsers: boolean;
             canUseTranslator: boolean;
             canHideAds: boolean;
+            canManageFlash: boolean;
             canCreateChannel: boolean;
             driveCapacityMb: number;
             maxFileSizeMb: number;
@@ -8294,6 +8299,7 @@ export interface operations {
                 'application/json': {
                     /** @default null */
                     query?: string | null;
+                    onlyMine?: boolean;
                     /** @default 10 */
                     limit?: number;
                     /** Format: misskey:id */

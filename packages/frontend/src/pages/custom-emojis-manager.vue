@@ -12,7 +12,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<template #prefix><i class="ti ti-search"></i></template>
 					<template #label>{{ i18n.ts.search }}</template>
 				</MkInput>
-				<MkSwitch v-model="selectMode" style="margin: 8px 0;">
+				<MkButton :primary="onlyMine" style="margin: 8px 0;" @click="onlyMine = !onlyMine">{{ i18n.ts.userEmojiOnlyMine }}</MkButton>
+				<MkSwitch v-if="canManage" v-model="selectMode" style="margin: 8px 0;">
 					<template #label>Select mode</template>
 				</MkSwitch>
 				<div v-if="selectMode" class="_buttons">
@@ -40,7 +41,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkPagination>
 			</div>
 
-			<div v-else-if="tab === 'remote'" class="remote">
+			<div v-else-if="tab === 'remote' && !userOnly" class="remote">
 				<FormSplit>
 					<MkInput v-model="queryRemote" :debounce="true" type="search" autocapitalize="off">
 						<template #prefix><i class="ti ti-search"></i></template>
@@ -84,10 +85,14 @@ import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { getProxiedImageUrl } from '@/utility/media-proxy.js';
 import { i18n } from '@/i18n.js';
-import { iAmAdmin } from '@/i.js';
+import { $i, iAmAdmin } from '@/i.js';
+import MkCustomEmojiDetailedDialog from '@/components/MkCustomEmojiDetailedDialog.vue';
 import { definePage } from '@/page.js';
 import { Paginator } from '@/utility/paginator.js';
 
+const canManage = computed(() => Boolean($i && ($i.isAdmin || $i.policies.canManageCustomEmojis)));
+const userOnly = computed(() => Boolean($i && !canManage.value && !$i.policies.canCreateEmoji && $i.policies.canManageUserEmoji));
+const onlyMine = ref(false);
 const tab = ref('local');
 const query = ref<string | null>(null);
 const queryRemote = ref<string | null>(null);
@@ -100,6 +105,7 @@ type RemoteEmoji = Misskey.entities.AdminEmojiListRemoteResponse[number] & { hos
 const paginator = markRaw(new Paginator('admin/emoji/list', {
 	limit: 30,
 	computedParams: computed(() => ({
+		onlyMine: onlyMine.value,
 		query: (query.value && query.value !== '') ? query.value : null,
 	})),
 }));
@@ -145,6 +151,10 @@ const add = async () => {
 };
 
 const edit = async (emoji: Misskey.entities.EmojiDetailed) => {
+	if (!canManage.value && !($i?.policies.canManageUserEmoji && emoji.userId === $i.id && emoji.host === null)) {
+		const { dispose } = os.popup(MkCustomEmojiDetailedDialog, { emoji }, { closed: () => dispose() });
+		return;
+	}
 	const { dispose } = await os.popupAsyncWithDialog(import('./emoji-edit-dialog.vue').then(x => x.default), {
 		emoji: emoji,
 	}, {
@@ -330,19 +340,19 @@ const headerActions = computed(() => [{
 	icon: 'ti ti-plus',
 	text: i18n.ts.addEmoji,
 	handler: add,
-}, {
+}, ...(!userOnly.value ? [{
 	icon: 'ti ti-dots',
 	text: i18n.ts.more,
 	handler: menu,
-}]);
+}] : [])]);
 
 const headerTabs = computed(() => [{
 	key: 'local',
 	title: i18n.ts.local,
-}, {
+}, ...(!userOnly.value ? [{
 	key: 'remote',
 	title: i18n.ts.remote,
-}]);
+}] : [])]);
 
 definePage(() => ({
 	title: i18n.ts.customEmojis,

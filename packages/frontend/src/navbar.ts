@@ -9,6 +9,7 @@ import { clearCache } from './utility/clear-cache.js';
 import type { ComputedRef } from 'vue';
 import { $i } from '@/i.js';
 import { fuji3chatConfig } from '@/utility/fuji3chat-config.js';
+import { fuji3qaConfig } from '@/utility/fuji3qa-config.js';
 import { miLocalStorage } from '@/local-storage.js';
 import { openInstanceMenu, openToolsMenu } from '@/ui/_common_/common.js';
 import { lookup } from '@/utility/lookup.js';
@@ -140,6 +141,12 @@ export const navbarItemDef = reactive<{
 		to: '/chat',
 		show: computed(() => $i != null && $i.policies.chatAvailability !== 'unavailable'),
 		indicated: computed(() => $i != null && $i.hasUnreadChatMessages),
+	},
+	fuji3qa: {
+		title: i18n.ts._fuji3qa.title,
+		icon: '_fuji3qaIcon',
+		show: computed(() => $i != null && fuji3qaConfig.url != null),
+		to: '/fuji3qa',
 	},
 	achievements: {
 		title: i18n.ts.achievements,

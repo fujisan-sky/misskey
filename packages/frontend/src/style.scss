@@ -769,3 +769,18 @@ html[data-color-scheme=dark] ._woodenFrame {
 		background: url('./assets/fuji3chat.png') center / contain no-repeat;
 	}
 }
+
+// Shared by navigation, menu settings and the Fuji3QA page header.
+._fuji3qaIcon {
+	display: inline-block;
+	line-height: 1;
+
+	&::before {
+		content: '';
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		vertical-align: -0.125em;
+		background: url('./assets/fuji3qa.png') center / contain no-repeat;
+	}
+}

@@ -2116,6 +2116,7 @@ _role:
     inviteLimitCycle: "招待コードの発行間隔"
     inviteExpirationTime: "招待コードの有効期限"
     canManageCustomEmojis: "カスタム絵文字の管理"
+    canManageUserEmoji: "ユーザ絵文字の作成"
     canManageAvatarDecorations: "アバターデコレーションの管理"
     driveCapacity: "ドライブ容量"
     maxFileSize: "アップロード可能な最大ファイルサイズ"
@@ -2137,6 +2138,7 @@ _role:
     canSearchNotes: "ノート検索の利用"
     canSearchUsers: "ユーザー検索の利用"
     canUseTranslator: "翻訳機能の利用"
+    canManageFlash: "play管理"
     canCreateChannel: "チャンネルの作成"
     avatarDecorationLimit: "アイコンデコレーションの最大取付個数"
     publicMinimumInterval: "パブリック投稿の最低時間間隔"
@@ -3593,3 +3595,14 @@ _fuji3chat:
   title: "ふじさんチャット"
   connecting: "ふじさんチャットに接続しています…"
   failed: "接続できませんでした。もう一度お試しください。"
+
+_fuji3qa:
+  title: "ふじさんQA"
+  connecting: "QAに接続しています…"
+  failed: "QAに接続できませんでした。"
+
+userEmojiOnlyMine: "自分が作成した絵文字のみ"
+
+userEmojiOriginalOnlyNotice: |-
+  このメニュー・権限での追加・登録はオリジナルのカスタム絵文字のみです。
+  他のサーバーの絵文字の追加はできません。

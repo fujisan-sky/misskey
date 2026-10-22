@@ -66,8 +66,7 @@ const props = defineProps<{
 }>();
 
 const settingsWindowed = ref(window.innerWidth > WINDOW_THRESHOLD);
-const menu = computed(() => prefer.r.menu.value.includes('fuji3chat')
-	? prefer.r.menu.value : ['fuji3chat', ...prefer.r.menu.value]);
+const menu = computed(() => [...(['fuji3chat'].filter(item => !prefer.r.menu.value.includes(item))), ...prefer.r.menu.value, ...(['fuji3qa'].filter(item => !prefer.r.menu.value.includes(item)))]);
 // const menuDisplay = store.model('menuDisplay');
 const otherNavItemIndicated = computed<boolean>(() => {
 	for (const def in navbarItemDef) {

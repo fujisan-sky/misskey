@@ -347,6 +347,14 @@ export class ApiCallService implements OnApplicationShutdown {
 		}
 	}
 
+	// Only the QA posting capability may use this entry point, and only notes/create.
+	@bindThis
+	public async callQaNote(ep: IEndpoint & { exec: any }, user: MiLocalUser, text: string, visibility: string, request: FastifyRequest) {
+		if (ep.name !== 'notes/create') throw new ApiError(accessDenied);
+		return this.call(ep, user, null, { text, visibility, noExtractMentions: true, noExtractHashtags: true }, null,
+			request as FastifyRequest<{ Body: Record<string, unknown> | undefined, Querystring: Record<string, unknown> }>);
+	}
+
 	@bindThis
 	private async call(
 		ep: IEndpoint & { exec: any },
@@ -449,10 +457,12 @@ export class ApiCallService implements OnApplicationShutdown {
 			}
 		}
 
-		if (ep.meta.requiredRolePolicy != null && (this.meta.rootUserId !== user!.id)) {
+		if ((ep.meta.requiredRolePolicy != null || ep.meta.requiredRolePolicies != null) && (this.meta.rootUserId !== user!.id)) {
 			const myRoles = await this.roleService.getUserRoles(user!.id);
 			const policies = await this.roleService.getUserPolicies(user!.id);
-			if (!policies[ep.meta.requiredRolePolicy] && !myRoles.some(r => r.isAdministrator)) {
+			const hasRequiredPolicy = ep.meta.requiredRolePolicy == null || Boolean(policies[ep.meta.requiredRolePolicy]);
+			const hasAlternativePolicy = ep.meta.requiredRolePolicies == null || ep.meta.requiredRolePolicies.some(policy => policies[policy] === true);
+			if ((!hasRequiredPolicy || !hasAlternativePolicy) && !myRoles.some(r => r.isAdministrator)) {
 				throw new ApiError({
 					message: 'You are not assigned to a required role.',
 					code: 'ROLE_PERMISSION_DENIED',

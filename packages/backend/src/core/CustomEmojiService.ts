@@ -91,6 +91,7 @@ export class CustomEmojiService implements OnApplicationShutdown {
 
 	@bindThis
 	public async add(data: {
+		userId?: MiUser['id'] | null;
 		originalUrl: string;
 		publicUrl: string;
 		fileType: string;
@@ -109,6 +110,7 @@ export class CustomEmojiService implements OnApplicationShutdown {
 			name: data.name,
 			category: data.category,
 			host: data.host,
+			userId: data.userId ?? null,
 			aliases: data.aliases,
 			originalUrl: data.originalUrl,
 			publicUrl: data.publicUrl,

@@ -16,7 +16,7 @@ export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	requiredRolePolicy: 'canCreateEmoji',
+	requiredRolePolicies: ['canCreateEmoji', 'canManageCustomEmojis', 'canManageUserEmoji'],
 	kind: 'read:admin:emoji',
 
 	res: {
@@ -33,6 +33,7 @@ export const paramDef = {
 	type: 'object',
 	properties: {
 		query: { type: 'string', nullable: true, default: null },
+		onlyMine: { type: 'boolean', default: false },
 		limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 },
 		sinceId: { type: 'string', format: 'misskey:id' },
 		untilId: { type: 'string', format: 'misskey:id' },
@@ -54,6 +55,8 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		super(meta, paramDef, async (ps, me) => {
 			const q = this.queryService.makePaginationQuery(this.emojisRepository.createQueryBuilder('emoji'), ps.sinceId, ps.untilId, ps.sinceDate, ps.untilDate)
 				.andWhere('emoji.host IS NULL');
+
+			if (ps.onlyMine) q.andWhere('emoji.userId = :userId', { userId: me.id });
 
 			let emojis: MiEmoji[];
 

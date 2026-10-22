@@ -18,6 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div style="display: flex; flex-direction: column; min-height: 100%;">
 		<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px; flex-grow: 1;">
 			<div class="_gaps_m">
+				<MkInfo v-if="userOnly && !emoji" style="white-space: pre-line;">{{ i18n.ts.userEmojiOriginalOnlyNotice }}</MkInfo>
 				<div v-if="imgUrl != null" :class="$style.imgs">
 					<div style="background: #000;" :class="$style.imgContainer">
 						<img :src="imgUrl" :class="$style.img"/>
@@ -49,7 +50,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkInput v-model="license" :mfmAutocomplete="true">
 					<template #label>{{ i18n.ts.license }}</template>
 				</MkInput>
-				<MkFolder>
+				<MkFolder v-if="!userOnly">
 					<template #label>{{ i18n.ts.rolesThatCanBeUsedThisEmojiAsReaction }}</template>
 					<template #suffix>{{ rolesThatCanBeUsedThisEmojiAsReaction.length === 0 ? i18n.ts.all : rolesThatCanBeUsedThisEmojiAsReaction.length }}</template>
 
@@ -66,13 +67,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<MkInfo warn>{{ i18n.ts.rolesThatCanBeUsedThisEmojiAsReactionPublicRoleWarn }}</MkInfo>
 					</div>
 				</MkFolder>
-				<MkSwitch v-model="isSensitive">{{ i18n.ts.sensitive }}</MkSwitch>
-				<MkSwitch v-model="localOnly">{{ i18n.ts.localOnly }}</MkSwitch>
-				<MkButton v-if="emoji" danger @click="del()"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
+				<MkSwitch v-if="!userOnly" v-model="isSensitive">{{ i18n.ts.sensitive }}</MkSwitch>
+				<MkSwitch v-if="!userOnly" v-model="localOnly">{{ i18n.ts.localOnly }}</MkSwitch>
+				<MkButton v-if="emoji && canEdit" danger @click="del()"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
 			</div>
 		</div>
 		<div :class="$style.footer">
-			<MkButton primary rounded style="margin: 0 auto;" @click="done"><i class="ti ti-check"></i> {{ props.emoji ? i18n.ts.update : i18n.ts.create }}</MkButton>
+			<MkButton v-if="canEdit" primary rounded style="margin: 0 auto;" @click="done"><i class="ti ti-check"></i> {{ props.emoji ? i18n.ts.update : i18n.ts.create }}</MkButton>
 		</div>
 	</div>
 </MkWindow>
@@ -93,6 +94,7 @@ import { customEmojiCategories } from '@/custom-emojis.js';
 import MkSwitch from '@/components/MkSwitch.vue';
 import { selectFile } from '@/utility/drive.js';
 import MkRolePreview from '@/components/MkRolePreview.vue';
+import { $i } from '@/i.js';
 
 const props = defineProps<{
 	emoji?: Misskey.entities.EmojiDetailed,
@@ -103,6 +105,8 @@ const emit = defineEmits<{
 	(ev: 'closed'): void
 }>();
 
+const userOnly = computed(() => Boolean($i && !$i.isAdmin && !$i.policies.canManageCustomEmojis && !$i.policies.canCreateEmoji && $i.policies.canManageUserEmoji));
+const canEdit = computed(() => Boolean($i && (!props.emoji || $i.isAdmin || $i.policies.canManageCustomEmojis || ($i.policies.canManageUserEmoji && props.emoji.host === null && props.emoji.userId === $i.id))));
 const windowEl = useTemplateRef('windowEl');
 const name = ref<string>(props.emoji ? props.emoji.name : '');
 const category = ref<string>(props.emoji?.category ? props.emoji.category : '');
@@ -148,19 +152,21 @@ async function removeRole(role: Misskey.entities.RoleLite) {
 }
 
 async function done() {
+	if (!canEdit.value) return;
 	const params = {
 		name: name.value,
 		category: category.value === '' ? null : category.value,
 		aliases: aliases.value.split(' ').filter(x => x !== ''),
 		license: license.value === '' ? null : license.value,
-		isSensitive: isSensitive.value,
-		localOnly: localOnly.value,
-		roleIdsThatCanBeUsedThisEmojiAsReaction: rolesThatCanBeUsedThisEmojiAsReaction.value.map(x => x.id),
+		isSensitive: userOnly.value ? false : isSensitive.value,
+		localOnly: userOnly.value ? false : localOnly.value,
+		roleIdsThatCanBeUsedThisEmojiAsReaction: userOnly.value ? [] : rolesThatCanBeUsedThisEmojiAsReaction.value.map(x => x.id),
 		fileId: file.value ? file.value.id : undefined,
 	} satisfies Misskey.entities.AdminEmojiUpdateRequest;
 
 	if (props.emoji) {
 		const emojiDetailed = {
+			...props.emoji,
 			id: props.emoji.id,
 			aliases: params.aliases,
 			name: params.name,
@@ -200,7 +206,7 @@ async function done() {
 }
 
 async function del() {
-	if (!props.emoji) return;
+	if (!props.emoji || !canEdit.value) return;
 	const { canceled } = await os.confirm({
 		type: 'warning',
 		text: i18n.tsx.removeAreYouSure({ x: name.value }),

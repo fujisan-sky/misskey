@@ -27,9 +27,9 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div :class="$style.footer">
 			<div class="_spacer">
 				<div class="_buttons">
-					<MkButton primary @click="save"><i class="ti ti-check"></i> {{ i18n.ts.save }}</MkButton>
+					<MkButton v-if="$i?.policies.canManageFlash" primary @click="save"><i class="ti ti-check"></i> {{ i18n.ts.save }}</MkButton>
 					<MkButton @click="show"><i class="ti ti-eye"></i> {{ i18n.ts.show }}</MkButton>
-					<MkButton v-if="flash" danger @click="del"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
+					<MkButton v-if="flash && $i?.policies.canManageFlash" danger @click="del"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
 				</div>
 			</div>
 		</div>
@@ -45,6 +45,7 @@ import MkButton from '@/components/MkButton.vue';
 import * as os from '@/os.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import { i18n } from '@/i18n.js';
+import { $i } from '@/i.js';
 import { definePage } from '@/page.js';
 import MkTextarea from '@/components/MkTextarea.vue';
 import MkCodeEditor from '@/components/MkCodeEditor.vue';
@@ -420,6 +421,7 @@ function selectPreset(ev: PointerEvent) {
 }
 
 async function save() {
+	if (!$i?.policies.canManageFlash) return;
 	if (flash.value != null) {
 		os.apiWithDialog('flash/update', {
 			flashId: flash.value.id,
@@ -456,6 +458,7 @@ function show() {
 }
 
 async function del() {
+	if (!$i?.policies.canManageFlash) return;
 	if (flash.value == null) return;
 
 	const { canceled } = await os.confirm({

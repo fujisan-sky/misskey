@@ -30,7 +30,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 		<div v-else-if="tab === 'my'">
 			<div class="_gaps">
-				<MkButton gradate rounded style="margin: 0 auto;" @click="create()"><i class="ti ti-plus"></i></MkButton>
+				<MkButton v-if="$i?.policies.canManageFlash" gradate rounded style="margin: 0 auto;" @click="create()"><i class="ti ti-plus"></i></MkButton>
 				<MkPagination v-slot="{items}" :paginator="myFlashsPaginator">
 					<div class="_gaps_s">
 						<MkFlashPreview v-for="flash in items" :key="flash.id" :flash="flash"/>
@@ -58,6 +58,7 @@ import MkPagination from '@/components/MkPagination.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import { i18n } from '@/i18n.js';
+import { $i } from '@/i.js';
 import { definePage } from '@/page.js';
 import { useRouter } from '@/router.js';
 import { Paginator } from '@/utility/paginator.js';
@@ -101,11 +102,11 @@ function search() {
 	searchKey.value++;
 }
 
-const headerActions = computed(() => [{
+const headerActions = computed(() => $i?.policies.canManageFlash ? [{
 	icon: 'ti ti-plus',
 	text: i18n.ts.create,
 	handler: create,
-}]);
+}] : []);
 
 const headerTabs = computed(() => [{
 	key: 'search',

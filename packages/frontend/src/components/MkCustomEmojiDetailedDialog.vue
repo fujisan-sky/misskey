@@ -10,11 +10,19 @@ SPDX-License-Identifier: AGPL-3.0-only
 		<div class="_spacer">
 			<div style="display: flex; flex-direction: column; gap: 1em;">
 				<div :class="$style.emojiImgWrapper">
-					<MkCustomEmoji :name="emoji.name" :normal="true" :useOriginalSize="true" style="height: 100%;"></MkCustomEmoji>
+					<MkCustomEmoji :name="emoji.host ? `${emoji.name}@${emoji.host}` : emoji.name" :normal="true" :useOriginalSize="true" style="height: 100%;"></MkCustomEmoji>
 				</div>
 				<MkKeyValue :copy="`:${emoji.name}:`">
 					<template #key>{{ i18n.ts.name }}</template>
 					<template #value>{{ emoji.name }}</template>
+				</MkKeyValue>
+				<MkKeyValue v-if="emoji.username">
+					<template #key>{{ i18n.ts.username }}</template>
+					<template #value><MkA v-if="emoji.userId" :to="`/@${emoji.username}`">@{{ emoji.username }}</MkA><span v-else>@{{ emoji.username }}</span></template>
+				</MkKeyValue>
+				<MkKeyValue>
+					<template #key>{{ i18n.ts.host }}</template>
+					<template #value>{{ emoji.host ?? host }}</template>
 				</MkKeyValue>
 				<MkKeyValue>
 					<template #key>{{ i18n.ts.tags }}</template>
@@ -62,6 +70,7 @@ import MkLink from '@/components/MkLink.vue';
 import { i18n } from '@/i18n.js';
 import MkModalWindow from '@/components/MkModalWindow.vue';
 import MkKeyValue from '@/components/MkKeyValue.vue';
+import { host } from '@@/js/config.js';
 
 const props = defineProps<{
 	emoji: Misskey.entities.EmojiDetailed,

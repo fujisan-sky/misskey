@@ -43,12 +43,14 @@ export type RolePolicies = {
 	inviteLimitCycle: number;
 	inviteExpirationTime: number;
 	canManageCustomEmojis: boolean;
+	canManageUserEmoji: boolean;
 	canManageAvatarDecorations: boolean;
 	canSearchNotes: boolean;
 	canSearchUsers: boolean;
 	canUseTranslator: boolean;
 	canHideAds: boolean;
 	canCreateChannel: boolean;
+	canManageFlash: boolean;
 	driveCapacityMb: number;
 	maxFileSizeMb: number;
 	alwaysMarkNsfw: boolean;
@@ -90,12 +92,14 @@ export const DEFAULT_POLICIES: RolePolicies = {
 	inviteLimitCycle: 60 * 24 * 7,
 	inviteExpirationTime: 0,
 	canManageCustomEmojis: false,
+	canManageUserEmoji: false,
 	canManageAvatarDecorations: false,
 	canSearchNotes: false,
 	canSearchUsers: true,
 	canUseTranslator: true,
 	canHideAds: false,
 	canCreateChannel: false,
+	canManageFlash: false,
 	driveCapacityMb: 100,
 	maxFileSizeMb: 30,
 	alwaysMarkNsfw: false,
@@ -427,12 +431,14 @@ export class RoleService implements OnApplicationShutdown, OnModuleInit {
 			inviteLimitCycle: calc('inviteLimitCycle', vs => Math.max(...vs)),
 			inviteExpirationTime: calc('inviteExpirationTime', vs => Math.max(...vs)),
 			canManageCustomEmojis: calc('canManageCustomEmojis', vs => vs.some(v => v === true)),
+			canManageUserEmoji: calc('canManageUserEmoji', vs => vs.some(v => v === true)),
 			canManageAvatarDecorations: calc('canManageAvatarDecorations', vs => vs.some(v => v === true)),
 			canSearchNotes: calc('canSearchNotes', vs => vs.some(v => v === true)),
 			canSearchUsers: calc('canSearchUsers', vs => vs.some(v => v === true)),
 			canUseTranslator: calc('canUseTranslator', vs => vs.some(v => v === true)),
 			canHideAds: calc('canHideAds', vs => vs.some(v => v === true)),
 			canCreateChannel: calc('canCreateChannel', vs => vs.some(v => v === true)),
+			canManageFlash: calc('canManageFlash', vs => vs.some(v => v === true)),
 			driveCapacityMb: calc('driveCapacityMb', vs => Math.max(...vs)),
 			maxFileSizeMb: calc('maxFileSizeMb', vs => Math.min(serverMaxFileSizeMb, Math.max(...vs))),
 			alwaysMarkNsfw: calc('alwaysMarkNsfw', vs => vs.some(v => v === true)),

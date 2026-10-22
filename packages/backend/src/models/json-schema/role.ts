@@ -200,6 +200,10 @@ export const packedRolePoliciesSchema = {
 			type: 'integer',
 			optional: false, nullable: false,
 		},
+		canManageUserEmoji: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
 		canManageCustomEmojis: {
 			type: 'boolean',
 			optional: false, nullable: false,
@@ -221,6 +225,10 @@ export const packedRolePoliciesSchema = {
 			optional: false, nullable: false,
 		},
 		canHideAds: {
+			type: 'boolean',
+			optional: false, nullable: false,
+		},
+		canManageFlash: {
 			type: 'boolean',
 			optional: false, nullable: false,
 		},

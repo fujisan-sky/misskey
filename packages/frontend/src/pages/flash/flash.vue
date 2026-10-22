@@ -50,7 +50,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 						<div><i class="ti ti-clock"></i> {{ i18n.ts.createdAt }}: <MkTime :time="flash.createdAt" mode="detail"/></div>
 					</div>
 				</div>
-				<MkA v-if="$i && $i.id === flash.userId" :to="`/play/${flash.id}/edit`" style="color: var(--MI_THEME-accent);">{{ i18n.ts._play.editThisPage }}</MkA>
+				<MkA v-if="$i?.policies.canManageFlash && $i.id === flash.userId" :to="`/play/${flash.id}/edit`" style="color: var(--MI_THEME-accent);">{{ i18n.ts._play.editThisPage }}</MkA>
 				<MkAd :preferForms="['horizontal', 'horizontal-big']"/>
 			</div>
 			<MkError v-else-if="error" @retry="fetchFlash()"/>
@@ -291,7 +291,7 @@ function showMenu(ev: PointerEvent) {
 				text: i18n.ts.reportAbuse,
 				action: reportAbuse,
 			},
-			...($i.isModerator || $i.isAdmin ? [
+			...($i.policies.canManageFlash && ($i.isModerator || $i.isAdmin) ? [
 				{
 					type: 'divider' as const,
 				},

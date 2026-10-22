@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { PrimaryColumn, Entity, Index, Column } from 'typeorm';
+import { PrimaryColumn, Entity, Index, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { id } from './util/id.js';
+import { MiUser } from './User.js';
 
 @Entity('emoji')
 @Index(['name', 'host'], { unique: true })
@@ -12,6 +13,14 @@ import { id } from './util/id.js';
 export class MiEmoji {
 	@PrimaryColumn(id())
 	public id: string;
+
+	@Index('IDX_emoji_userId')
+	@Column({ ...id(), nullable: true })
+	public userId: MiUser['id'] | null;
+
+	@ManyToOne(() => MiUser, { nullable: true, onDelete: 'SET NULL' })
+	@JoinColumn({ foreignKeyConstraintName: 'FK_emoji_userId' })
+	public user: MiUser | null;
 
 	@Column('timestamp with time zone', {
 		nullable: true,

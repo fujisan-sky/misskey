@@ -69,6 +69,10 @@ export const ROUTE_DEF = [{
 	component: chatPage(() => import('@/pages/chat/room.vue')),
 	loginRequired: true,
 }, {
+	path: '/fuji3qa',
+	component: page(() => import('@/pages/fuji3qa.vue')),
+	loginRequired: true,
+}, {
 	path: '/chat/messages/:messageId',
 	component: chatPage(() => import('@/pages/chat/message.vue')),
 	loginRequired: true,
