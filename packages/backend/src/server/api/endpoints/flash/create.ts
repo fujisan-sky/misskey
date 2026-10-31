@@ -20,6 +20,8 @@ export const meta = {
 
 	kind: 'write:flash',
 
+	requiredRolePolicy: 'canManageFlash',
+
 	limit: {
 		duration: ms('1hour'),
 		max: 10,

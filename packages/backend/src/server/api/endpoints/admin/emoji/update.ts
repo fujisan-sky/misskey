@@ -4,6 +4,8 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import { RoleService } from '@/core/RoleService.js';
+import { getUserEmojiAccess, canEditUserEmoji } from '@/misc/user-emoji-permissions.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 import type { DriveFilesRepository, MiEmoji } from '@/models/_.js';
@@ -14,10 +16,15 @@ export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	requireRolePolicy: 'canManageCustomEmojis',
+	requiredRolePolicies: ['canManageCustomEmojis', 'canManageUserEmoji'],
 	kind: 'write:admin:emoji',
 
 	errors: {
+		permissionDenied: {
+			message: 'You can only manage your own local emoji.',
+			code: 'PERMISSION_DENIED',
+			id: '97e15ec7-263a-488b-a8df-c860d0ab08e9',
+		},
 		noSuchEmoji: {
 			message: 'No such emoji.',
 			code: 'NO_SUCH_EMOJI',
@@ -37,29 +44,45 @@ export const meta = {
 } as const;
 
 export const paramDef = {
-	type: 'object',
-	properties: {
-		id: { type: 'string', format: 'misskey:id' },
-		name: { type: 'string', pattern: '^[a-zA-Z0-9_]+$' },
-		fileId: { type: 'string', format: 'misskey:id' },
-		category: {
-			type: 'string',
-			nullable: true,
-			description: 'Use `null` to reset the category.',
+	allOf: [
+		{
+			anyOf: [
+				{
+					type: 'object',
+					properties: {
+						id: { type: 'string', format: 'misskey:id' },
+					},
+					required: ['id'],
+				},
+				{
+					type: 'object',
+					properties: {
+						name: { type: 'string', pattern: '^[a-zA-Z0-9_]+$' },
+					},
+					required: ['name'],
+				},
+			],
 		},
-		aliases: { type: 'array', items: {
-			type: 'string',
-		} },
-		license: { type: 'string', nullable: true },
-		isSensitive: { type: 'boolean' },
-		localOnly: { type: 'boolean' },
-		roleIdsThatCanBeUsedThisEmojiAsReaction: { type: 'array', items: {
-			type: 'string',
-		} },
-	},
-	anyOf: [
-		{ required: ['id'] },
-		{ required: ['name'] },
+		{
+			type: 'object',
+			properties: {
+				fileId: { type: 'string', format: 'misskey:id' },
+				category: {
+					type: 'string',
+					nullable: true,
+					description: 'Use `null` to reset the category.',
+				},
+				aliases: { type: 'array', items: {
+					type: 'string',
+				} },
+				license: { type: 'string', nullable: true },
+				isSensitive: { type: 'boolean' },
+				localOnly: { type: 'boolean' },
+				roleIdsThatCanBeUsedThisEmojiAsReaction: { type: 'array', items: {
+					type: 'string',
+				} },
+			},
+		},
 	],
 } as const;
 
@@ -70,18 +93,24 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		private driveFilesRepository: DriveFilesRepository,
 
 		private customEmojiService: CustomEmojiService,
+		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			const policies = await this.roleService.getUserPolicies(me.id);
+			const access = getUserEmojiAccess(policies, await this.roleService.isAdministrator(me));
+			const emoji = 'id' in ps
+				? await this.customEmojiService.getEmojiById(ps.id)
+				: await this.customEmojiService.getEmojiByName(ps.name);
+			if (emoji == null) throw new ApiError(meta.errors.noSuchEmoji);
+			if (!canEditUserEmoji(access, emoji, me.id)) throw new ApiError(meta.errors.permissionDenied);
+
 			let driveFile;
 			if (ps.fileId) {
 				driveFile = await this.driveFilesRepository.findOneBy({ id: ps.fileId });
-				if (driveFile == null) throw new ApiError(meta.errors.noSuchFile);
+				if (driveFile == null || (access.userOnly && driveFile.userId !== me.id)) throw new ApiError(meta.errors.noSuchFile);
 			}
 
-			// JSON schemeのanyOfの型変換がうまくいっていないらしい
-			const required = { id: ps.id, name: ps.name } as
-				| { id: MiEmoji['id']; name?: string }
-				| { id?: MiEmoji['id']; name: string };
+			const required = { id: emoji.id, name: 'name' in ps ? ps.name : undefined };
 
 			const error = await this.customEmojiService.update({
 				...required,
@@ -91,9 +120,9 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				category: ps.category,
 				aliases: ps.aliases,
 				license: ps.license,
-				isSensitive: ps.isSensitive,
-				localOnly: ps.localOnly,
-				roleIdsThatCanBeUsedThisEmojiAsReaction: ps.roleIdsThatCanBeUsedThisEmojiAsReaction,
+				isSensitive: access.userOnly ? false : ps.isSensitive,
+				localOnly: access.userOnly ? false : ps.localOnly,
+				roleIdsThatCanBeUsedThisEmojiAsReaction: access.userOnly ? [] : ps.roleIdsThatCanBeUsedThisEmojiAsReaction,
 			}, me);
 
 			switch (error) {
@@ -102,7 +131,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				case 'SAME_NAME_EMOJI_EXISTS': throw new ApiError(meta.errors.sameNameEmojiExists);
 			}
 			// 網羅性チェック
-			const mustBeNever: never = error;
+			const _mustBeNever: never = error;
 		});
 	}
 }

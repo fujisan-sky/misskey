@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 <SearchMarker path="/settings/profile" :label="i18n.ts.profile" :keywords="['profile']" icon="ti ti-user">
 	<div class="_gaps_m">
 		<div class="_panel">
-			<div :class="$style.banner" :style="{ backgroundImage: $i.bannerUrl ? `url(${ $i.bannerUrl })` : null }">
+			<div :class="$style.banner" :style="{ backgroundImage: $i.bannerUrl ? `url(${ $i.bannerUrl })` : '' }">
 				<div :class="$style.bannerEdit">
 					<SearchMarker :keywords="['banner', 'change']">
 						<MkButton primary rounded @click="changeBanner"><SearchLabel>{{ i18n.ts._profile.changeBanner }}</SearchLabel></MkButton>
@@ -20,7 +20,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<SearchMarker :keywords="['avatar', 'icon', 'change']">
 						<MkButton primary rounded @click="changeAvatar"><SearchLabel>{{ i18n.ts._profile.changeAvatar }}</SearchLabel></MkButton>
 					</SearchMarker>
-					<MkButton primary rounded link to="/settings/avatar-decoration">{{ i18n.ts.decorate }} <i class="ti ti-sparkles"></i></MkButton>
+					<MkButton primary rounded type="routerLink" to="/settings/avatar-decoration">{{ i18n.ts.decorate }} <i class="ti ti-sparkles"></i></MkButton>
 				</div>
 			</div>
 		</div>
@@ -52,10 +52,17 @@ SPDX-License-Identifier: AGPL-3.0-only
 			</MkInput>
 		</SearchMarker>
 
+                <SearchMarker :keywords="['safemode']">
+                        <MkSwitch v-model="profile.safemode">
+				<template #label><SearchLabel>あんぜんモード（１２才以下の人は必須）</SearchLabel></template>
+                                <template #caption>危険を避けるための制限を行います。この情報は公開されません。</template>
+                        </MkSwitch>
+                </SearchMarker>
+
+
 		<SearchMarker :keywords="['language', 'locale']">
-			<MkSelect v-model="profile.lang">
+			<MkSelect v-model="profile.lang" :items="Object.entries(langmap).map(([code, def]) => ({ label: def.nativeName, value: code }))">
 				<template #label><SearchLabel>{{ i18n.ts.language }}</SearchLabel></template>
-				<option v-for="x in Object.keys(langmap)" :key="x" :value="x">{{ langmap[x].nativeName }}</option>
 			</MkSelect>
 		</SearchMarker>
 
@@ -76,30 +83,27 @@ SPDX-License-Identifier: AGPL-3.0-only
 					<div :class="$style.metadataRoot" class="_gaps_s">
 						<MkInfo>{{ i18n.ts._profile.verifiedLinkDescription }}</MkInfo>
 
-						<Sortable
+						<MkDraggable
 							v-model="fields"
-							class="_gaps_s"
-							itemKey="id"
-							:animation="150"
-							:handle="'.' + $style.dragItemHandle"
-							@start="e => e.item.classList.add('active')"
-							@end="e => e.item.classList.remove('active')"
+							direction="vertical"
+							withGaps
+							manualDragStart
 						>
-							<template #item="{element, index}">
+							<template #default="{ item, dragStart }">
 								<div v-panel :class="$style.fieldDragItem">
-									<button v-if="!fieldEditMode" class="_button" :class="$style.dragItemHandle" tabindex="-1"><i class="ti ti-menu"></i></button>
-									<button v-if="fieldEditMode" :disabled="fields.length <= 1" class="_button" :class="$style.dragItemRemove" @click="deleteField(index)"><i class="ti ti-x"></i></button>
+									<button v-if="!fieldEditMode" class="_button" :class="$style.dragItemHandle" tabindex="-1" :draggable="true" @dragstart.stop="dragStart"><i class="ti ti-menu"></i></button>
+									<button v-if="fieldEditMode" :disabled="fields.length <= 1" class="_button" :class="$style.dragItemRemove" @click="deleteField(item.id)"><i class="ti ti-x"></i></button>
 									<div :class="$style.dragItemForm">
 										<FormSplit :minWidth="200">
-											<MkInput v-model="element.name" small :placeholder="i18n.ts._profile.metadataLabel">
+											<MkInput v-model="item.name" small :placeholder="i18n.ts._profile.metadataLabel">
 											</MkInput>
-											<MkInput v-model="element.value" small :placeholder="i18n.ts._profile.metadataContent">
+											<MkInput v-model="item.value" small :placeholder="i18n.ts._profile.metadataContent">
 											</MkInput>
 										</FormSplit>
 									</div>
 								</div>
 							</template>
-						</Sortable>
+						</MkDraggable>
 					</div>
 				</MkFolder>
 				<template #caption>{{ i18n.ts._profile.metadataDescription }}</template>
@@ -108,22 +112,26 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 		<SearchMarker :keywords="['follow', 'message']">
 			<MkInput v-model="profile.followedMessage" :max="200" manualSave :mfmPreview="false">
-				<template #label><SearchLabel>{{ i18n.ts._profile.followedMessage }}</SearchLabel><span class="_beta">{{ i18n.ts.beta }}</span></template>
+				<template #label><SearchLabel>{{ i18n.ts._profile.followedMessage }}</SearchLabel></template>
 				<template #caption>
-					<div><SearchKeyword>{{ i18n.ts._profile.followedMessageDescription }}</SearchKeyword></div>
+					<div><SearchText>{{ i18n.ts._profile.followedMessageDescription }}</SearchText></div>
 					<div>{{ i18n.ts._profile.followedMessageDescriptionForLockedAccount }}</div>
 				</template>
 			</MkInput>
 		</SearchMarker>
 
 		<SearchMarker :keywords="['reaction']">
-			<MkSelect v-model="reactionAcceptance">
+			<MkSelect
+				v-model="reactionAcceptance"
+				:items="[
+					{ label: i18n.ts.all, value: null },
+					{ label: i18n.ts.likeOnlyForRemote, value: 'likeOnlyForRemote' },
+					{ label: i18n.ts.nonSensitiveOnly, value: 'nonSensitiveOnly' },
+					{ label: i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote, value: 'nonSensitiveOnlyForLocalLikeOnlyForRemote' },
+					{ label: i18n.ts.likeOnly, value: 'likeOnly' },
+				]"
+			>
 				<template #label><SearchLabel>{{ i18n.ts.reactionAcceptance }}</SearchLabel></template>
-				<option :value="null">{{ i18n.ts.all }}</option>
-				<option value="likeOnlyForRemote">{{ i18n.ts.likeOnlyForRemote }}</option>
-				<option value="nonSensitiveOnly">{{ i18n.ts.nonSensitiveOnly }}</option>
-				<option value="nonSensitiveOnlyForLocalLikeOnlyForRemote">{{ i18n.ts.nonSensitiveOnlyForLocalLikeOnlyForRemote }}</option>
-				<option value="likeOnly">{{ i18n.ts.likeOnly }}</option>
 			</MkSelect>
 		</SearchMarker>
 
@@ -148,12 +156,22 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</div>
 			</MkFolder>
 		</SearchMarker>
+
+		<hr>
+
+		<SearchMarker :keywords="['qrcode']">
+			<FormLink to="/qr">
+				<template #icon><i class="ti ti-qrcode"></i></template>
+				<SearchLabel>{{ i18n.ts.qr }}</SearchLabel>
+			</FormLink>
+		</SearchMarker>
 	</div>
 </SearchMarker>
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, watch, defineAsyncComponent } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import * as Misskey from 'misskey-js';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
@@ -161,23 +179,23 @@ import MkSelect from '@/components/MkSelect.vue';
 import FormSplit from '@/components/form/split.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import FormSlot from '@/components/form/slot.vue';
-import { selectFile } from '@/scripts/select-file.js';
+import FormLink from '@/components/form/link.vue';
+import MkDraggable from '@/components/MkDraggable.vue';
+import { chooseDriveFile } from '@/utility/drive.js';
 import * as os from '@/os.js';
 import { i18n } from '@/i18n.js';
-import { signinRequired } from '@/account.js';
-import { langmap } from '@/scripts/langmap.js';
-import { definePageMetadata } from '@/scripts/page-metadata.js';
-import { claimAchievement } from '@/scripts/achievements.js';
-import { defaultStore } from '@/store.js';
-import { globalEvents } from '@/events.js';
+import { ensureSignin } from '@/i.js';
+import { langmap } from '@/utility/langmap.js';
+import { definePage } from '@/page.js';
+import { claimAchievement } from '@/utility/achievements.js';
+import { store } from '@/store.js';
 import MkInfo from '@/components/MkInfo.vue';
 import MkTextarea from '@/components/MkTextarea.vue';
+import { genId } from '@/utility/id.js';
 
-const $i = signinRequired();
+const $i = ensureSignin();
 
-const Sortable = defineAsyncComponent(() => import('vuedraggable').then(x => x.default));
-
-const reactionAcceptance = computed(defaultStore.makeGetterSetter('reactionAcceptance'));
+const reactionAcceptance = store.model('reactionAcceptance');
 
 function assertVaildLang(lang: string | null): lang is keyof typeof langmap {
 	return lang != null && lang in langmap;
@@ -189,6 +207,7 @@ const profile = reactive({
 	followedMessage: $i.followedMessage,
 	location: $i.location,
 	birthday: $i.birthday,
+	safemode: $i.safemode ?? false,
 	lang: assertVaildLang($i.lang) ? $i.lang : null,
 	isBot: $i.isBot ?? false,
 	isCat: $i.isCat ?? false,
@@ -200,12 +219,12 @@ watch(() => profile, () => {
 	deep: true,
 });
 
-const fields = ref($i.fields.map(field => ({ id: Math.random().toString(), name: field.name, value: field.value })) ?? []);
+const fields = ref($i.fields.map(field => ({ id: genId(), name: field.name, value: field.value })) ?? []);
 const fieldEditMode = ref(false);
 
 function addField() {
 	fields.value.push({
-		id: Math.random().toString(),
+		id: genId(),
 		name: '',
 		value: '',
 	});
@@ -215,15 +234,14 @@ while (fields.value.length < 4) {
 	addField();
 }
 
-function deleteField(index: number) {
-	fields.value.splice(index, 1);
+function deleteField(itemId: string) {
+	fields.value = fields.value.filter(f => f.id !== itemId);
 }
 
 function saveFields() {
 	os.apiWithDialog('i/update', {
 		fields: fields.value.filter(field => field.name !== '' && field.value !== '').map(field => ({ name: field.name, value: field.value })),
 	});
-	globalEvents.emit('requestClearPageCache');
 }
 
 function save() {
@@ -240,6 +258,7 @@ function save() {
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
 		birthday: profile.birthday || null,
 		// eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+		safemode: !!profile.safemode,
 		lang: profile.lang || null,
 		isBot: !!profile.isBot,
 		isCat: !!profile.isCat,
@@ -249,7 +268,6 @@ function save() {
 			text: i18n.ts.yourNameContainsProhibitedWordsDescription,
 		},
 	});
-	globalEvents.emit('requestClearPageCache');
 	claimAchievement('profileFilled');
 	if (profile.name === 'syuilo' || profile.name === 'しゅいろ') {
 		claimAchievement('setNameToSyuilo');
@@ -259,64 +277,108 @@ function save() {
 	}
 }
 
-function changeAvatar(ev) {
-	selectFile(ev.currentTarget ?? ev.target, i18n.ts.avatar).then(async (file) => {
-		let originalOrCropped = file;
-
-		const { canceled } = await os.confirm({
-			type: 'question',
-			text: i18n.ts.cropImageAsk,
-			okText: i18n.ts.cropYes,
-			cancelText: i18n.ts.cropNo,
-		});
-
-		if (!canceled) {
-			originalOrCropped = await os.cropImage(file, {
-				aspectRatio: 1,
-			});
-		}
-
+function changeAvatar(ev: PointerEvent) {
+	async function done(driveFile: Misskey.entities.DriveFile) {
 		const i = await os.apiWithDialog('i/update', {
-			avatarId: originalOrCropped.id,
+			avatarId: driveFile.id,
 		});
 		$i.avatarId = i.avatarId;
 		$i.avatarUrl = i.avatarUrl;
-		globalEvents.emit('requestClearPageCache');
 		claimAchievement('profileFilled');
-	});
+	}
+
+	os.popupMenu([{
+		text: i18n.ts.avatar,
+		type: 'label',
+	}, {
+		text: i18n.ts.upload,
+		icon: 'ti ti-upload',
+		action: async () => {
+			const files = await os.chooseFileFromPc({ multiple: false });
+			const file = files[0];
+
+			let originalOrCropped = file;
+
+			const { canceled } = await os.confirm({
+				type: 'question',
+				text: i18n.ts.cropImageAsk,
+				okText: i18n.ts.cropYes,
+				cancelText: i18n.ts.cropNo,
+			});
+
+			if (!canceled) {
+				originalOrCropped = await os.cropImageFile(file, {
+					aspectRatio: 1,
+				});
+			}
+
+			const driveFile = (await os.launchUploader([originalOrCropped], { multiple: false }))[0];
+			done(driveFile);
+		},
+	}, {
+		text: i18n.ts.fromDrive,
+		icon: 'ti ti-cloud',
+		action: () => {
+			chooseDriveFile({ multiple: false }).then(files => {
+				done(files[0]);
+			});
+		},
+	}], ev.currentTarget ?? ev.target);
 }
 
-function changeBanner(ev) {
-	selectFile(ev.currentTarget ?? ev.target, i18n.ts.banner).then(async (file) => {
-		let originalOrCropped = file;
-
-		const { canceled } = await os.confirm({
-			type: 'question',
-			text: i18n.ts.cropImageAsk,
-			okText: i18n.ts.cropYes,
-			cancelText: i18n.ts.cropNo,
-		});
-
-		if (!canceled) {
-			originalOrCropped = await os.cropImage(file, {
-				aspectRatio: 2,
-			});
-		}
-
+function changeBanner(ev: PointerEvent) {
+	async function done(driveFile: Misskey.entities.DriveFile) {
 		const i = await os.apiWithDialog('i/update', {
-			bannerId: originalOrCropped.id,
+			bannerId: driveFile.id,
 		});
 		$i.bannerId = i.bannerId;
 		$i.bannerUrl = i.bannerUrl;
-		globalEvents.emit('requestClearPageCache');
-	});
+	}
+
+	os.popupMenu([{
+		text: i18n.ts.banner,
+		type: 'label',
+	}, {
+		text: i18n.ts.upload,
+		icon: 'ti ti-upload',
+		action: async () => {
+			const files = await os.chooseFileFromPc({ multiple: false });
+			const file = files[0];
+
+			let originalOrCropped = file;
+
+			const { canceled } = await os.confirm({
+				type: 'question',
+				text: i18n.ts.cropImageAsk,
+				okText: i18n.ts.cropYes,
+				cancelText: i18n.ts.cropNo,
+			});
+
+			if (!canceled) {
+				originalOrCropped = await os.cropImageFile(file, {
+					aspectRatio: 2,
+				});
+			}
+
+			const driveFile = (await os.launchUploader([originalOrCropped], { multiple: false }))[0];
+			done(driveFile);
+		},
+	}, {
+		text: i18n.ts.fromDrive,
+		icon: 'ti ti-cloud',
+		action: () => {
+			chooseDriveFile({ multiple: false }).then(files => {
+				done(files[0]);
+			});
+		},
+	}], ev.currentTarget ?? ev.target);
 }
 
 const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata(() => ({
+definePage(() => ({
 	title: i18n.ts.profile,
 	icon: 'ti ti-user',
 }));

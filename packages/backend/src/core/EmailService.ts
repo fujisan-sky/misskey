@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { URLSearchParams } from 'node:url';
 import * as nodemailer from 'nodemailer';
 import juice from 'juice';
+import sanitizeHtml from 'sanitize-html';
 import { Inject, Injectable } from '@nestjs/common';
-import { validate as validateEmail } from 'deep-email-validator';
 import { UtilityService } from '@/core/UtilityService.js';
 import { DI } from '@/di-symbols.js';
 import type { Config } from '@/config.js';
@@ -16,7 +15,135 @@ import type { MiMeta, UserProfilesRepository } from '@/models/_.js';
 import { LoggerService } from '@/core/LoggerService.js';
 import { bindThis } from '@/decorators.js';
 import { HttpRequestService } from '@/core/HttpRequestService.js';
+import { escapeHtml } from '@/misc/escape-html.js';
 
+import { readFileSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { domainToASCII } from 'node:url';
+
+const DISPOSABLE_EMAIL_BLOCKLIST_PATH = join(
+	homedir(),
+	'misskey',
+	'plus',
+	'disposable_email_blocklist.conf',
+);
+
+// ファイル更新確認の間隔 1 hour
+const DISPOSABLE_EMAIL_BLOCKLIST_CHECK_INTERVAL = 60 * 60 * 1000;
+
+let disposableEmailDomains = new Set<string>();
+let disposableEmailBlocklistMtimeMs = -1;
+let disposableEmailBlocklistNextCheckAt = 0;
+
+function normalizeEmailDomain(domain: string): string {
+	const normalized = domain
+		.trim()
+		.toLowerCase()
+		.replace(/^\*\./, '')
+		.replace(/\.+$/, '');
+
+	return domainToASCII(normalized);
+}
+
+function getDisposableEmailDomains(): ReadonlySet<string> {
+	const now = Date.now();
+
+	// 毎回ファイルを確認せず、最大60分間キャッシュする
+	if (now < disposableEmailBlocklistNextCheckAt) {
+		return disposableEmailDomains;
+	}
+
+	disposableEmailBlocklistNextCheckAt =
+		now + DISPOSABLE_EMAIL_BLOCKLIST_CHECK_INTERVAL;
+
+	try {
+		const fileStat = statSync(DISPOSABLE_EMAIL_BLOCKLIST_PATH);
+
+		// ファイルが更新されていなければ現在のキャッシュを使用
+		if (
+			disposableEmailDomains.size > 0 &&
+			fileStat.mtimeMs === disposableEmailBlocklistMtimeMs
+		) {
+			return disposableEmailDomains;
+		}
+
+		const loadedDomains = new Set<string>();
+		const fileText = readFileSync(
+			DISPOSABLE_EMAIL_BLOCKLIST_PATH,
+			'utf8',
+		);
+
+		for (const originalLine of fileText.split(/\r?\n/)) {
+			const line = originalLine
+				.replace(/^\uFEFF/, '')
+				.trim();
+
+			if (
+				line === '' ||
+				line.startsWith('#') ||
+				line.startsWith(';')
+			) {
+				continue;
+			}
+
+			const domain = normalizeEmailDomain(line);
+
+			if (domain !== '') {
+				loadedDomains.add(domain);
+			}
+		}
+
+		if (loadedDomains.size === 0) {
+			throw new Error(
+				'disposable email domain list is empty',
+			);
+		}
+
+		disposableEmailDomains = loadedDomains;
+		disposableEmailBlocklistMtimeMs = fileStat.mtimeMs;
+	} catch (error) {
+		const message =
+			error instanceof Error
+				? error.message
+				: String(error);
+
+		process.stderr.write(
+			`[EmailService] disposable email blocklist load error: ${message}\n`,
+		);
+	}
+
+	return disposableEmailDomains;
+}
+
+function isDisposableEmailDomain(domain: string): boolean {
+	const normalizedDomain = normalizeEmailDomain(domain);
+
+	if (normalizedDomain === '') {
+		return false;
+	}
+
+	const domains = getDisposableEmailDomains();
+
+	let checkDomain = normalizedDomain;
+
+	while (checkDomain !== '') {
+		if (domains.has(checkDomain)) {
+			return true;
+		}
+
+		const dotPosition = checkDomain.indexOf('.');
+
+		if (dotPosition === -1) {
+			break;
+		}
+
+		checkDomain = checkDomain.slice(dotPosition + 1);
+	}
+
+	return false;
+}
+ 
 @Injectable()
 export class EmailService {
 	private logger: Logger;
@@ -48,6 +175,8 @@ export class EmailService {
 		const enableAuth = this.meta.smtpUser != null && this.meta.smtpUser !== '';
 		const subjectPlus = `[${this.config.host}]${subject}`;
 
+		const sanitizedHtml = sanitizeHtml(html);
+
 		const transporter = nodemailer.createTransport({
 			host: this.meta.smtpHost,
 			port: this.meta.smtpPort,
@@ -64,7 +193,7 @@ export class EmailService {
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>${ subject }</title>
+		<title>${ escapeHtml(subject) }</title>
 		<style>
 			html {
 				background: #eee;
@@ -125,18 +254,18 @@ export class EmailService {
 	<body>
 		<main>
 			<header>
-				<img src="${ this.meta.logoImageUrl ?? this.meta.iconUrl ?? iconUrl }"/>
+				<img src="${ escapeHtml(this.meta.logoImageUrl ?? this.meta.iconUrl ?? iconUrl) }"/>
 			</header>
 			<article>
-				<h1>${ subject }</h1>
-				<div>${ html }</div>
+				<h1>${ escapeHtml(subject) }</h1>
+				<div>${ sanitizedHtml }</div>
 			</article>
 			<footer>
-				<a href="${ emailSettingUrl }">${ 'Email setting' }</a>
+				<a href="${ escapeHtml(emailSettingUrl) }">${ 'Email setting' }</a>
 			</footer>
 		</main>
 		<nav>
-			<a href="${ this.config.url }">${ this.config.host }</a>
+			<a href="${ escapeHtml(this.config.url) }">${ escapeHtml(this.config.host) }</a>
 		</nav>
 	</body>
 </html>`;
@@ -144,9 +273,11 @@ export class EmailService {
 		const inlinedHtml = juice(htmlContent);
 
 		try {
-			// TODO: htmlサニタイズ
 			const info = await transporter.sendMail({
-				from: this.meta.email!,
+				from: this.meta.name ? {
+					name: this.meta.name,
+					address: this.meta.email!,
+				} : this.meta.email!,
 				to: to,
 				subject: subjectPlus,
 				text: text,
@@ -184,6 +315,20 @@ export class EmailService {
 			};
 		}
 
+
+		const atPosition = emailAddress.lastIndexOf('@');
+		const emailDomain = normalizeEmailDomain(
+			emailAddress.slice(atPosition + 1),
+		);
+
+		// ローカルのdisposable email domain一覧による判定
+		if (isDisposableEmailDomain(emailDomain)) {
+			return {
+				available: false,
+				reason: 'disposable',
+			};
+		}
+
 		let validated: {
 			valid: boolean,
 			reason?: string | null,
@@ -195,6 +340,7 @@ export class EmailService {
 			} else if (this.meta.enableTruemailApi && this.meta.truemailInstance && this.meta.truemailAuthKey != null) {
 				validated = await this.trueMail(this.meta.truemailInstance, emailAddress, this.meta.truemailAuthKey);
 			} else {
+				const { validate: validateEmail } = await import('deep-email-validator');
 				validated = await validateEmail({
 					email: emailAddress,
 					validateRegex: true,
@@ -222,7 +368,7 @@ export class EmailService {
 			};
 		}
 
-		const emailDomain: string = emailAddress.split('@')[1];
+		//const emailDomain: string = emailAddress.split('@')[1];
 		const isBanned = this.utilityService.isBlockedHost(this.meta.bannedEmailDomains, emailDomain);
 
 		if (isBanned) {
@@ -364,7 +510,7 @@ export class EmailService {
 				valid: true,
 				reason: null,
 			};
-		} catch (error) {
+		} catch (_) {
 			return {
 				valid: false,
 				reason: 'network',

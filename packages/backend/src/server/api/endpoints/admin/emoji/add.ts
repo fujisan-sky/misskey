@@ -4,6 +4,8 @@
  */
 
 import { Inject, Injectable } from '@nestjs/common';
+import { RoleService } from '@/core/RoleService.js';
+import { getUserEmojiAccess } from '@/misc/user-emoji-permissions.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import type { DriveFilesRepository } from '@/models/_.js';
 import { DI } from '@/di-symbols.js';
@@ -16,7 +18,7 @@ export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	requireRolePolicy: 'canCreateEmoji',
+	requiredRolePolicies: ['canCreateEmoji', 'canManageCustomEmojis', 'canManageUserEmoji'],
 	kind: 'write:admin:emoji',
 
 	errors: {
@@ -80,11 +82,14 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 		@Inject(DI.driveFilesRepository)
 		private driveFilesRepository: DriveFilesRepository,
 		private customEmojiService: CustomEmojiService,
+		private roleService: RoleService,
 		private emojiEntityService: EmojiEntityService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			const policies = await this.roleService.getUserPolicies(me.id);
+			const access = getUserEmojiAccess(policies, await this.roleService.isAdministrator(me));
 			const driveFile = await this.driveFilesRepository.findOneBy({ id: ps.fileId });
-			if (driveFile == null) throw new ApiError(meta.errors.noSuchFile);
+			if (driveFile == null || (access.userOnly && driveFile.userId !== me.id)) throw new ApiError(meta.errors.noSuchFile);
 			const isDuplicate = await this.customEmojiService.checkDuplicate(ps.name);
 			if (isDuplicate) throw new ApiError(meta.errors.duplicateName);
 			if (!FILE_TYPE_IMAGE.includes(driveFile.type)) throw new ApiError(meta.errors.unsupportedFileType);
@@ -97,10 +102,11 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				category: ps.category ?? null,
 				aliases: ps.aliases ?? [],
 				host: null,
+				userId: policies.canManageUserEmoji ? me.id : null,
 				license: ps.license ?? null,
-				isSensitive: ps.isSensitive ?? false,
-				localOnly: ps.localOnly ?? false,
-				roleIdsThatCanBeUsedThisEmojiAsReaction: ps.roleIdsThatCanBeUsedThisEmojiAsReaction ?? [],
+				isSensitive: access.userOnly ? false : (ps.isSensitive ?? false),
+				localOnly: access.userOnly ? false : (ps.localOnly ?? false),
+				roleIdsThatCanBeUsedThisEmojiAsReaction: access.userOnly ? [] : (ps.roleIdsThatCanBeUsedThisEmojiAsReaction ?? []),
 			}, me);
 
 			return this.emojiEntityService.packDetailed(emoji);
