@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { createFuji3IpGuard } from './fuji3-ip.js';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Redis } from 'ioredis';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
@@ -46,6 +47,7 @@ type Dependencies = {
 };
 
 export function registerFuji3QaApi(fastify: FastifyInstance, deps: Dependencies) {
+	const ipGuard = createFuji3IpGuard(fastify, 'FUJI3QA_IP');
 	const issuer = deps.config.url.replace(/\/$/, '');
 	const audience = chatOrigin(process.env.FUJI3QA_URL ?? '');
 	const secret = process.env.FUJI3QA_SSO_SECRET ?? '';
@@ -64,7 +66,7 @@ export function registerFuji3QaApi(fastify: FastifyInstance, deps: Dependencies)
 	// Public settings contain the destination only, never the shared secret.
 	fastify.get('/fuji3qa/config', async (_request, reply) => {
 		reply.headers(noCache);
-		return { url: configured ? audience : null };
+		return { url: configured ? audience : null, roleId: process.env.FUJI3QA_ROLE?.trim() || null };
 	});
 
 	fastify.post<{ Body: { i: string; state: string; codeChallenge: string } }>('/fuji3qa/issue', {
@@ -103,6 +105,7 @@ export function registerFuji3QaApi(fastify: FastifyInstance, deps: Dependencies)
 	});
 
 	fastify.post<{ Body: { code: string; state: string; codeVerifier: string } }>('/fuji3qa/exchange', {
+		onRequest: ipGuard,
 		bodyLimit: 4096,
 		schema: { body: { type: 'object', additionalProperties: false, required: ['code', 'state', 'codeVerifier'], properties: {
 			code: randomField, state: randomField, codeVerifier: randomField,
@@ -145,6 +148,7 @@ export function registerFuji3QaApi(fastify: FastifyInstance, deps: Dependencies)
 
 	const capabilityProperties = { grant: randomField, audience: { type: 'string', maxLength: 2048 } };
 	fastify.post<{ Body: { grant: string; audience: string; requestId: string; text: string; visibility: string } }>('/fuji3qa/post-note', {
+		onRequest: ipGuard,
 		bodyLimit: 32768,
 		preValidation: async (request, reply) => {
 			if (!request.body || Object.keys(request.body).some(key => !['grant', 'audience', 'requestId', 'text', 'visibility'].includes(key))) {

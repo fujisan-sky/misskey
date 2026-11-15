@@ -86,6 +86,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { computed, defineAsyncComponent, onDeactivated, onUnmounted, ref } from 'vue';
 import { $i } from '@/i.js';
 import { fuji3chatRoomLink } from '@/utility/fuji3chat-link.js';
+import { fuji3qaConfig } from '@/utility/fuji3qa-config.js';
+import { fuji3qaRoomLink } from '@/utility/fuji3qa-room-link.js';
 import { url as local } from '@@/js/config.js';
 import { versatileLang } from '@@/js/intl-const.js';
 import type { SummalyResult } from '@misskey-dev/summaly';
@@ -112,7 +114,7 @@ const props = withDefaults(defineProps<{
 const MOBILE_THRESHOLD = 500;
 const isMobile = ref(deviceKind === 'smartphone' || window.innerWidth <= MOBILE_THRESHOLD);
 
-const navigationUrl = computed(() => fuji3chatRoomLink(props.url, local, $i != null) ?? maybeRelativeUrl);
+const navigationUrl = computed(() => fuji3qaRoomLink(props.url, fuji3qaConfig.url, local, $i != null) ?? fuji3chatRoomLink(props.url, local, $i != null) ?? maybeRelativeUrl);
 const maybeRelativeUrl = maybeMakeRelative(props.url, local);
 const self = maybeRelativeUrl !== props.url;
 const attr = self ? 'to' : 'href';

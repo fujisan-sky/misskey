@@ -180,6 +180,11 @@ export const packedUserLiteSchema = {
 				type: 'object',
 				nullable: false, optional: false,
 				properties: {
+					id: {
+						type: 'string',
+						format: 'id',
+						nullable: false, optional: true,
+					},
 					name: {
 						type: 'string',
 						nullable: false, optional: false,
@@ -498,6 +503,14 @@ export const packedMeDetailedOnlySchema = {
 		autoAcceptFollowed: {
 			type: 'boolean',
 			nullable: false, optional: false,
+		},
+		followApprovalLocalSeconds: {
+			type: 'number',
+			nullable: true, optional: false,
+		},
+		followApprovalRemoteSeconds: {
+			type: 'number',
+			nullable: true, optional: false,
 		},
 		noCrawle: {
 			type: 'boolean',

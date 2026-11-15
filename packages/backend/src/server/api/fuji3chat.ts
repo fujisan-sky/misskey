@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { createFuji3IpGuard } from './fuji3-ip.js';
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import type { Redis } from 'ioredis';
 import type { FastifyInstance } from 'fastify';
@@ -44,6 +45,7 @@ type Dependencies = {
 };
 
 export function registerFuji3ChatApi(fastify: FastifyInstance, deps: Dependencies) {
+	const ipGuard = createFuji3IpGuard(fastify, 'FUJI3CHAT_IP');
 	const issuer = deps.config.url.replace(/\/$/, '');
 	const audience = chatOrigin(process.env.FUJI3CHAT_URL ?? '');
 	const secret = process.env.FUJI3CHAT_SSO_SECRET ?? '';
@@ -92,6 +94,7 @@ export function registerFuji3ChatApi(fastify: FastifyInstance, deps: Dependencie
 	});
 
 	fastify.post<{ Body: { code: string; state: string; codeVerifier: string } }>('/fuji3chat/exchange', {
+		onRequest: ipGuard,
 		bodyLimit: 4096,
 		schema: { body: { type: 'object', additionalProperties: false, required: ['code', 'state', 'codeVerifier'], properties: {
 			code: randomField, state: randomField, codeVerifier: randomField,

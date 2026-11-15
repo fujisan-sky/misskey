@@ -519,6 +519,7 @@ export class UserEntityService implements OnModuleInit {
 				.filter((r) => r.isPublic || iAmModerator)
 				.sort((a, b) => b.displayOrder - a.displayOrder)
 				.map((r) => ({
+					id: r.id,
 					name: r.name,
 					iconUrl: r.iconUrl,
 					displayOrder: r.displayOrder,
@@ -595,6 +596,8 @@ export class UserEntityService implements OnModuleInit {
 				autoSensitive: profile!.autoSensitive,
 				carefulBot: profile!.carefulBot,
 				autoAcceptFollowed: profile!.autoAcceptFollowed,
+				followApprovalLocalSeconds: profile!.followApprovalLocalSeconds,
+				followApprovalRemoteSeconds: profile!.followApprovalRemoteSeconds,
 				noCrawle: profile!.noCrawle,
 				preventAiLearning: profile!.preventAiLearning,
 				isExplorable: user.isExplorable,

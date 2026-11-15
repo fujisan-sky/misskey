@@ -70,7 +70,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 							<MkAcct :user="appearNote.user"/>
 						</div>
 						<div v-if="appearNote.user.badgeRoles" :class="$style.noteHeaderBadgeRoles">
-							<img v-for="(role, i) in appearNote.user.badgeRoles" :key="i" v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
+							<template v-for="(role, i) in appearNote.user.badgeRoles" :key="i">
+								<a v-if="fuji3qaBadgeLink(appearNote.user, role)" v-tooltip="role.name" :href="fuji3qaBadgeLink(appearNote.user, role)!" :class="$style.noteHeaderBadgeRole" :aria-label="role.name" @click.stop>
+									<img :src="role.iconUrl!" alt="" style="height: 1.3em; vertical-align: -20%;"/>
+								</a>
+								<img v-else v-tooltip="role.name" :class="$style.noteHeaderBadgeRole" :src="role.iconUrl!"/>
+							</template>
 						</div>
 					</div>
 					<MkInstanceTicker v-if="showTicker" :host="appearNote.user.host" :instance="appearNote.user.instance"/>
@@ -244,13 +249,14 @@ import * as Misskey from 'misskey-js';
 import { useNote } from '@/composables/use-note.js';
 import { prefer } from '@/preferences.js';
 import { i18n } from '@/i18n.js';
-import { userPage } from '@/filters/user.js';
-import { notePage } from '@/filters/note.js';
+import { userPage } from '@@/js/user.js';
+import { notePage } from '@@/js/note.js';
 import { isEnabledUrlPreview } from '@/utility/url-preview.js';
 import { Paginator } from '@/utility/paginator.js';
 import { misskeyApi } from '@/utility/misskey-api.js';
 import number from '@/filters/number.js';
 import { DI } from '@/di.js';
+import { fuji3qaBadgeLink } from '@/utility/fuji3qa-link.js';
 import type { Keymap } from '@/utility/hotkey.js';
 
 // コンポーネント外部の依存関係

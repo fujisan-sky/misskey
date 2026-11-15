@@ -15,13 +15,14 @@ SPDX-License-Identifier: AGPL-3.0-only
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import MkButton from '@/components/MkButton.vue';
+import { hostname } from '@@/js/config.js';
 import { $i } from '@/i.js';
+import { isFuji3qaRoom } from '@/utility/fuji3qa-link.js';
 import { i18n } from '@/i18n.js';
 import { definePage } from '@/page.js';
 import { fuji3qaConfig, loadFuji3qaConfig } from '@/utility/fuji3qa-config.js';
 
 const room = new URLSearchParams(window.location.search).get('room') ?? '';
-const validRoom = !room || /^[A-Za-z0-9]{10}$/.test(room);
 const failed = ref(false);
 const controller = new AbortController();
 onBeforeUnmount(() => controller.abort());
@@ -30,9 +31,9 @@ async function restart() {
 	try {
 		await loadFuji3qaConfig();
 		if (controller.signal.aborted) return;
-		if (!fuji3qaConfig.url || !validRoom) throw new Error();
+		if (!fuji3qaConfig.url || !isFuji3qaRoom(room, fuji3qaConfig.url, hostname)) throw new Error();
 		const start = new URL('/api/auth/fuji3qa/start', fuji3qaConfig.url);
-		start.searchParams.set('host', window.location.hostname);
+		start.searchParams.set('host', hostname);
 		if (room) start.searchParams.set('room', room);
 		window.location.replace(start.href);
 	} catch {
@@ -44,7 +45,7 @@ onMounted(async () => {
 	try { await loadFuji3qaConfig(); } catch { failed.value = true; return; }
 	const destination = fuji3qaConfig.url;
 	if (controller.signal.aborted) return;
-	if (!$i || !destination || !validRoom) { failed.value = true; return; }
+	if (!$i || !destination || !isFuji3qaRoom(room, destination, hostname)) { failed.value = true; return; }
 	const params = new URLSearchParams(window.location.search);
 	const state = params.get('state');
 	const codeChallenge = params.get('code_challenge');

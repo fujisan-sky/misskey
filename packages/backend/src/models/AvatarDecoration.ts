@@ -3,13 +3,24 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Entity, PrimaryColumn, Index, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { id } from './util/id.js';
+import { MiUser } from './User.js';
 
 @Entity('avatar_decoration')
 export class MiAvatarDecoration {
 	@PrimaryColumn(id())
 	public id: string;
+
+	@Column({ ...id(), nullable: true })
+	public userId: MiUser['id'] | null;
+
+	@ManyToOne(() => MiUser, {
+		nullable: true,
+		onDelete: 'SET NULL',
+	})
+	@JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FK_avatar_decoration_userId' })
+	public user: MiUser | null;
 
 	@Column('timestamp with time zone', {
 		nullable: true,

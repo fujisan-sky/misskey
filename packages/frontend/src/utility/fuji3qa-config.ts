@@ -5,7 +5,7 @@
 
 import { reactive } from 'vue';
 
-export const fuji3qaConfig = reactive<{ url: string | null }>({ url: null });
+export const fuji3qaConfig = reactive<{ url: string | null; roleId: string | null }>({ url: null, roleId: null });
 let loading: Promise<void> | null = null;
 
 export function loadFuji3qaConfig(): Promise<void> {
@@ -20,6 +20,8 @@ export function loadFuji3qaConfig(): Promise<void> {
 			if (!response.ok) throw new Error('SSO settings unavailable');
 			const data: unknown = await response.json();
 			if (!data || typeof data !== 'object' || !('url' in data)) throw new Error('Invalid SSO settings');
+			if ('roleId' in data && data.roleId !== null && typeof data.roleId !== 'string') throw new Error('Invalid QA role');
+			fuji3qaConfig.roleId = 'roleId' in data && typeof data.roleId === 'string' ? data.roleId : null;
 			if (data.url === null) { fuji3qaConfig.url = null; return; }
 			if (typeof data.url !== 'string') throw new Error('Invalid SSO destination');
 			const target = new URL(data.url);
@@ -27,6 +29,7 @@ export function loadFuji3qaConfig(): Promise<void> {
 			fuji3qaConfig.url = target.origin;
 		} catch (error) {
 			fuji3qaConfig.url = null;
+			fuji3qaConfig.roleId = null;
 			loading = null;
 			throw error;
 		} finally {

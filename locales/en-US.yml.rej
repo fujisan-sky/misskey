@@ -1,0 +1,14 @@
+--- locales/en-US.yml	2026-09-23 17:23:27.000000000 +0900
++++ locales/en-US.yml	2026-09-29 11:46:15.249142279 +0900
+@@ -2115,6 +2115,11 @@
+     canUseTranslator: "Translator usage"
+     canCreateChannel: "Allow creating channels"
+     avatarDecorationLimit: "Maximum number of avatar decorations"
++    publicMinimumInterval: "Minimum time interval for public notes"
++    mentionMinimumInterval: "Minimum time interval for mentions"
++    canCreateEmoji: "Permission to create custom emojis (create only)"
++    messageFilter: "Filter messages for that person"
++    canCreateOwnDec: "Permission to create your own decorations"
+     canImportAntennas: "Can import antennas"
+     canImportBlocking: "Can import blocking"
+     canImportFollowing: "Can import following"

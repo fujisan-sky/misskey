@@ -26,23 +26,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 
 <script lang="ts" setup>
 import { computed, defineAsyncComponent, ref } from 'vue';
-import { toUnicode as decodePunycode } from 'punycode.js';
 import { $i } from '@/i.js';
 import { fuji3chatRoomLink } from '@/utility/fuji3chat-link.js';
+import { fuji3qaConfig } from '@/utility/fuji3qa-config.js';
+import { fuji3qaRoomLink } from '@/utility/fuji3qa-room-link.js';
 import { url as local } from '@@/js/config.js';
-import { maybeMakeRelative } from '@@/js/url.js';
+import { maybeMakeRelative, parseUrlForDisplay } from '@@/js/url.js';
 import type { MkABehavior } from '@/components/global/MkA.vue';
 import * as os from '@/os.js';
 import { useTooltip } from '@/composables/use-tooltip.js';
 import { isEnabledUrlPreview } from '@/utility/url-preview.js';
-
-function safeURIDecode(str: string): string {
-	try {
-		return decodeURIComponent(str);
-	} catch {
-		return str;
-	}
-}
 
 const props = withDefaults(defineProps<{
 	url: string;
@@ -53,11 +46,10 @@ const props = withDefaults(defineProps<{
 	showUrlPreview: true,
 });
 
-const navigationUrl = computed(() => fuji3chatRoomLink(props.url, local, $i != null) ?? maybeRelativeUrl);
+const navigationUrl = computed(() => fuji3qaRoomLink(props.url, fuji3qaConfig.url, local, $i != null) ?? fuji3chatRoomLink(props.url, local, $i != null) ?? maybeRelativeUrl);
 const maybeRelativeUrl = maybeMakeRelative(props.url, local);
 const self = maybeRelativeUrl !== props.url;
-const url = new URL(props.url);
-if (!['http:', 'https:'].includes(url.protocol)) throw new Error('invalid url');
+const { schema, hostname, port, pathname, query, hash } = parseUrlForDisplay(props.url);
 const el = ref();
 
 if (props.showUrlPreview && isEnabledUrlPreview.value) {
@@ -72,12 +64,6 @@ if (props.showUrlPreview && isEnabledUrlPreview.value) {
 	});
 }
 
-const schema = url.protocol;
-const hostname = decodePunycode(url.hostname);
-const port = url.port;
-const pathname = safeURIDecode(url.pathname);
-const query = safeURIDecode(url.search);
-const hash = safeURIDecode(url.hash);
 const attr = self ? 'to' : 'href';
 const target = self ? null : '_blank';
 </script>

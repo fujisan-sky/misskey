@@ -1,0 +1,14 @@
+--- packages/misskey-js/src/consts.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/misskey-js/src/consts.ts	2026-09-29 11:46:15.251142290 +0900
+@@ -222,6 +222,11 @@
+ 	'userEachUserListsLimit',
+ 	'rateLimitFactor',
+ 	'avatarDecorationLimit',
++	'publicMinimumInterval',
++	'mentionMinimumInterval',
++	'canCreateEmoji',
++	'messageFilter',
++	'canCreateOwnDeco',
+ 	'canImportAntennas',
+ 	'canImportBlocking',
+ 	'canImportFollowing',

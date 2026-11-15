@@ -1,15 +1,4 @@
-<br>
-ライセンス上、公開しているだけで(環境依存のコードがあり）申し訳ありませんがフォーク的に使える物ではありません。<br>
-<br>
-以下については、お問い合わせ頂ければ当該処理部分のパッチの提供を検討させて頂きます。<br>
-<br>
--  ふじさんQA、ふじさんチャットとの強化SSO連携を入れたい<br>
-   （ふじすきで対応しているレベルですが、ワンクリックで、ふじさんQAに入れます。）<br>
-<br>
-<br>
 <div align="center">
-<hr>
-
 <a href="https://misskey-hub.net">
 	<img src="./assets/title_float.svg" alt="Misskey logo" style="border-radius:50%" width="300"/>
 </a>

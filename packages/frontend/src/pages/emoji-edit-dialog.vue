@@ -18,7 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div style="display: flex; flex-direction: column; min-height: 100%;">
 		<div class="_spacer" style="--MI_SPACER-min: 20px; --MI_SPACER-max: 28px; flex-grow: 1;">
 			<div class="_gaps_m">
-				<MkInfo v-if="userOnly && !emoji" style="white-space: pre-line;">{{ i18n.ts.userEmojiOriginalOnlyNotice }}</MkInfo>
+				<MkInfo v-if="userOnly" style="white-space: pre-line;">{{ i18n.ts.userEmojiOriginalOnlyNotice }}</MkInfo>
 				<div v-if="imgUrl != null" :class="$style.imgs">
 					<div style="background: #000;" :class="$style.imgContainer">
 						<img :src="imgUrl" :class="$style.img"/>
@@ -37,7 +37,11 @@ SPDX-License-Identifier: AGPL-3.0-only
 				<MkInput v-model="name" pattern="[a-z0-9_]" autocapitalize="off">
 					<template #label>{{ i18n.ts.name }}</template>
 				</MkInput>
-				<MkInput v-model="category" :datalist="customEmojiCategories.filter(x => x != null)">
+				<MkSelect v-if="userOnly" v-model="category" :items="userEmojiCategoryItems">
+					<template #label>{{ i18n.ts.category }}</template>
+					<template #caption>{{ i18n.ts.userEmojiCategoryCaption }}</template>
+				</MkSelect>
+				<MkInput v-else v-model="category" :datalist="customEmojiCategories.filter(x => x != null)">
 					<template #label>{{ i18n.ts.category }}</template>
 				</MkInput>
 				<MkInput v-model="aliases" autocapitalize="off">
@@ -49,6 +53,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 				</MkInput>
 				<MkInput v-model="license" :mfmAutocomplete="true">
 					<template #label>{{ i18n.ts.license }}</template>
+					<template v-if="userOnly" #caption>{{ i18n.ts.userEmojiLicenseCaption }}</template>
 				</MkInput>
 				<MkFolder v-if="!userOnly">
 					<template #label>{{ i18n.ts.rolesThatCanBeUsedThisEmojiAsReaction }}</template>
@@ -68,7 +73,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 					</div>
 				</MkFolder>
 				<MkSwitch v-if="!userOnly" v-model="isSensitive">{{ i18n.ts.sensitive }}</MkSwitch>
-				<MkSwitch v-if="!userOnly" v-model="localOnly">{{ i18n.ts.localOnly }}</MkSwitch>
+				<MkSwitch v-model="localOnly">{{ i18n.ts.localOnly }}</MkSwitch>
 				<MkButton v-if="emoji && canEdit" danger @click="del()"><i class="ti ti-trash"></i> {{ i18n.ts.delete }}</MkButton>
 			</div>
 		</div>
@@ -85,6 +90,7 @@ import * as Misskey from 'misskey-js';
 import MkWindow from '@/components/MkWindow.vue';
 import MkButton from '@/components/MkButton.vue';
 import MkInput from '@/components/MkInput.vue';
+import MkSelect from '@/components/MkSelect.vue';
 import MkInfo from '@/components/MkInfo.vue';
 import MkFolder from '@/components/MkFolder.vue';
 import * as os from '@/os.js';
@@ -110,8 +116,31 @@ const canEdit = computed(() => Boolean($i && (!props.emoji || $i.isAdmin || $i.p
 const windowEl = useTemplateRef('windowEl');
 const name = ref<string>(props.emoji ? props.emoji.name : '');
 const category = ref<string>(props.emoji?.category ? props.emoji.category : '');
+const userEmojiCategories = [
+	'文字/object',
+	'文字/character',
+	'文字/デコ文字',
+	'文字',
+	'色々/logo・icon',
+	'色々/character',
+	'色々/word',
+	'blobcat',
+	'blob',
+	'オリジナル',
+	'動物',
+	'食べ物',
+	'応援',
+	'ボイロ・ボカロ',
+	'その他',
+];
+const userEmojiCategoryItems = computed(() => {
+	const categories = [...userEmojiCategories];
+	const currentCategory = props.emoji?.category;
+	if (currentCategory && !categories.includes(currentCategory)) categories.unshift(currentCategory);
+	return categories.map(value => ({ value, label: value }));
+});
 const aliases = ref<string>(props.emoji ? props.emoji.aliases.join(' ') : '');
-const license = ref<string>(props.emoji?.license ? props.emoji.license : '');
+const license = ref<string>(props.emoji ? (props.emoji.license ?? '') : (userOnly.value && $i ? `${$i.username}@misskey.day` : ''));
 const isSensitive = ref(props.emoji ? props.emoji.isSensitive : false);
 const localOnly = ref(props.emoji ? props.emoji.localOnly : false);
 const roleIdsThatCanBeUsedThisEmojiAsReaction = ref(props.emoji ? props.emoji.roleIdsThatCanBeUsedThisEmojiAsReaction : []);
@@ -159,7 +188,7 @@ async function done() {
 		aliases: aliases.value.split(' ').filter(x => x !== ''),
 		license: license.value === '' ? null : license.value,
 		isSensitive: userOnly.value ? false : isSensitive.value,
-		localOnly: userOnly.value ? false : localOnly.value,
+		localOnly: localOnly.value,
 		roleIdsThatCanBeUsedThisEmojiAsReaction: userOnly.value ? [] : rolesThatCanBeUsedThisEmojiAsReaction.value.map(x => x.id),
 		fileId: file.value ? file.value.id : undefined,
 	} satisfies Misskey.entities.AdminEmojiUpdateRequest;

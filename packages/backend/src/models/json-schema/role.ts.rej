@@ -1,0 +1,38 @@
+--- packages/backend/src/models/json-schema/role.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/models/json-schema/role.ts	2026-09-29 11:46:15.243142246 +0900
+@@ -66,7 +66,7 @@
+ 		type: {
+ 			type: 'string',
+ 			nullable: false, optional: false,
+-			enum: ['isSuspended', 'isLocked', 'isBot', 'isCat', 'isExplorable'],
++			enum: ['isSuspended', 'isLocked', 'isBot', 'isCat', 'isExplorable' , 'isSafe' ],
+ 		},
+ 	},
+ } as const;
+@@ -329,6 +329,26 @@
+ 			type: 'boolean',
+ 			optional: false, nullable: false,
+ 		},
++		publicMinimumInterval: {
++			type: 'integer',
++			optional: false, nullable: false,
++		},
++		mentionMinimumInterval: {
++			type: 'integer',
++			optional: false, nullable: false,
++		},
++		canCreateEmoji: {
++			type: 'boolean',
++			optional: false, nullable: false,
++		},
++		messageFilter: {
++			type: 'boolean',
++			optional: false, nullable: false,
++		},
++		canCreateOwnDeco: {
++			type: 'boolean',
++			optional: false, nullable: false,
++		},
+ 	},
+ } as const;
+ 

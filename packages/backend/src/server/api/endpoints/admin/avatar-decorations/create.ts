@@ -3,14 +3,11 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { AvatarDecorationService } from '@/core/AvatarDecorationService.js';
 import { IdService } from '@/core/IdService.js';
 import { ApiError } from '../../../error.js';
-import { DI } from '@/di-symbols.js';
-import type { UsersRepository } from '@/models/_.js';
-import { RoleService } from '@/core/RoleService.js';
 
 export const meta = {
 	tags: ['admin'],
@@ -92,20 +89,16 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-		@Inject(DI.usersRepository)
-		private usersRepository: UsersRepository,
 		private avatarDecorationService: AvatarDecorationService,
 		private idService: IdService,
-		private roleService: RoleService,
 
 	) {
 		super(meta, paramDef, async (ps, me) => {
 			const isDuplicate = await this.avatarDecorationService.checkDuplicate(ps.name);
 			if (isDuplicate) throw new ApiError(meta.errors.duplicateName);
 
-			let pure_description = ps.description;
-			ps.description = me.id + "# " + ps.description;
 			const created = await this.avatarDecorationService.create({
+				userId: me.id,
 				name: ps.name,
 				description: ps.description,
 				url: ps.url,
@@ -113,18 +106,12 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				category: ps.category,
 			}, me);
 
-			const _me = await this.usersRepository.findOneByOrFail({ id: me.id });
-			const isAdmin = await this.roleService.isAdministrator(_me);
-			if ( isAdmin ){
-				pure_description = created.description;
-			}
-
 			return {
 				id: created.id,
 				createdAt: this.idService.parse(created.id).date.toISOString(),
 				updatedAt: null,
 				name: created.name,
-				description: pure_description,
+				description: created.description,
 				url: created.url,
 				roleIdsThatCanBeUsedThisDecoration: created.roleIdsThatCanBeUsedThisDecoration,
 				category: created.category,

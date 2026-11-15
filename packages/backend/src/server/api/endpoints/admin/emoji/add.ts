@@ -105,7 +105,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				userId: policies.canManageUserEmoji ? me.id : null,
 				license: ps.license ?? null,
 				isSensitive: access.userOnly ? false : (ps.isSensitive ?? false),
-				localOnly: access.userOnly ? false : (ps.localOnly ?? false),
+				localOnly: ps.localOnly ?? false,
 				roleIdsThatCanBeUsedThisEmojiAsReaction: access.userOnly ? [] : (ps.roleIdsThatCanBeUsedThisEmojiAsReaction ?? []),
 			}, me);
 

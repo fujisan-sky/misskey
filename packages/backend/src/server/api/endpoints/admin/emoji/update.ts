@@ -121,7 +121,7 @@ export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-
 				aliases: ps.aliases,
 				license: ps.license,
 				isSensitive: access.userOnly ? false : ps.isSensitive,
-				localOnly: access.userOnly ? false : ps.localOnly,
+				localOnly: ps.localOnly,
 				roleIdsThatCanBeUsedThisEmojiAsReaction: access.userOnly ? [] : ps.roleIdsThatCanBeUsedThisEmojiAsReaction,
 			}, me);
 
