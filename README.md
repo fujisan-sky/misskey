@@ -3,7 +3,7 @@
 <br>
 以下については、お問い合わせ頂ければ当該処理部分のパッチの提供を検討させて頂きます。<br>
 <br>
--  ふじさんQA、ふじさんチャットとの強化SSO連携を入れたい<br>
+-  ふじさんQA、ふじさんチャットとの<a href="https://misskey.day/documents/htmls/qa/fujisan_qa_chat_security.html">強化SSO連携</a>を入れたい<br>
    （ふじすきで対応しているレベルですが、ワンクリックで、ふじさんQAに入れます。）<br>
 <br>
 <br>

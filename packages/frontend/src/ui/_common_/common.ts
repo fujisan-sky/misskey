@@ -66,6 +66,11 @@ export function openInstanceMenu(ev: PointerEvent) {
 		text: i18n.ts.customEmojis,
 		icon: 'ti ti-icons',
 		to: '/about#emojis',
+	}, {
+		type: 'link',
+                text: i18n.ts.avatarDecorations,
+                icon: 'ti ti-sparkles',
+                to: '/avatar-decorations',
 	});
 
 	if (instance.federation !== 'none') {
@@ -148,7 +153,8 @@ export function openInstanceMenu(ev: PointerEvent) {
 		type: 'a',
 		text: i18n.ts.document,
 		icon: 'ti ti-bulb',
-		href: 'https://misskey-hub.net/docs/for-users/',
+//		href: 'https://misskey-hub.net/docs/for-users/',
+		href: 'https://misskey.day/documents/htmls/help.html',
 		target: '_blank',
 	});
 
