@@ -91,6 +91,13 @@ type CondFormulaValueIsExplorable = {
 };
 
 /**
+ * あんしんモードの場合のみ成立とする
+ */
+type CondFormulaValueIsSafe = {
+	type: 'isSafe';
+};
+
+/**
  * ユーザが作成されてから指定期間経過した場合のみ成立とする
  */
 type CondFormulaValueCreatedLessThan = {
@@ -247,6 +254,11 @@ export class MiRole {
 		default: false,
 	})
 	public isExplorable: boolean;
+
+	@Column('boolean', {
+		default: false,
+	})
+	public preserveAssignmentOnMoveAccount: boolean;
 
 	@Column('boolean', {
 		default: false,

@@ -4,17 +4,25 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import { RoleService } from '@/core/RoleService.js';
+import { getUserEmojiAccess, canEditUserEmoji } from '@/misc/user-emoji-permissions.js';
 import { Endpoint } from '@/server/api/endpoint-base.js';
+import { ApiError } from '../../../error.js';
 import { CustomEmojiService } from '@/core/CustomEmojiService.js';
 
 export const meta = {
 	tags: ['admin'],
 
 	requireCredential: true,
-	requireRolePolicy: 'canManageCustomEmojis',
+	requiredRolePolicies: ['canManageCustomEmojis', 'canManageUserEmoji'],
 	kind: 'write:admin:emoji',
 
 	errors: {
+		permissionDenied: {
+			message: 'You can only manage your own local emoji.',
+			code: 'PERMISSION_DENIED',
+			id: '97e15ec7-263a-488b-a8df-c860d0ab08e9',
+		},
 		noSuchEmoji: {
 			message: 'No such emoji.',
 			code: 'NO_SUCH_EMOJI',
@@ -35,8 +43,14 @@ export const paramDef = {
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
 		private customEmojiService: CustomEmojiService,
+		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
+			const policies = await this.roleService.getUserPolicies(me.id);
+			const access = getUserEmojiAccess(policies, await this.roleService.isAdministrator(me));
+			const emoji = await this.customEmojiService.getEmojiById(ps.id);
+			if (emoji == null) throw new ApiError(meta.errors.noSuchEmoji);
+			if (!canEditUserEmoji(access, emoji, me.id)) throw new ApiError(meta.errors.permissionDenied);
 			await this.customEmojiService.delete(ps.id, me);
 		});
 	}

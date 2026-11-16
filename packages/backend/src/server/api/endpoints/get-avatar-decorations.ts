@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
-import { IsNull } from 'typeorm';
+import { In } from 'typeorm';
 import { Inject, Injectable } from '@nestjs/common';
 import { Endpoint } from '@/server/api/endpoint-base.js';
 import { DI } from '@/di-symbols.js';
@@ -50,6 +50,10 @@ export const meta = {
 						format: 'id',
 					},
 				},
+				category: {
+					type: 'string',
+					optional: true, nullable: true,
+				},
 			},
 		},
 	},
@@ -64,58 +68,31 @@ export const paramDef = {
 @Injectable()
 export default class extends Endpoint<typeof meta, typeof paramDef> { // eslint-disable-line import/no-default-export
 	constructor(
-               	@Inject(DI.usersRepository)
-                private usersRepository: UsersRepository,
+		@Inject(DI.usersRepository)
+		private usersRepository: UsersRepository,
 
 		private avatarDecorationService: AvatarDecorationService,
 		private roleService: RoleService,
 	) {
 		super(meta, paramDef, async (ps, me) => {
-			let decorations = await this.avatarDecorationService.getAll(true);
+			const decorations = await this.avatarDecorationService.getAll(true);
 			const allRoles = await this.roleService.getRoles();
+			const visibleRoles = me == null ? allRoles.filter(role => role.isPublic) : allRoles;
 
-// following statement is ERROR
-//			decorations.forEach( (item) =>{
-////			});
-			// await Promise.all(docorations.map(async (item) => {
-			// }
-			for( let item of decorations ) {
-				const sh_in = item.description.indexOf('#')
-                                if ( sh_in >=8 && sh_in < 16 ){
-                                	const u_id = item.description.substr( 0,sh_in );
-
-//					const owner = await this.usersRepository.findOneByOrFail({ id: u_id });
-					const owner = await this.usersRepository.findOneBy({ id: u_id });
-					let byName = '';
-					if( owner ){
-						if ( owner.name ){
-							byName = owner.name;
-						}else{
-							byName = owner.username;
-						}
-					}
-					if ( byName != '' ){
-						while ( byName.includes(':')){
-							const st_i = byName.indexOf(':');
-							const ed_i = byName.indexOf(':',st_i + 1);
-							let bname  = byName.substr( 0 , st_i );
-							if ( ed_i > 0 ){
-								byName = bname + byName.substr(ed_i + 1);
-							}else{
-								byName = bname;
-							}
-						}
-						item.name = item.name + "/" + byName + "さん";
-					}
-                                }
-			}
+			const ownerIds = [...new Set(decorations.flatMap(decoration => decoration.userId == null ? [] : [decoration.userId]))];
+			const owners = ownerIds.length === 0 ? [] : await this.usersRepository.find({
+				where: { id: In(ownerIds) },
+				select: { id: true, name: true, username: true },
+			});
+			const ownerNames = new Map(owners.map(owner => [owner.id, (owner.name || owner.username).replace(/:[^:]*:|:.*$/g, '')]));
 
 			return decorations.map(decoration => ({
 				id: decoration.id,
-				name: decoration.name,
+				name: ownerNames.get(decoration.userId ?? '') ? `${decoration.name}/${ownerNames.get(decoration.userId ?? '')}さん` : decoration.name,
 				description: decoration.description,
 				url: decoration.url,
-				roleIdsThatCanBeUsedThisDecoration: decoration.roleIdsThatCanBeUsedThisDecoration.filter(roleId => allRoles.some(role => role.id === roleId)),
+				roleIdsThatCanBeUsedThisDecoration: decoration.roleIdsThatCanBeUsedThisDecoration.filter(roleId => visibleRoles.some(role => role.id === roleId)),
+				category: decoration.category,
 			}));
 		});
 	}

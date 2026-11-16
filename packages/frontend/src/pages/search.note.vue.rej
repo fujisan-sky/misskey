@@ -1,0 +1,89 @@
+--- packages/frontend/src/pages/search.note.vue	2026-09-23 17:23:27.000000000 +0900
++++ packages/frontend/src/pages/search.note.vue	2026-09-29 11:46:15.237142213 +0900
+@@ -93,6 +93,19 @@
+ 						</div>
+ 					</div>
+ 				</div>
++				<div>
++                         		<MkRadios v-model="attachedSelect"
++					  	:options="[
++					        	{ value: 'all'  , label: i18n.ts.all },
++                                			{ value: 'image', label: '画像' },
++                                			{ value: 'video', label: '動画' },
++                                			{ value: 'audio', label: '♪' },
++					  	]"
++					  	@update:modelValue="search()"
++				 	>
++                                 		<template #label>添付ファイルで絞り込み</template>
++                        		</MkRadios>
++				</div>
+ 			</div>
+ 		</MkFoldableSection>
+ 		<div>
+@@ -142,11 +155,13 @@
+ 	userId?: string;
+ 	username?: string;
+ 	host?: string | null;
++	attachedFileType?: string | null;
+ }>(), {
+ 	query: '',
+ 	userId: undefined,
+ 	username: undefined,
+ 	host: '',
++	attachedFileType: '',
+ });
+ 
+ const router = useRouter();
+@@ -212,10 +227,21 @@
+ 	return options;
+ });
+ 
++type AttachedSelect = 'all' | 'image' | 'video' | 'audio';
++type AttachedFileType = Exclude<AttachedSelect, 'all'>;
++
++const attachedSelect = ref<AttachedSelect>('all');
++
++const searchAttached = computed<AttachedFileType | null>(() => {
++    if (attachedSelect.value === 'all') return null;
++    return attachedSelect.value;
++});
++
+ type SearchParams = {
+ 	readonly query: string;
+ 	readonly host?: string;
+ 	readonly userId?: string;
++	readonly attachedFileType?: AttachedFileType;
+ 	readonly rangeStartAt?: number | null;
+ 	readonly rangeEndAt?: number | null;
+ };
+@@ -242,6 +268,7 @@
+ 			query: trimmedQuery,
+ 			host: fixHostIfLocal(user.value.host),
+ 			userId: user.value.id,
++			...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+ 			...searchRange(),
+ 		};
+ 	}
+@@ -257,6 +284,7 @@
+ 		return {
+ 			query: trimmedQuery,
+ 			host: fixHostIfLocal(trimmedHost),
++			...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+ 			...searchRange(),
+ 		};
+ 	}
+@@ -265,12 +293,14 @@
+ 		return {
+ 			query: trimmedQuery,
+ 			host: '.',
++			...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+ 			...searchRange(),
+ 		};
+ 	}
+ 
+ 	return {
+ 		query: trimmedQuery,
++		...(searchAttached.value ? { attachedFileType: searchAttached.value } : {}),
+ 		...searchRange(),
+ 	};
+ });

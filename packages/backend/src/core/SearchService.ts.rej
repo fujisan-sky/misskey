@@ -1,0 +1,61 @@
+--- packages/backend/src/core/SearchService.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/core/SearchService.ts	2026-09-29 11:46:15.243142246 +0900
+@@ -38,6 +38,7 @@
+ 	userId?: MiNote['userId'] | null;
+ 	channelId?: MiNote['channelId'] | null;
+ 	host?: string | null;
++	attachedFileType?:  string | null;
+ 	rangeStartAt?: number | null;
+ 	rangeEndAt?: number | null;
+ };
+@@ -113,6 +114,7 @@
+ 					'userHost',
+ 					'channelId',
+ 					'tags',
++					'attachedFileType',
+ 				],
+ 				typoTolerance: {
+ 					enabled: false,
+@@ -152,6 +154,20 @@
+ 			}
+ 		}
+ 
++		var attachedFileType = '';
++		if ( note.attachedFileTypes ){
++			if ( note.attachedFileTypes.length > 0 ){
++				const firstF =  note.attachedFileTypes[0];
++				if (firstF){
++					if( firstF.indexOf('/') > 0 ){
++						attachedFileType = firstF.substr(0, firstF.indexOf('/'));
++					}
++				}
++			}
++		}
++		//console.log('----add meilisearch indexes-----');
++		//console.log(attachedFileType);
++
+ 		await this.meilisearchNoteIndex?.addDocuments([{
+ 			id: note.id,
+ 			createdAt: this.idService.parse(note.id).date.getTime(),
+@@ -161,6 +177,7 @@
+ 			cw: note.cw,
+ 			text: note.text,
+ 			tags: note.tags,
++			attachedFileType: attachedFileType,
+ 		}], {
+ 			primaryKey: 'id',
+ 		});
+@@ -294,6 +311,13 @@
+ 				filter.qs.push({ op: '=', k: 'userHost', v: opts.host });
+ 			}
+ 		}
++		console.log('----search meilisearch-----');
++		console.log(opts);
++		if (opts.attachedFileType) {
++			console.log('----search meilisearch attachedFileType-----');
++			console.log(opts.attachedFileType);
++			filter.qs.push({ op: '=', k: 'attachedFileType', v: opts.attachedFileType });
++		}
+ 
+ 		const res = await this.meilisearchNoteIndex.search(q, {
+ 			sort: ['createdAt:desc'],

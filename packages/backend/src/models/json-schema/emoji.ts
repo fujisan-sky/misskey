@@ -55,6 +55,15 @@ export const packedEmojiDetailedSchema = {
 			optional: false, nullable: false,
 			format: 'id',
 		},
+		userId: {
+			type: 'string',
+			optional: true, nullable: true,
+			format: 'id',
+		},
+		username: {
+			type: 'string',
+			optional: true, nullable: true,
+		},
 		aliases: {
 			type: 'array',
 			optional: false, nullable: false,

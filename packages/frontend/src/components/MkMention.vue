@@ -18,9 +18,9 @@ import { toUnicode } from 'punycode.js';
 import { computed } from 'vue';
 import { host as localHost } from '@@/js/config.js';
 import type { MkABehavior } from '@/components/global/MkA.vue';
-import { $i } from '@/account.js';
-import { defaultStore } from '@/store.js';
-import { getStaticImageUrl } from '@/scripts/media-proxy.js';
+import { $i } from '@/i.js';
+import { getStaticImageUrl } from '@/utility/media-proxy.js';
+import { prefer } from '@/preferences.js';
 
 const props = defineProps<{
 	username: string;
@@ -33,10 +33,10 @@ const canonical = props.host === localHost ? `@${props.username}` : `@${props.us
 const url = `/${canonical}`;
 
 const isMe = $i && (
-	`@${props.username}@${toUnicode(props.host)}` === `@${$i.username}@${toUnicode(localHost)}`.toLowerCase()
+	`@${props.username}@${toUnicode(props.host)}`.toLowerCase() === `@${$i.username}@${toUnicode(localHost)}`.toLowerCase()
 );
 
-const avatarUrl = computed(() => defaultStore.state.disableShowingAnimatedImages || defaultStore.state.dataSaver.avatar
+const avatarUrl = computed(() => prefer.s.disableShowingAnimatedImages || prefer.s.dataSaver.avatar
 	? getStaticImageUrl(`/avatar/@${props.username}@${props.host}`)
 	: `/avatar/@${props.username}@${props.host}`,
 );

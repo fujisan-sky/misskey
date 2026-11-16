@@ -66,21 +66,21 @@ import MkInput from '@/components/MkInput.vue';
 import MkSwitch from '@/components/MkSwitch.vue';
 import MkDisableSection from '@/components/MkDisableSection.vue';
 import * as os from '@/os.js';
-import { misskeyApi } from '@/scripts/misskey-api.js';
-import { signinRequired } from '@/account.js';
+import { misskeyApi } from '@/utility/misskey-api.js';
+import { ensureSignin } from '@/i.js';
 import { i18n } from '@/i18n.js';
-import { definePageMetadata } from '@/scripts/page-metadata.js';
+import { definePage } from '@/page.js';
 import { instance } from '@/instance.js';
 
-const $i = signinRequired();
+const $i = ensureSignin();
 
-const emailAddress = ref($i.email);
+const emailAddress = ref($i.email ?? '');
 
-const onChangeReceiveAnnouncementEmail = (v) => {
+function onChangeReceiveAnnouncementEmail(v: boolean) {
 	misskeyApi('i/update', {
 		receiveAnnouncementEmail: v,
 	});
-};
+}
 
 async function saveEmailAddress() {
 	const auth = await os.authenticateDialog();
@@ -125,7 +125,7 @@ const headerActions = computed(() => []);
 
 const headerTabs = computed(() => []);
 
-definePageMetadata(() => ({
+definePage(() => ({
 	title: i18n.ts.email,
 	icon: 'ti ti-mail',
 }));

@@ -1,0 +1,26 @@
+{
+	"name": "frontend-builder",
+	"type": "module",
+	"scripts": {
+		"eslint": "eslint './**/*.{js,jsx,ts,tsx}'",
+		"typecheck": "tsc --noEmit",
+		"lint": "pnpm typecheck && pnpm eslint"
+	},
+	"exports": {
+		"./*": "./js/*"
+	},
+	"devDependencies": {
+		"@types/estree": "1.0.9",
+		"@types/node": "26.6.5",
+		"@typescript-eslint/eslint-plugin": "8.71.2",
+		"@typescript-eslint/parser": "8.71.2",
+		"rollup": "4.64.7"
+	},
+	"dependencies": {
+		"i18n": "workspace:*",
+		"magic-string": "1.4.3",
+		"oxc-walker": "1.1.1",
+		"rolldown": "1.2.14",
+		"vite": "8.3.4"
+	}
+}

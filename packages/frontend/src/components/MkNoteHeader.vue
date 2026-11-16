@@ -14,7 +14,12 @@ SPDX-License-Identifier: AGPL-3.0-only
 	<div v-if="note.user.isBot" :class="$style.isBot">bot</div>
 	<div :class="$style.username"><MkAcct :user="note.user"/></div>
 	<div v-if="note.user.badgeRoles" :class="$style.badgeRoles">
-		<img v-for="(role, i) in note.user.badgeRoles" :key="i" v-tooltip="role.name" :class="$style.badgeRole" :src="role.iconUrl!"/>
+		<template v-for="(role, i) in note.user.badgeRoles" :key="i">
+			<a v-if="fuji3qaBadgeLink(note.user, role)" v-tooltip="role.name" :href="fuji3qaBadgeLink(note.user, role)!" :class="$style.badgeRole" :aria-label="role.name" @click.stop>
+				<img :src="role.iconUrl!" alt="" style="height: 1.3em; vertical-align: -20%;"/>
+			</a>
+			<img v-else v-tooltip="role.name" :class="$style.badgeRole" :src="role.iconUrl!"/>
+		</template>
 	</div>
 	<div :class="$style.info">
 		<div v-if="mock">
@@ -38,15 +43,16 @@ SPDX-License-Identifier: AGPL-3.0-only
 import { inject } from 'vue';
 import * as Misskey from 'misskey-js';
 import { i18n } from '@/i18n.js';
-import { notePage } from '@/filters/note.js';
-import { userPage } from '@/filters/user.js';
-import { defaultStore } from '@/store.js';
+import { notePage } from '@@/js/note.js';
+import { userPage } from '@@/js/user.js';
+import { DI } from '@/di.js';
+import { fuji3qaBadgeLink } from '@/utility/fuji3qa-link.js';
 
 defineProps<{
 	note: Misskey.entities.Note;
 }>();
 
-const mock = inject<boolean>('mock', false);
+const mock = inject(DI.mock, false);
 </script>
 
 <style lang="scss" module>

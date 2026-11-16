@@ -1,0 +1,192 @@
+--- packages/backend/src/core/EmailService.ts	2026-09-23 17:23:27.000000000 +0900
++++ packages/backend/src/core/EmailService.ts	2026-09-29 11:46:15.241142235 +0900
+@@ -17,6 +17,133 @@
+ import { HttpRequestService } from '@/core/HttpRequestService.js';
+ import { escapeHtml } from '@/misc/escape-html.js';
+ 
++import { readFileSync, statSync } from 'node:fs';
++import { homedir } from 'node:os';
++import { join } from 'node:path';
++import { domainToASCII } from 'node:url';
++
++const DISPOSABLE_EMAIL_BLOCKLIST_PATH = join(
++	homedir(),
++	'misskey',
++	'plus',
++	'disposable_email_blocklist.conf',
++);
++
++// ファイル更新確認の間隔 1 hour
++const DISPOSABLE_EMAIL_BLOCKLIST_CHECK_INTERVAL = 60 * 60 * 1000;
++
++let disposableEmailDomains = new Set<string>();
++let disposableEmailBlocklistMtimeMs = -1;
++let disposableEmailBlocklistNextCheckAt = 0;
++
++function normalizeEmailDomain(domain: string): string {
++	const normalized = domain
++		.trim()
++		.toLowerCase()
++		.replace(/^\*\./, '')
++		.replace(/\.+$/, '');
++
++	return domainToASCII(normalized);
++}
++
++function getDisposableEmailDomains(): ReadonlySet<string> {
++	const now = Date.now();
++
++	// 毎回ファイルを確認せず、最大60分間キャッシュする
++	if (now < disposableEmailBlocklistNextCheckAt) {
++		return disposableEmailDomains;
++	}
++
++	disposableEmailBlocklistNextCheckAt =
++		now + DISPOSABLE_EMAIL_BLOCKLIST_CHECK_INTERVAL;
++
++	try {
++		const fileStat = statSync(DISPOSABLE_EMAIL_BLOCKLIST_PATH);
++
++		// ファイルが更新されていなければ現在のキャッシュを使用
++		if (
++			disposableEmailDomains.size > 0 &&
++			fileStat.mtimeMs === disposableEmailBlocklistMtimeMs
++		) {
++			return disposableEmailDomains;
++		}
++
++		const loadedDomains = new Set<string>();
++		const fileText = readFileSync(
++			DISPOSABLE_EMAIL_BLOCKLIST_PATH,
++			'utf8',
++		);
++
++		for (const originalLine of fileText.split(/\r?\n/)) {
++			const line = originalLine
++				.replace(/^\uFEFF/, '')
++				.trim();
++
++			if (
++				line === '' ||
++				line.startsWith('#') ||
++				line.startsWith(';')
++			) {
++				continue;
++			}
++
++			const domain = normalizeEmailDomain(line);
++
++			if (domain !== '') {
++				loadedDomains.add(domain);
++			}
++		}
++
++		if (loadedDomains.size === 0) {
++			throw new Error(
++				'disposable email domain list is empty',
++			);
++		}
++
++		disposableEmailDomains = loadedDomains;
++		disposableEmailBlocklistMtimeMs = fileStat.mtimeMs;
++	} catch (error) {
++		const message =
++			error instanceof Error
++				? error.message
++				: String(error);
++
++		process.stderr.write(
++			`[EmailService] disposable email blocklist load error: ${message}\n`,
++		);
++	}
++
++	return disposableEmailDomains;
++}
++
++function isDisposableEmailDomain(domain: string): boolean {
++	const normalizedDomain = normalizeEmailDomain(domain);
++
++	if (normalizedDomain === '') {
++		return false;
++	}
++
++	const domains = getDisposableEmailDomains();
++
++	let checkDomain = normalizedDomain;
++
++	while (checkDomain !== '') {
++		if (domains.has(checkDomain)) {
++			return true;
++		}
++
++		const dotPosition = checkDomain.indexOf('.');
++
++		if (dotPosition === -1) {
++			break;
++		}
++
++		checkDomain = checkDomain.slice(dotPosition + 1);
++	}
++
++	return false;
++}
++ 
+ @Injectable()
+ export class EmailService {
+ 	private logger: Logger;
+@@ -46,6 +173,7 @@
+ 		const emailSettingUrl = `${this.config.url}/settings/email`;
+ 
+ 		const enableAuth = this.meta.smtpUser != null && this.meta.smtpUser !== '';
++		const subjectPlus = `[${this.config.host}]${subject}`;
+ 
+ 		const sanitizedHtml = sanitizeHtml(html);
+ 
+@@ -94,7 +222,7 @@
+ 			}
+ 				main > header {
+ 					padding: 32px;
+-					background: #86b300;
++					background: #40ffff;
+ 				}
+ 					main > header > img {
+ 						max-width: 128px;
+@@ -151,7 +279,7 @@
+ 					address: this.meta.email!,
+ 				} : this.meta.email!,
+ 				to: to,
+-				subject: subject,
++				subject: subjectPlus,
+ 				text: text,
+ 				html: inlinedHtml,
+ 			});
+@@ -187,6 +315,20 @@
+ 			};
+ 		}
+ 
++
++		const atPosition = emailAddress.lastIndexOf('@');
++		const emailDomain = normalizeEmailDomain(
++			emailAddress.slice(atPosition + 1),
++		);
++
++		// ローカルのdisposable email domain一覧による判定
++		if (isDisposableEmailDomain(emailDomain)) {
++			return {
++				available: false,
++				reason: 'disposable',
++			};
++		}
++
+ 		let validated: {
+ 			valid: boolean,
+ 			reason?: string | null,
+@@ -226,7 +368,7 @@
+ 			};
+ 		}
+ 
+-		const emailDomain: string = emailAddress.split('@')[1];
++		//const emailDomain: string = emailAddress.split('@')[1];
+ 		const isBanned = this.utilityService.isBlockedHost(this.meta.bannedEmailDomains, emailDomain);
+ 
+ 		if (isBanned) {

@@ -18,6 +18,8 @@ export const meta = {
 
 	kind: 'write:flash',
 
+	requiredRolePolicy: 'canManageFlash',
+
 	errors: {
 		noSuchFlash: {
 			message: 'No such flash.',
